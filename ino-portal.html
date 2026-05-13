@@ -132,6 +132,37 @@ body { font-family: 'GeneralSans', sans-serif; background: var(--soft); min-heig
 .info-bar-sep { color: var(--gray20); font-size: 18px; user-select: none; }
 .info-bar-loading { color: var(--gray20); font-style: italic; font-size: 13px; }
 
+.tax-calendar {
+  margin-top: 40px;
+  background: white;
+  border: 1px solid var(--gray10);
+  border-radius: 14px;
+  padding: 24px 28px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.tax-calendar-title {
+  font-family: 'Ladislav', serif;
+  font-size: 17px; color: var(--green-gray);
+  letter-spacing: 0.03em; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.tax-items { display: flex; flex-direction: column; gap: 8px; }
+.tax-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 10px 14px; border-radius: 9px;
+  font-size: 14px;
+}
+.tax-item.urgent { background: rgba(255,68,45,0.07); border-left: 3px solid var(--red); }
+.tax-item.soon   { background: rgba(255,167,38,0.07); border-left: 3px solid #FFA726; }
+.tax-item.normal { background: var(--gray5); border-left: 3px solid var(--gray20); }
+.tax-item.past   { opacity: 0.4; }
+.tax-date { font-family: 'Ladislav', serif; font-size: 14px; color: var(--green-gray); min-width: 52px; flex-shrink: 0; }
+.tax-desc { color: var(--gray80); line-height: 1.4; }
+.tax-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 7px; border-radius: 10px; margin-left: 6px; flex-shrink: 0; }
+.tax-badge.urgent { background: var(--red); color: white; }
+.tax-badge.soon   { background: #FFA726; color: white; }
+.tax-empty { font-size: 14px; color: var(--gray60); font-style: italic; }
+
 .quote-bar {
   margin-top: 48px;
   border-top: 1px solid var(--gray10);
@@ -203,7 +234,6 @@ body { font-family: 'GeneralSans', sans-serif; background: var(--soft); min-heig
       <div class="dashboard-header-right">
         <div class="clock" id="clock"></div>
         <div class="date-line" id="dateline"></div>
-        <div class="nameday-line" id="nameday"></div>
       </div>
     </div>
     <div class="info-bar" id="info-bar">
@@ -215,15 +245,14 @@ body { font-family: 'GeneralSans', sans-serif; background: var(--soft); min-heig
       <div class="info-bar-sep">·</div>
       <div class="info-bar-item">📆 <span id="week-num"></span></div>
       <div class="info-bar-sep">·</div>
-      <div class="info-bar-item">💶 EUR <strong id="eur-rate"><span class="info-bar-loading">načítám…</span></strong></div>
-      <div class="info-bar-sep">·</div>
-      <div class="info-bar-item">💵 USD <strong id="usd-rate"><span class="info-bar-loading">načítám…</span></strong></div>
+      <div class="info-bar-item">🎂 <span id="nameday-bar"></span></div>
     </div>
     <div id="sections"></div>
     <div class="quote-bar">
       <div class="quote-text" id="quote-text"></div>
       <div class="quote-author" id="quote-author"></div>
     </div>
+
   </div>
 </div>
 
@@ -313,7 +342,7 @@ const NAMEDAYS = {
 const DAYS_CS = ['neděle','pondělí','úterý','středa','čtvrtek','pátek','sobota'];
 const MONTHS_CS = ['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
 
-function updateClock() {{
+function updateClock() {
   const now = new Date();
   const hh = String(now.getHours()).padStart(2,'0');
   const mm = String(now.getMinutes()).padStart(2,'0');
@@ -322,21 +351,22 @@ function updateClock() {{
   if (el) el.textContent = hh + ':' + mm;
 
   const dl = document.getElementById('dateline');
-  if (dl) {{
+  if (dl) {
     const day = DAYS_CS[now.getDay()];
     const d = now.getDate();
     const m = MONTHS_CS[now.getMonth()];
     const y = now.getFullYear();
     dl.textContent = day.charAt(0).toUpperCase() + day.slice(1) + ' ' + d + '. ' + m + ' ' + y;
-  }}
+  }
 
   const nd = document.getElementById('nameday');
-  if (nd) {{
+  if (nd) {
     const key = now.getDate() + '.' + (now.getMonth()+1);
     const name = NAMEDAYS[key];
     nd.innerHTML = name ? 'Dnes slaví: <strong style="color:var(--green-gray);font-weight:700;">' + name + '</strong>' : '';
-  }}
-}}
+  }
+}
+
 
 // ── CITÁTY ──────────────────────────────────────────────
 const QUOTES = [
@@ -357,36 +387,36 @@ const QUOTES = [
   { text: "Spokojený zákazník je nejlepší reklama.", author: "" },
 ];
 
-function showQuote() {{
+function showQuote() {
   const idx = Math.floor(Date.now() / (1000 * 60 * 60 * 4)) % QUOTES.length;
   const q = QUOTES[idx];
   const el = document.getElementById('quote-text');
   const au = document.getElementById('quote-author');
   if (!el) return;
   el.classList.remove('visible');
-  setTimeout(() => {{
+  setTimeout(() => {
     el.textContent = '„' + q.text + '"';
     if (au) au.textContent = q.author || '';
     el.classList.add('visible');
-  }}, 200);
-}}
+  }, 200);
+}
 
 // ── INFO BAR ─────────────────────────────────────────────
-function getWeekNumber(d) {{
+function getWeekNumber(d) {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   const dayNum = date.getUTCDay() || 7;
   date.setUTCDate(date.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
   return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-}}
+}
 
-function getCzechHolidays(year) {{
+function getCzechHolidays(year) {
   // Pevné státní svátky ČR
   const fixed = [
-    `${{year}}-01-01`, `${{year}}-05-01`, `${{year}}-05-08`,
-    `${{year}}-07-05`, `${{year}}-07-06`, `${{year}}-09-28`,
-    `${{year}}-10-28`, `${{year}}-11-17`, `${{year}}-12-24`,
-    `${{year}}-12-25`, `${{year}}-12-26`
+    `${year}-01-01`, `${year}-05-01`, `${year}-05-08`,
+    `${year}-07-05`, `${year}-07-06`, `${year}-09-28`,
+    `${year}-10-28`, `${year}-11-17`, `${year}-12-24`,
+    `${year}-12-25`, `${year}-12-26`
   ];
   // Velikonoce (Gauss)
   const a = year % 19, b = Math.floor(year/100), c = year % 100;
@@ -404,9 +434,9 @@ function getCzechHolidays(year) {{
   const em = new Date(easter); em.setDate(em.getDate()+1);
   const fmt = d => d.toISOString().slice(0,10);
   return new Set([...fixed, fmt(gf), fmt(em)]);
-}}
+}
 
-function updateInfoBar() {{
+function updateInfoBar() {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
@@ -416,12 +446,12 @@ function updateInfoBar() {{
 
   const holidays = getCzechHolidays(year);
   let workdays = 0;
-  for (let d = today + 1; d <= lastDay; d++) {{
+  for (let d = today + 1; d <= lastDay; d++) {
     const date = new Date(year, month, d);
     const dow = date.getDay();
     const iso = date.toISOString().slice(0,10);
     if (dow !== 0 && dow !== 6 && !holidays.has(iso)) workdays++;
-  }}
+  }
 
   const week = getWeekNumber(now);
   const HOLIDAY_NAMES = {
@@ -434,19 +464,19 @@ function updateInfoBar() {{
   // Svátky tento měsíc
   const monthStr = String(month+1).padStart(2,'0');
   const monthHolidays = [];
-  holidays.forEach(iso => {{
-    if (iso.startsWith(year + '-' + monthStr)) {{
+  holidays.forEach(iso => {
+    if (iso.startsWith(year + '-' + monthStr)) {
       const d = parseInt(iso.slice(8,10));
       const mmdd = iso.slice(5);
       // Velikonoce nemají pevný název v HOLIDAY_NAMES, doplníme
       let name = HOLIDAY_NAMES[mmdd];
-      if (!name) {{
+      if (!name) {
         const dow = new Date(iso).getDay();
         name = dow === 5 ? 'Velký pátek' : 'Vel. pondělí';
-      }}
+      }
       monthHolidays.push(d + '. ' + name);
-    }}
-  }});
+    }
+  });
   monthHolidays.sort((a,b) => parseInt(a) - parseInt(b));
 
   const dl = document.getElementById('days-left');
@@ -455,43 +485,29 @@ function updateInfoBar() {{
   const hm = document.getElementById('holidays-this-month');
 
   if (dl) dl.innerHTML = '<strong>' + daysLeft + '</strong> dní do konce měsíce';
+
+  // Svátek do info lišty
+  const nbEl = document.getElementById('nameday-bar');
+  if (nbEl) {
+    const ndKey = now.getDate() + '.' + (now.getMonth()+1);
+    const ndName = NAMEDAYS[ndKey];
+    nbEl.innerHTML = ndName ? 'Dnes slaví: <strong style="color:var(--green-gray);font-weight:700;">' + ndName + '</strong>' : 'Dnes není svátek';
+  }
   if (wd) wd.innerHTML = '<strong>' + workdays + '</strong> pracovních dní do konce měsíce';
   if (wn) wn.innerHTML = '<strong>' + week + '</strong>. týden v roce';
-  if (hm) {{
-    if (monthHolidays.length > 0) {{
+  if (hm) {
+    if (monthHolidays.length > 0) {
       hm.innerHTML = monthHolidays.map(h => '<strong>' + h + '</strong>').join(', ');
-    }} else {{
+    } else {
       hm.innerHTML = '<span style=\"color:var(--gray20)\">žádné svátky</span>';
-    }}
-  }}
-}}
-async function fetchRates() {{
-  try {{
-    const res = await fetch('https://api.frankfurter.app/latest?from=EUR,USD&to=CZK');
-    const data = await res.json();
-    const eur = document.getElementById('eur-rate');
-    const usd = document.getElementById('usd-rate');
-    if (eur && data.rates && data.rates.CZK) {{
-      eur.textContent = data.rates.CZK.toFixed(2).replace('.',',') + ' Kč';
-    }}
-    // USD→CZK: fetch separately
-    const res2 = await fetch('https://api.frankfurter.app/latest?from=USD&to=CZK');
-    const data2 = await res2.json();
-    if (usd && data2.rates && data2.rates.CZK) {{
-      usd.textContent = data2.rates.CZK.toFixed(2).replace('.',',') + ' Kč';
-    }}
-  }} catch(e) {{
-    const eur = document.getElementById('eur-rate');
-    const usd = document.getElementById('usd-rate');
-    if (eur) eur.textContent = 'nedostupné';
-    if (usd) usd.textContent = 'nedostupné';
-  }}
-}}
+    }
+  }
+}
 
 const USER_HASH  = "93066bafc9a53ef3842b10a7811cf02982780fe84b3add361e527f6124c66bf0";
 const SESSION_MS = 8 * 60 * 60 * 1000;
-const ICONS   = {"dashboard": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g1\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#26C6DA\"/><stop offset=\"100%\" stop-color=\"#00838F\"/></linearGradient>\n  <filter id=\"sh1\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(0,131,143,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g1)\" filter=\"url(#sh1)\"/>\n  <rect x=\"9\" y=\"42\" width=\"8\" height=\"10\" rx=\"2\" fill=\"rgba(255,255,255,0.45)\"/>\n  <rect x=\"21\" y=\"32\" width=\"8\" height=\"20\" rx=\"2\" fill=\"rgba(255,255,255,0.65)\"/>\n  <rect x=\"33\" y=\"24\" width=\"8\" height=\"28\" rx=\"2\" fill=\"rgba(255,255,255,0.85)\"/>\n  <rect x=\"45\" y=\"16\" width=\"8\" height=\"36\" rx=\"2\" fill=\"rgba(255,255,255,0.95)\"/>\n  <polyline points=\"13,34 25,24 37,17 49,10\" stroke=\"white\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\" opacity=\"0.7\"/>\n  <circle cx=\"13\" cy=\"34\" r=\"2.5\" fill=\"white\" opacity=\"0.8\"/><circle cx=\"25\" cy=\"24\" r=\"2.5\" fill=\"white\" opacity=\"0.8\"/>\n  <circle cx=\"37\" cy=\"17\" r=\"2.5\" fill=\"white\" opacity=\"0.8\"/><circle cx=\"49\" cy=\"10\" r=\"2.5\" fill=\"white\" opacity=\"0.8\"/>\n</svg>", "sleva": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g2\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#FFA726\"/><stop offset=\"100%\" stop-color=\"#E65100\"/></linearGradient>\n  <filter id=\"sh2\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(230,81,0,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g2)\" filter=\"url(#sh2)\"/>\n  <rect x=\"12\" y=\"8\" width=\"36\" height=\"44\" rx=\"5\" fill=\"rgba(255,255,255,0.92)\"/>\n  <rect x=\"16\" y=\"12\" width=\"28\" height=\"11\" rx=\"3\" fill=\"rgba(230,81,0,0.15)\"/>\n  <text x=\"42\" y=\"21\" text-anchor=\"end\" font-size=\"8\" font-weight=\"bold\" fill=\"rgba(230,81,0,0.8)\" font-family=\"monospace\">-25%</text>\n  <rect x=\"16\" y=\"27\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.25)\"/>\n  <rect x=\"26\" y=\"27\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.25)\"/>\n  <rect x=\"36\" y=\"27\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.5)\"/>\n  <rect x=\"16\" y=\"35\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.15)\"/>\n  <rect x=\"26\" y=\"35\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.15)\"/>\n  <rect x=\"36\" y=\"35\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.15)\"/>\n  <rect x=\"16\" y=\"43\" width=\"17\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.15)\"/>\n  <rect x=\"36\" y=\"43\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.5)\"/>\n  <text x=\"22\" y=\"41\" font-size=\"8\" font-weight=\"bold\" fill=\"rgba(230,81,0,0.5)\" font-family=\"sans-serif\">%</text>\n</svg>", "marze": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g3\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#66BB6A\"/><stop offset=\"100%\" stop-color=\"#2E7D32\"/></linearGradient>\n  <filter id=\"sh3\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(46,125,50,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g3)\" filter=\"url(#sh3)\"/>\n  <rect x=\"12\" y=\"8\" width=\"36\" height=\"44\" rx=\"5\" fill=\"rgba(255,255,255,0.92)\"/>\n  <rect x=\"16\" y=\"12\" width=\"28\" height=\"11\" rx=\"3\" fill=\"rgba(46,125,50,0.12)\"/>\n  <text x=\"42\" y=\"21\" text-anchor=\"end\" font-size=\"8\" font-weight=\"bold\" fill=\"rgba(46,125,50,0.8)\" font-family=\"monospace\">34.5%</text>\n  <rect x=\"16\" y=\"27\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.2)\"/>\n  <rect x=\"26\" y=\"27\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.2)\"/>\n  <rect x=\"36\" y=\"27\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.5)\"/>\n  <rect x=\"16\" y=\"35\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.12)\"/>\n  <rect x=\"26\" y=\"35\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.12)\"/>\n  <rect x=\"36\" y=\"35\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.12)\"/>\n  <rect x=\"16\" y=\"43\" width=\"17\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.12)\"/>\n  <rect x=\"36\" y=\"43\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.5)\"/>\n  <text x=\"30\" y=\"42\" text-anchor=\"middle\" font-size=\"16\" font-weight=\"bold\" fill=\"rgba(46,125,50,0.45)\" font-family=\"sans-serif\">%</text>\n</svg>", "nahradni": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g7\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#26A69A\"/><stop offset=\"100%\" stop-color=\"#00695C\"/></linearGradient>\n  <filter id=\"sh7\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(0,105,92,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g7)\" filter=\"url(#sh7)\"/>\n  <circle cx=\"22\" cy=\"16\" r=\"6\" fill=\"rgba(255,255,255,0.9)\"/>\n  <path d=\"M10,42 Q10,28 22,28 Q34,28 34,42\" fill=\"rgba(255,255,255,0.7)\"/>\n  <circle cx=\"40\" cy=\"20\" r=\"5\" fill=\"rgba(255,255,255,0.6)\"/>\n  <path d=\"M30,44 Q30,32 40,32 Q50,32 50,44\" fill=\"rgba(255,255,255,0.45)\"/>\n  <rect x=\"8\" y=\"48\" width=\"44\" height=\"3\" rx=\"1.5\" fill=\"rgba(255,255,255,0.3)\"/>\n</svg>", "kanban": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g4\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#AB47BC\"/><stop offset=\"100%\" stop-color=\"#6A1B9A\"/></linearGradient>\n  <filter id=\"sh4\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(106,27,154,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g4)\" filter=\"url(#sh4)\"/>\n  <rect x=\"8\" y=\"10\" width=\"13\" height=\"5\" rx=\"2.5\" fill=\"rgba(255,255,255,0.4)\"/>\n  <rect x=\"24\" y=\"10\" width=\"13\" height=\"5\" rx=\"2.5\" fill=\"rgba(255,255,255,0.4)\"/>\n  <rect x=\"40\" y=\"10\" width=\"13\" height=\"5\" rx=\"2.5\" fill=\"rgba(255,255,255,0.4)\"/>\n  <rect x=\"8\" y=\"18\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.9)\"/>\n  <rect x=\"8\" y=\"33\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.55)\"/>\n  <rect x=\"24\" y=\"18\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.55)\"/>\n  <rect x=\"24\" y=\"33\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.9)\"/>\n  <rect x=\"40\" y=\"18\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.55)\"/>\n  <rect x=\"40\" y=\"33\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.75)\"/>\n</svg>", "letak": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g5\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#EF5350\"/><stop offset=\"100%\" stop-color=\"#B71C1C\"/></linearGradient>\n  <filter id=\"sh5\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(183,28,28,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g5)\" filter=\"url(#sh5)\"/>\n  <rect x=\"14\" y=\"14\" width=\"28\" height=\"34\" rx=\"3\" fill=\"rgba(255,255,255,0.35)\" transform=\"rotate(-7 28 31)\"/>\n  <rect x=\"14\" y=\"14\" width=\"28\" height=\"34\" rx=\"3\" fill=\"rgba(255,255,255,0.55)\" transform=\"rotate(5 28 31)\"/>\n  <rect x=\"14\" y=\"11\" width=\"30\" height=\"38\" rx=\"3\" fill=\"white\"/>\n  <rect x=\"14\" y=\"11\" width=\"30\" height=\"9\" rx=\"3\" fill=\"rgba(239,83,80,0.85)\"/>\n  <rect x=\"14\" y=\"17\" width=\"30\" height=\"3\" fill=\"rgba(239,83,80,0.85)\"/>\n  <rect x=\"18\" y=\"24\" width=\"22\" height=\"2.5\" rx=\"1.2\" fill=\"rgba(0,0,0,0.2)\"/>\n  <rect x=\"18\" y=\"29\" width=\"18\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.13)\"/>\n  <rect x=\"18\" y=\"33\" width=\"20\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.13)\"/>\n  <rect x=\"18\" y=\"37\" width=\"15\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.13)\"/>\n  <rect x=\"18\" y=\"42\" width=\"22\" height=\"3\" rx=\"1.5\" fill=\"rgba(239,83,80,0.4)\"/>\n</svg>", "katalog": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g6\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#5C6BC0\"/><stop offset=\"100%\" stop-color=\"#283593\"/></linearGradient>\n  <filter id=\"sh6\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(40,53,147,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g6)\" filter=\"url(#sh6)\"/>\n  <rect x=\"8\" y=\"11\" width=\"44\" height=\"38\" rx=\"5\" fill=\"rgba(255,255,255,0.15)\" stroke=\"rgba(255,255,255,0.4)\" stroke-width=\"1.5\"/>\n  <rect x=\"8\" y=\"11\" width=\"44\" height=\"10\" rx=\"5\" fill=\"rgba(255,255,255,0.3)\"/>\n  <circle cx=\"15\" cy=\"16\" r=\"2.5\" fill=\"rgba(255,255,255,0.8)\"/>\n  <circle cx=\"22\" cy=\"16\" r=\"2.5\" fill=\"rgba(255,255,255,0.5)\"/>\n  <circle cx=\"29\" cy=\"16\" r=\"2.5\" fill=\"rgba(255,255,255,0.3)\"/>\n  <rect x=\"13\" y=\"25\" width=\"15\" height=\"11\" rx=\"2\" fill=\"rgba(255,255,255,0.7)\"/>\n  <rect x=\"32\" y=\"25\" width=\"15\" height=\"11\" rx=\"2\" fill=\"rgba(255,255,255,0.5)\"/>\n  <rect x=\"13\" y=\"39\" width=\"15\" height=\"6\" rx=\"2\" fill=\"rgba(255,255,255,0.4)\"/>\n  <rect x=\"32\" y=\"39\" width=\"15\" height=\"6\" rx=\"2\" fill=\"rgba(255,255,255,0.6)\"/>\n</svg>", "reklamace": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g8\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#78909C\"/><stop offset=\"100%\" stop-color=\"#37474F\"/></linearGradient>\n  <filter id=\"sh8\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(55,71,79,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g8)\" filter=\"url(#sh8)\"/>\n  <rect x=\"11\" y=\"14\" width=\"38\" height=\"38\" rx=\"4\" fill=\"rgba(255,255,255,0.92)\"/>\n  <rect x=\"22\" y=\"10\" width=\"16\" height=\"8\" rx=\"3\" fill=\"rgba(255,255,255,0.92)\"/>\n  <rect x=\"25\" y=\"8\" width=\"10\" height=\"6\" rx=\"3\" fill=\"rgba(120,144,156,0.6)\"/>\n  <line x1=\"16\" y1=\"21\" x2=\"21\" y2=\"26\" stroke=\"#EF5350\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <line x1=\"21\" y1=\"21\" x2=\"16\" y2=\"26\" stroke=\"#EF5350\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <rect x=\"25\" y=\"22\" width=\"20\" height=\"2.5\" rx=\"1.2\" fill=\"rgba(0,0,0,0.15)\"/>\n  <rect x=\"25\" y=\"26\" width=\"14\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.08)\"/>\n  <polyline points=\"16,36 19,39 25,33\" stroke=\"#66BB6A\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\"/>\n  <rect x=\"29\" y=\"34\" width=\"18\" height=\"2.5\" rx=\"1.2\" fill=\"rgba(0,0,0,0.15)\"/>\n  <rect x=\"29\" y=\"38\" width=\"12\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.08)\"/>\n  <rect x=\"16\" y=\"44\" width=\"28\" height=\"2\" rx=\"1\" fill=\"rgba(120,144,156,0.3)\"/>\n  <rect x=\"16\" y=\"47\" width=\"20\" height=\"2\" rx=\"1\" fill=\"rgba(120,144,156,0.2)\"/>\n</svg>"};
-const SECTIONS = [{"title": "Obchodník", "color": "#3D5655", "projects": [{"name": "Přehled prodejů", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/ino_dashboard.html", "icon_key": "dashboard"}, {"name": "Kalkulačka slev", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/ino-sleva-kalkulacka.html", "icon_key": "sleva"}, {"name": "Kalkulačka marže", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/ino-slevova-pasma.html", "icon_key": "marze"}, {"name": "Náhradní plnění", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/ino_np_final.html", "icon_key": "nahradni"}]}, {"title": "Marketing", "color": "#FF442D", "projects": [{"name": "Kanban", "url": "https://dapper-geyser-p5kg.here.now/", "icon_key": "kanban"}, {"name": "Tvorba letáku", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/INO-letak-editor.html", "icon_key": "letak"}, {"name": "Tvorba HTML katalogu", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/flipbook-generator.html", "icon_key": "katalog"}, {"name": "Vyhodnocení reklamací", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/vyhodnoceni_reklamaci.html", "icon_key": "reklamace"}]}];
+const ICONS   = {"dashboard": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g1\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#26C6DA\"/><stop offset=\"100%\" stop-color=\"#00838F\"/></linearGradient>\n  <filter id=\"sh1\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(0,131,143,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g1)\" filter=\"url(#sh1)\"/>\n  <rect x=\"9\" y=\"42\" width=\"8\" height=\"10\" rx=\"2\" fill=\"rgba(255,255,255,0.45)\"/>\n  <rect x=\"21\" y=\"32\" width=\"8\" height=\"20\" rx=\"2\" fill=\"rgba(255,255,255,0.65)\"/>\n  <rect x=\"33\" y=\"24\" width=\"8\" height=\"28\" rx=\"2\" fill=\"rgba(255,255,255,0.85)\"/>\n  <rect x=\"45\" y=\"16\" width=\"8\" height=\"36\" rx=\"2\" fill=\"rgba(255,255,255,0.95)\"/>\n  <polyline points=\"13,34 25,24 37,17 49,10\" stroke=\"white\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\" opacity=\"0.7\"/>\n  <circle cx=\"13\" cy=\"34\" r=\"2.5\" fill=\"white\" opacity=\"0.8\"/><circle cx=\"25\" cy=\"24\" r=\"2.5\" fill=\"white\" opacity=\"0.8\"/>\n  <circle cx=\"37\" cy=\"17\" r=\"2.5\" fill=\"white\" opacity=\"0.8\"/><circle cx=\"49\" cy=\"10\" r=\"2.5\" fill=\"white\" opacity=\"0.8\"/>\n</svg>", "sleva": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g2\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#FFA726\"/><stop offset=\"100%\" stop-color=\"#E65100\"/></linearGradient>\n  <filter id=\"sh2\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(230,81,0,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g2)\" filter=\"url(#sh2)\"/>\n  <rect x=\"12\" y=\"8\" width=\"36\" height=\"44\" rx=\"5\" fill=\"rgba(255,255,255,0.92)\"/>\n  <rect x=\"16\" y=\"12\" width=\"28\" height=\"11\" rx=\"3\" fill=\"rgba(230,81,0,0.15)\"/>\n  <text x=\"42\" y=\"21\" text-anchor=\"end\" font-size=\"8\" font-weight=\"bold\" fill=\"rgba(230,81,0,0.8)\" font-family=\"monospace\">-25%</text>\n  <rect x=\"16\" y=\"27\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.25)\"/>\n  <rect x=\"26\" y=\"27\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.25)\"/>\n  <rect x=\"36\" y=\"27\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.5)\"/>\n  <rect x=\"16\" y=\"35\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.15)\"/>\n  <rect x=\"26\" y=\"35\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.15)\"/>\n  <rect x=\"36\" y=\"35\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.15)\"/>\n  <rect x=\"16\" y=\"43\" width=\"17\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.15)\"/>\n  <rect x=\"36\" y=\"43\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.5)\"/>\n  <text x=\"22\" y=\"41\" font-size=\"8\" font-weight=\"bold\" fill=\"rgba(230,81,0,0.5)\" font-family=\"sans-serif\">%</text>\n</svg>", "marze": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g3\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#66BB6A\"/><stop offset=\"100%\" stop-color=\"#2E7D32\"/></linearGradient>\n  <filter id=\"sh3\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(46,125,50,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g3)\" filter=\"url(#sh3)\"/>\n  <rect x=\"12\" y=\"8\" width=\"36\" height=\"44\" rx=\"5\" fill=\"rgba(255,255,255,0.92)\"/>\n  <rect x=\"16\" y=\"12\" width=\"28\" height=\"11\" rx=\"3\" fill=\"rgba(46,125,50,0.12)\"/>\n  <text x=\"42\" y=\"21\" text-anchor=\"end\" font-size=\"8\" font-weight=\"bold\" fill=\"rgba(46,125,50,0.8)\" font-family=\"monospace\">34.5%</text>\n  <rect x=\"16\" y=\"27\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.2)\"/>\n  <rect x=\"26\" y=\"27\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.2)\"/>\n  <rect x=\"36\" y=\"27\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.5)\"/>\n  <rect x=\"16\" y=\"35\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.12)\"/>\n  <rect x=\"26\" y=\"35\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.12)\"/>\n  <rect x=\"36\" y=\"35\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.12)\"/>\n  <rect x=\"16\" y=\"43\" width=\"17\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.12)\"/>\n  <rect x=\"36\" y=\"43\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.5)\"/>\n  <text x=\"30\" y=\"42\" text-anchor=\"middle\" font-size=\"16\" font-weight=\"bold\" fill=\"rgba(46,125,50,0.45)\" font-family=\"sans-serif\">%</text>\n</svg>", "nahradni": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g7\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#26A69A\"/><stop offset=\"100%\" stop-color=\"#00695C\"/></linearGradient>\n  <filter id=\"sh7\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(0,105,92,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g7)\" filter=\"url(#sh7)\"/>\n  <circle cx=\"22\" cy=\"16\" r=\"6\" fill=\"rgba(255,255,255,0.9)\"/>\n  <path d=\"M10,42 Q10,28 22,28 Q34,28 34,42\" fill=\"rgba(255,255,255,0.7)\"/>\n  <circle cx=\"40\" cy=\"20\" r=\"5\" fill=\"rgba(255,255,255,0.6)\"/>\n  <path d=\"M30,44 Q30,32 40,32 Q50,32 50,44\" fill=\"rgba(255,255,255,0.45)\"/>\n  <rect x=\"8\" y=\"48\" width=\"44\" height=\"3\" rx=\"1.5\" fill=\"rgba(255,255,255,0.3)\"/>\n</svg>", "kanban": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g4\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#AB47BC\"/><stop offset=\"100%\" stop-color=\"#6A1B9A\"/></linearGradient>\n  <filter id=\"sh4\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(106,27,154,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g4)\" filter=\"url(#sh4)\"/>\n  <rect x=\"8\" y=\"10\" width=\"13\" height=\"5\" rx=\"2.5\" fill=\"rgba(255,255,255,0.4)\"/>\n  <rect x=\"24\" y=\"10\" width=\"13\" height=\"5\" rx=\"2.5\" fill=\"rgba(255,255,255,0.4)\"/>\n  <rect x=\"40\" y=\"10\" width=\"13\" height=\"5\" rx=\"2.5\" fill=\"rgba(255,255,255,0.4)\"/>\n  <rect x=\"8\" y=\"18\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.9)\"/>\n  <rect x=\"8\" y=\"33\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.55)\"/>\n  <rect x=\"24\" y=\"18\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.55)\"/>\n  <rect x=\"24\" y=\"33\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.9)\"/>\n  <rect x=\"40\" y=\"18\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.55)\"/>\n  <rect x=\"40\" y=\"33\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.75)\"/>\n</svg>", "letak": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g5\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#EF5350\"/><stop offset=\"100%\" stop-color=\"#B71C1C\"/></linearGradient>\n  <filter id=\"sh5\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(183,28,28,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g5)\" filter=\"url(#sh5)\"/>\n  <rect x=\"14\" y=\"14\" width=\"28\" height=\"34\" rx=\"3\" fill=\"rgba(255,255,255,0.35)\" transform=\"rotate(-7 28 31)\"/>\n  <rect x=\"14\" y=\"14\" width=\"28\" height=\"34\" rx=\"3\" fill=\"rgba(255,255,255,0.55)\" transform=\"rotate(5 28 31)\"/>\n  <rect x=\"14\" y=\"11\" width=\"30\" height=\"38\" rx=\"3\" fill=\"white\"/>\n  <rect x=\"14\" y=\"11\" width=\"30\" height=\"9\" rx=\"3\" fill=\"rgba(239,83,80,0.85)\"/>\n  <rect x=\"14\" y=\"17\" width=\"30\" height=\"3\" fill=\"rgba(239,83,80,0.85)\"/>\n  <rect x=\"18\" y=\"24\" width=\"22\" height=\"2.5\" rx=\"1.2\" fill=\"rgba(0,0,0,0.2)\"/>\n  <rect x=\"18\" y=\"29\" width=\"18\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.13)\"/>\n  <rect x=\"18\" y=\"33\" width=\"20\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.13)\"/>\n  <rect x=\"18\" y=\"37\" width=\"15\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.13)\"/>\n  <rect x=\"18\" y=\"42\" width=\"22\" height=\"3\" rx=\"1.5\" fill=\"rgba(239,83,80,0.4)\"/>\n</svg>", "katalog": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g6\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#5C6BC0\"/><stop offset=\"100%\" stop-color=\"#283593\"/></linearGradient>\n  <filter id=\"sh6\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(40,53,147,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g6)\" filter=\"url(#sh6)\"/>\n  <rect x=\"8\" y=\"11\" width=\"44\" height=\"38\" rx=\"5\" fill=\"rgba(255,255,255,0.15)\" stroke=\"rgba(255,255,255,0.4)\" stroke-width=\"1.5\"/>\n  <rect x=\"8\" y=\"11\" width=\"44\" height=\"10\" rx=\"5\" fill=\"rgba(255,255,255,0.3)\"/>\n  <circle cx=\"15\" cy=\"16\" r=\"2.5\" fill=\"rgba(255,255,255,0.8)\"/>\n  <circle cx=\"22\" cy=\"16\" r=\"2.5\" fill=\"rgba(255,255,255,0.5)\"/>\n  <circle cx=\"29\" cy=\"16\" r=\"2.5\" fill=\"rgba(255,255,255,0.3)\"/>\n  <rect x=\"13\" y=\"25\" width=\"15\" height=\"11\" rx=\"2\" fill=\"rgba(255,255,255,0.7)\"/>\n  <rect x=\"32\" y=\"25\" width=\"15\" height=\"11\" rx=\"2\" fill=\"rgba(255,255,255,0.5)\"/>\n  <rect x=\"13\" y=\"39\" width=\"15\" height=\"6\" rx=\"2\" fill=\"rgba(255,255,255,0.4)\"/>\n  <rect x=\"32\" y=\"39\" width=\"15\" height=\"6\" rx=\"2\" fill=\"rgba(255,255,255,0.6)\"/>\n</svg>", "reklamace": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g8\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#78909C\"/><stop offset=\"100%\" stop-color=\"#37474F\"/></linearGradient>\n  <filter id=\"sh8\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(55,71,79,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g8)\" filter=\"url(#sh8)\"/>\n  <rect x=\"11\" y=\"14\" width=\"38\" height=\"38\" rx=\"4\" fill=\"rgba(255,255,255,0.92)\"/>\n  <rect x=\"22\" y=\"10\" width=\"16\" height=\"8\" rx=\"3\" fill=\"rgba(255,255,255,0.92)\"/>\n  <rect x=\"25\" y=\"8\" width=\"10\" height=\"6\" rx=\"3\" fill=\"rgba(120,144,156,0.6)\"/>\n  <line x1=\"16\" y1=\"21\" x2=\"21\" y2=\"26\" stroke=\"#EF5350\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <line x1=\"21\" y1=\"21\" x2=\"16\" y2=\"26\" stroke=\"#EF5350\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <rect x=\"25\" y=\"22\" width=\"20\" height=\"2.5\" rx=\"1.2\" fill=\"rgba(0,0,0,0.15)\"/>\n  <rect x=\"25\" y=\"26\" width=\"14\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.08)\"/>\n  <polyline points=\"16,36 19,39 25,33\" stroke=\"#66BB6A\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\"/>\n  <rect x=\"29\" y=\"34\" width=\"18\" height=\"2.5\" rx=\"1.2\" fill=\"rgba(0,0,0,0.15)\"/>\n  <rect x=\"29\" y=\"38\" width=\"12\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.08)\"/>\n  <rect x=\"16\" y=\"44\" width=\"28\" height=\"2\" rx=\"1\" fill=\"rgba(120,144,156,0.3)\"/>\n  <rect x=\"16\" y=\"47\" width=\"20\" height=\"2\" rx=\"1\" fill=\"rgba(120,144,156,0.2)\"/>\n</svg>", "crm": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"gc\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#FF442D\"/><stop offset=\"100%\" stop-color=\"#B71C1C\"/></linearGradient><filter id=\"shc\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(183,28,28,0.4)\"/></filter></defs><rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#gc)\" filter=\"url(#shc)\"/><circle cx=\"30\" cy=\"19\" r=\"9\" fill=\"rgba(255,255,255,0.92)\"/><path d=\"M12,46 Q12,31 30,31 Q48,31 48,46\" fill=\"rgba(255,255,255,0.75)\"/><rect x=\"18\" y=\"15\" width=\"24\" height=\"2\" rx=\"1\" fill=\"rgba(183,28,28,0.25)\"/><rect x=\"21\" y=\"19\" width=\"18\" height=\"2\" rx=\"1\" fill=\"rgba(183,28,28,0.15)\"/><text x=\"30\" y=\"43\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"bold\" fill=\"rgba(255,255,255,0.7)\" font-family=\"sans-serif\">CRM</text></svg>"};
+const SECTIONS = [{"title": "Obchodník", "color": "#3D5655", "projects": [{"name": "Přehled prodejů", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/ino_dashboard.html", "icon_key": "dashboard"}, {"name": "Kalkulačka slev", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/ino-sleva-kalkulacka.html", "icon_key": "sleva"}, {"name": "Kalkulačka marže", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/ino-slevova-pasma.html", "icon_key": "marze"}, {"name": "Náhradní plnění", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/ino_np_final.html", "icon_key": "nahradni"}, {"name": "CRM", "url": "https://crm.ino.cz", "icon_key": "crm"}]}, {"title": "Marketing", "color": "#FF442D", "projects": [{"name": "Kanban", "url": "https://dapper-geyser-p5kg.here.now/", "icon_key": "kanban"}, {"name": "Tvorba letáku", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/INO-letak-editor.html", "icon_key": "letak"}, {"name": "Tvorba HTML katalogu", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/flipbook-generator.html", "icon_key": "katalog"}, {"name": "Vyhodnocení reklamací", "url": "https://lukassykora11-source.github.io/project-ino-1994-asdfghjkl/vyhodnoceni_reklamaci.html", "icon_key": "reklamace"}]}];
 let sTimer, wTimer;
 
 async function sha256(s) {
@@ -524,7 +540,6 @@ function show(ms) {
   updateClock();
   if (!window._clockInterval) window._clockInterval = setInterval(updateClock, 1000);
   updateInfoBar();
-  fetchRates();
   showQuote();
 }
 
