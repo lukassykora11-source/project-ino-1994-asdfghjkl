@@ -61,9 +61,13 @@ body { font-family: 'GeneralSans', sans-serif; background: var(--soft); min-heig
 /* DASHBOARD */
 #dashboard-screen { display: none; flex-direction: column; min-height: 100vh; }
 .dashboard-content { flex: 1; padding: 48px 44px; max-width: 1280px; margin: 0 auto; width: 100%; }
-.dashboard-header { margin-bottom: 48px; }
-.dashboard-header h2 { font-family: 'Ladislav', serif; font-size: 38px; color: var(--green-gray); letter-spacing: 0.02em; margin-bottom: 8px; }
-.dashboard-header p { font-size: 15px; color: var(--gray60); }
+.dashboard-header { margin-bottom: 48px; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.dashboard-header-left h2 { font-family: 'Ladislav', serif; font-size: 38px; color: var(--green-gray); letter-spacing: 0.02em; margin-bottom: 8px; }
+.dashboard-header-left p { font-size: 15px; color: var(--gray60); }
+.dashboard-header-right { text-align: right; flex-shrink: 0; }
+.clock { font-family: 'Ladislav', serif; font-size: 38px; color: var(--green-gray); letter-spacing: 0.02em; line-height: 1; }
+.date-line { font-size: 14px; color: var(--gray60); margin-top: 6px; }
+.nameday-line { font-size: 13px; color: var(--gray60); margin-top: 3px; opacity: 0.75; }
 
 /* SEKCE */
 .section { margin-bottom: 52px; }
@@ -115,14 +119,44 @@ body { font-family: 'GeneralSans', sans-serif; background: var(--soft); min-heig
 .card-title { font-family: 'Ladislav', serif; font-size: 14.5px; color: var(--gray80); letter-spacing: 0.01em; line-height: 1.35; }
 
 /* TOAST */
-.toast { position: fixed; bottom: 24px; right: 24px; background: var(--green-gray); color: white; padding: 12px 22px; border-radius: 9px; font-size: 14px; opacity: 0; transform: translateY(10px); transition: all .3s; z-index: 999; pointer-events: none; }
+.info-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: white; border: 1px solid var(--gray10);
+  border-radius: 12px; padding: 13px 20px;
+  margin-bottom: 40px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  font-size: 14px; color: var(--gray60);
+}
+.info-bar-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.info-bar-item strong { color: var(--green-gray); font-weight: 700; }
+.info-bar-sep { color: var(--gray20); font-size: 18px; user-select: none; }
+.info-bar-loading { color: var(--gray20); font-style: italic; font-size: 13px; }
+
+.quote-bar {
+  margin-top: 48px;
+  border-top: 1px solid var(--gray10);
+  padding-top: 28px;
+  text-align: center;
+}
+.quote-text {
+  font-family: 'Ladislav', serif;
+  font-size: 17px; color: var(--green-gray);
+  letter-spacing: 0.01em; line-height: 1.5;
+  max-width: 640px; margin: 0 auto 8px;
+  opacity: 0; transition: opacity 0.8s ease;
+}
+.quote-text.visible { opacity: 1; }
+.quote-author { font-size: 12px; color: var(--gray60); letter-spacing: 0.06em; text-transform: uppercase; } position: fixed; bottom: 24px; right: 24px; background: var(--green-gray); color: white; padding: 12px 22px; border-radius: 9px; font-size: 14px; opacity: 0; transform: translateY(10px); transition: all .3s; z-index: 999; pointer-events: none; }
 .toast.show { opacity:1; transform:translateY(0); }
 .session-warn { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #fff3cd; color: #856404; border: 1px solid #ffc107; padding: 10px 22px; border-radius: 9px; font-size: 14px; display: none; z-index: 999; }
 
 @media (max-width: 680px) {
   .dashboard-content { padding: 20px 16px; }
   .topbar { padding: 0 16px; }
-  .dashboard-header h2 { font-size: 28px; }
+  .dashboard-header { flex-direction: column; gap: 16px; }
+  .dashboard-header-left h2 { font-size: 26px; }
+  .dashboard-header-right { text-align: left; }
+  .clock { font-size: 28px; }
   .projects-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .card-icon-wrap { width: 64px; height: 64px; }
   .card-title { font-size: 12px; }
@@ -162,10 +196,34 @@ body { font-family: 'GeneralSans', sans-serif; background: var(--soft); min-heig
 
   <div class="dashboard-content">
     <div class="dashboard-header">
-      <h2 id="greeting"></h2>
-      <p>Vyberte aplikaci, se kterou chcete pracovat</p>
+      <div class="dashboard-header-left">
+        <h2 id="greeting"></h2>
+        <p>Vyberte aplikaci, se kterou chcete pracovat</p>
+      </div>
+      <div class="dashboard-header-right">
+        <div class="clock" id="clock"></div>
+        <div class="date-line" id="dateline"></div>
+        <div class="nameday-line" id="nameday"></div>
+      </div>
+    </div>
+    <div class="info-bar" id="info-bar">
+      <div class="info-bar-item">📅 <span id="days-left"></span></div>
+      <div class="info-bar-sep">·</div>
+      <div class="info-bar-item">💼 <span id="workdays-left"></span></div>
+      <div class="info-bar-sep">·</div>
+      <div class="info-bar-item">🚫 <span id="holidays-this-month"></span></div>
+      <div class="info-bar-sep">·</div>
+      <div class="info-bar-item">📆 <span id="week-num"></span></div>
+      <div class="info-bar-sep">·</div>
+      <div class="info-bar-item">💶 EUR <strong id="eur-rate"><span class="info-bar-loading">načítám…</span></strong></div>
+      <div class="info-bar-sep">·</div>
+      <div class="info-bar-item">💵 USD <strong id="usd-rate"><span class="info-bar-loading">načítám…</span></strong></div>
     </div>
     <div id="sections"></div>
+    <div class="quote-bar">
+      <div class="quote-text" id="quote-text"></div>
+      <div class="quote-author" id="quote-author"></div>
+    </div>
   </div>
 </div>
 
@@ -173,6 +231,263 @@ body { font-family: 'GeneralSans', sans-serif; background: var(--soft); min-heig
 <div class="session-warn" id="sw">⚠ Přihlášení vyprší za 5 minut</div>
 
 <script>
+// Svátky - česká jména pro každý den v roce
+const NAMEDAYS = {
+  "1.1":"Nový rok – Nový rok","2.1":"Karina","3.1":"Radmila","4.1":"Diana","5.1":"Dalimil",
+  "6.1":"Tři králové – Kašpar","7.1":"Vilma","8.1":"Čestmír","9.1":"Vladan","10.1":"Břetislav",
+  "11.1":"Bohdana","12.1":"Pravoslav","13.1":"Edita","14.1":"Radovan","15.1":"Alice",
+  "16.1":"Ctirad","17.1":"Dětmar","18.1":"Vladislav","19.1":"Doubravka","20.1":"Ilona",
+  "21.1":"Běla","22.1":"Slavomír","23.1":"Zdeněk","24.1":"Milena","25.1":"Miloš",
+  "26.1":"Zora","27.1":"Ingrid","28.1":"Otýlie","29.1":"Zdislava","30.1":"Robin",
+  "31.1":"Marika","1.2":"Hynek","2.2":"Nela","3.2":"Blažej","4.2":"Jarmila",
+  "5.2":"Dobromila","6.2":"Vanda","7.2":"Veronika","8.2":"Milada","9.2":"Apolena",
+  "10.2":"Mojmír","11.2":"Dezider","12.2":"Slavěna","13.2":"Věnceslava","14.2":"Valentýn – Valentin",
+  "15.2":"Jiřina","16.2":"Ljuba","17.2":"Miloslav","18.2":"Gizela","19.2":"Patrik",
+  "20.2":"Oldřich","21.2":"Lenka","22.2":"Petr","23.2":"Svatopluk","24.2":"Matěj",
+  "25.2":"Liliana","26.2":"Dorota","27.2":"Alexandr","28.2":"Lumír","29.2":"Horymír",
+  "1.3":"Albín","2.3":"Anežka","3.3":"Kamil","4.3":"Stela","5.3":"Kazimír",
+  "6.3":"Miroslav","7.3":"Tomáš","8.3":"Gabriela","9.3":"Františka","10.3":"Viktorie",
+  "11.3":"Anděla","12.3":"Řehoř","13.3":"Růžena","14.3":"Rút – Matylda","15.3":"Ida",
+  "16.3":"Herbert","17.3":"Vlastimil","18.3":"Eduard","19.3":"Josef","20.3":"Světlana",
+  "21.3":"Radek","22.3":"Leona","23.3":"Ivona","24.3":"Gabriel","25.3":"Marián",
+  "26.3":"Emanuel","27.3":"Dita","28.3":"Soňa","29.3":"Taťána","30.3":"Arnošt",
+  "31.3":"Kvido","1.4":"Hugo","2.4":"Erika","3.4":"Richard","4.4":"Ivana",
+  "5.4":"Miroslava","6.4":"Vendula","7.4":"Heřman","8.4":"Ema","9.4":"Dušan",
+  "10.4":"Darja","11.4":"Izabela","12.4":"Julius","13.4":"Aleš","14.4":"Vincenc",
+  "15.4":"Anastázie","16.4":"Irena","17.4":"Rudolf","18.4":"Valérie","19.4":"Rostislav",
+  "20.4":"Marcela","21.4":"Alexandra","22.4":"Evženie","23.4":"Vojtěch","24.4":"Jiří",
+  "25.4":"Marek","26.4":"Oto","27.4":"Jaroslav","28.4":"Vlastislav","29.4":"Robert",
+  "30.4":"Blahoslav","1.5":"Svátek práce","2.5":"Zikmund","3.5":"Alexej","4.5":"Florian",
+  "5.5":"Klaudie","6.5":"Radoslav","7.5":"Stanislav","8.5":"Den vítězství – Stan.",
+  "9.5":"Ctibor","10.5":"Blažena","11.5":"Svatava","12.5":"Pankrác","13.5":"Servác",
+  "14.5":"Bonifác","15.5":"Žofie","16.5":"Přemysl","17.5":"Aneta","18.5":"Nataša",
+  "19.5":"Ivo","20.5":"Zbyšek","21.5":"Monika","22.5":"Emil","23.5":"Vladimír",
+  "24.5":"Jana","25.5":"Viola","26.5":"Filip","27.5":"Valdemar","28.5":"Vilém",
+  "29.5":"Maxmilián","30.5":"Ferdinand","31.5":"Kamila","1.6":"Laura","2.6":"Jarmil",
+  "3.6":"Tamara","4.6":"Dalibor","5.6":"Dobroslav","6.6":"Norbert","7.6":"Iveta",
+  "8.6":"Medard","9.6":"Stanislava","10.6":"Gita","11.6":"Antonie","12.6":"Radek",
+  "13.6":"Antonín","14.6":"Roland","15.6":"Vít","16.6":"Zbyněk","17.6":"Adolf",
+  "18.6":"Milan","19.6":"Leoš","20.6":"Květa","21.6":"Alois","22.6":"Pavla",
+  "23.6":"Zdeňka","24.6":"Jan","25.6":"Ivan","26.6":"Adriana","27.6":"Ladislav",
+  "28.6":"Lubomír","29.6":"Petr a Pavel","30.6":"Šárka","1.7":"Jaroslava","2.7":"Patricie",
+  "3.7":"Radomír","4.7":"Prokop","5.7":"Cyril a Metoděj","6.7":"Mistr Jan Hus",
+  "7.7":"Bohuslava","8.7":"Nora","9.7":"Drahoslava","10.7":"Libuše","11.7":"Olga",
+  "12.7":"Bořek","13.7":"Markéta","14.7":"Karolína","15.7":"Jindřich","16.7":"Luboš",
+  "17.7":"Martina","18.7":"Drahomíra","19.7":"Čeněk","20.7":"Ilja","21.7":"Vítězslav",
+  "22.7":"Magdaléna","23.7":"Libor","24.7":"Kristýna","25.7":"Jakub","26.7":"Anna",
+  "27.7":"Věroslav","28.7":"Viktor","29.7":"Marta","30.7":"Bořivoj","31.7":"Ignác",
+  "1.8":"Oskar","2.8":"Gustav","3.8":"Miluše","4.8":"Dominik","5.8":"Kristián",
+  "6.8":"Oldřiška","7.8":"Lada","8.8":"Soběslav","9.8":"Roman","10.8":"Vavřinec",
+  "11.8":"Zuzana","12.8":"Klára","13.8":"Alena","14.8":"Arnulf","15.8":"Hana",
+  "16.8":"Jáchym","17.8":"Petra","18.8":"Helena","19.8":"Ludvík","20.8":"Bernard",
+  "21.8":"Johana","22.8":"Bohumila","23.8":"Sandra","24.8":"Bartoloměj","25.8":"Radim",
+  "26.8":"Luděk","27.8":"Otakar","28.8":"Augustýn","29.8":"Evelína","30.8":"Vladěna",
+  "31.8":"Pavlína","1.9":"Linda","2.9":"Adéla","3.9":"Bronislav","4.9":"Jindřiška",
+  "5.9":"Boris","6.9":"Boleslav","7.9":"Regína","8.9":"Mariana","9.9":"Daniela",
+  "10.9":"Irma","11.9":"Denisa","12.9":"Marie","13.9":"Lubor","14.9":"Radka",
+  "15.9":"Jolana","16.9":"Ludmila","17.9":"Naděžda","18.9":"Kryštof","19.9":"Zita",
+  "20.9":"Oleg","21.9":"Matouš","22.9":"Darina","23.9":"Bořislav","24.9":"Jaromír",
+  "25.9":"Miloš – Zlata","26.9":"Andrea","27.9":"Jonáš","28.9":"Václav","29.9":"Michal",
+  "30.9":"Jeroným","1.10":"Igor","2.10":"Olivie","3.10":"Bohumil","4.10":"František",
+  "5.10":"Eliška","6.10":"Hanuš","7.10":"Justýna","8.10":"Věra","9.10":"Štefan",
+  "10.10":"Marina","11.10":"Andrej","12.10":"Marcel","13.10":"Renáta","14.10":"Agáta",
+  "15.10":"Tereza","16.10":"Havel","17.10":"Hedvika","18.10":"Lukáš","19.10":"Michaela",
+  "20.10":"Vendelín","21.10":"Brigita","22.10":"Sabina","23.10":"Teodor","24.10":"Radek – Šarlota",
+  "25.10":"Beáta","26.10":"Erik","27.10":"Šarlota – Zoe","28.10":"Den vzniku Československa",
+  "29.10":"Silvie","30.10":"Tadeáš","31.10":"Štěpánka","1.11":"Svátek všech svatých",
+  "2.11":"Památka zemřelých – Dušičky","3.11":"Hubert","4.11":"Karel","5.11":"Miriam",
+  "6.11":"Liběna","7.11":"Saskie","8.11":"Bohumír","9.11":"Bohdan","10.11":"Evžen",
+  "11.11":"Martin","12.11":"Renáta","13.11":"Tibor","14.11":"Sáva","15.11":"Leopold",
+  "16.11":"Otmar","17.11":"Den boje za svobodu","18.11":"Romana","19.11":"Alžběta",
+  "20.11":"Nikola","21.11":"Albert","22.11":"Cecílie","23.11":"Klement","24.11":"Emílie",
+  "25.11":"Kateřina","26.11":"Artur","27.11":"Xenie","28.11":"René","29.11":"Zina",
+  "30.11":"Ondřej","1.12":"Iva","2.12":"Blanka","3.12":"Svatoslav","4.12":"Barbora",
+  "5.12":"Mikuláš","6.12":"Mikuláš – Mikuláš","7.12":"Ambrož","8.12":"Marta",
+  "9.12":"Vratislav","10.12":"Julie","11.12":"Dana","12.12":"Simona","13.12":"Lucie",
+  "14.12":"Lýdie","15.12":"Radana","16.12":"Albína","17.12":"Daniel","18.12":"Miloslav",
+  "19.12":"Ester","20.12":"Dagmar","21.12":"Natálie","22.12":"Šimon","23.12":"Vlasta",
+  "24.12":"Štědrý den – Adam a Eva","25.12":"Boží hod vánoční – Anastázie","26.12":"Štěpán",
+  "27.12":"Žaneta","28.12":"Bohumila","29.12":"Judita","30.12":"David","31.12":"Silvestr"
+};
+
+const DAYS_CS = ['neděle','pondělí','úterý','středa','čtvrtek','pátek','sobota'];
+const MONTHS_CS = ['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
+
+function updateClock() {{
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  const el = document.getElementById('clock');
+  if (el) el.textContent = hh + ':' + mm;
+
+  const dl = document.getElementById('dateline');
+  if (dl) {{
+    const day = DAYS_CS[now.getDay()];
+    const d = now.getDate();
+    const m = MONTHS_CS[now.getMonth()];
+    const y = now.getFullYear();
+    dl.textContent = day.charAt(0).toUpperCase() + day.slice(1) + ' ' + d + '. ' + m + ' ' + y;
+  }}
+
+  const nd = document.getElementById('nameday');
+  if (nd) {{
+    const key = now.getDate() + '.' + (now.getMonth()+1);
+    const name = NAMEDAYS[key];
+    nd.innerHTML = name ? 'Dnes slaví: <strong style="color:var(--green-gray);font-weight:700;">' + name + '</strong>' : '';
+  }}
+}}
+
+// ── CITÁTY ──────────────────────────────────────────────
+const QUOTES = [
+  { text: "Nejlepší čas zavolat zákazníkovi je teď.", author: "" },
+  { text: "Prodej není o přesvědčování. Je o naslouchání.", author: "" },
+  { text: "Každé ne tě přibližuje k ano.", author: "" },
+  { text: "Zákazník si nekupuje produkt. Kupuje si lepší verzi sebe sama.", author: "" },
+  { text: "Důvěra se buduje roky, ztratí se za sekundu.", author: "" },
+  { text: "Nejúspěšnější obchodníci prodávají řešení, ne produkty.", author: "" },
+  { text: "Příprava není vše, ale bez přípravy není nic.", author: "" },
+  { text: "Každý zákazník je příležitost, ne povinnost.", author: "" },
+  { text: "Kdo se ptá, vede rozhovor. Kdo naslouchá, uzavírá obchod.", author: "" },
+  { text: "Úspěch není náhoda. Je to výsledek každodenní práce.", author: "" },
+  { text: "Lidé nekupují od firem. Kupují od lidí, kterým věří.", author: "" },
+  { text: "Nejlepší obchodník je ten, koho zákazník vnímá jako partnera.", author: "" },
+  { text: "Malá akce dnes je lepší než velký plán zítra.", author: "" },
+  { text: "Cena je argument až tehdy, když chybí hodnota.", author: "" },
+  { text: "Spokojený zákazník je nejlepší reklama.", author: "" },
+];
+
+function showQuote() {{
+  const idx = Math.floor(Date.now() / (1000 * 60 * 60 * 4)) % QUOTES.length;
+  const q = QUOTES[idx];
+  const el = document.getElementById('quote-text');
+  const au = document.getElementById('quote-author');
+  if (!el) return;
+  el.classList.remove('visible');
+  setTimeout(() => {{
+    el.textContent = '„' + q.text + '"';
+    if (au) au.textContent = q.author || '';
+    el.classList.add('visible');
+  }}, 200);
+}}
+
+// ── INFO BAR ─────────────────────────────────────────────
+function getWeekNumber(d) {{
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}}
+
+function getCzechHolidays(year) {{
+  // Pevné státní svátky ČR
+  const fixed = [
+    `${{year}}-01-01`, `${{year}}-05-01`, `${{year}}-05-08`,
+    `${{year}}-07-05`, `${{year}}-07-06`, `${{year}}-09-28`,
+    `${{year}}-10-28`, `${{year}}-11-17`, `${{year}}-12-24`,
+    `${{year}}-12-25`, `${{year}}-12-26`
+  ];
+  // Velikonoce (Gauss)
+  const a = year % 19, b = Math.floor(year/100), c = year % 100;
+  const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
+  const g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15) % 30;
+  const i = Math.floor(c/4), k = c % 4;
+  const l = (32+2*e+2*i-h-k) % 7;
+  const m = Math.floor((a+11*h+22*l)/451);
+  const month = Math.floor((h+l-7*m+114)/31);
+  const day = ((h+l-7*m+114) % 31) + 1;
+  const easter = new Date(year, month-1, day);
+  // Velký pátek
+  const gf = new Date(easter); gf.setDate(gf.getDate()-2);
+  // Velikonoční pondělí
+  const em = new Date(easter); em.setDate(em.getDate()+1);
+  const fmt = d => d.toISOString().slice(0,10);
+  return new Set([...fixed, fmt(gf), fmt(em)]);
+}}
+
+function updateInfoBar() {{
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const today = now.getDate();
+  const daysLeft = lastDay - today;
+
+  const holidays = getCzechHolidays(year);
+  let workdays = 0;
+  for (let d = today + 1; d <= lastDay; d++) {{
+    const date = new Date(year, month, d);
+    const dow = date.getDay();
+    const iso = date.toISOString().slice(0,10);
+    if (dow !== 0 && dow !== 6 && !holidays.has(iso)) workdays++;
+  }}
+
+  const week = getWeekNumber(now);
+  const HOLIDAY_NAMES = {
+    '01-01': 'Nový rok', '05-01': 'Svátek práce', '05-08': 'Den vítězství',
+    '07-05': 'Cyril a Metoděj', '07-06': 'Jan Hus', '09-28': 'Den české státnosti',
+    '10-28': 'Vznik Československa', '11-17': 'Den svobody',
+    '12-24': 'Štědrý den', '12-25': 'Boží hod', '12-26': 'Štěpán'
+  };
+
+  // Svátky tento měsíc
+  const monthStr = String(month+1).padStart(2,'0');
+  const monthHolidays = [];
+  holidays.forEach(iso => {{
+    if (iso.startsWith(year + '-' + monthStr)) {{
+      const d = parseInt(iso.slice(8,10));
+      const mmdd = iso.slice(5);
+      // Velikonoce nemají pevný název v HOLIDAY_NAMES, doplníme
+      let name = HOLIDAY_NAMES[mmdd];
+      if (!name) {{
+        const dow = new Date(iso).getDay();
+        name = dow === 5 ? 'Velký pátek' : 'Vel. pondělí';
+      }}
+      monthHolidays.push(d + '. ' + name);
+    }}
+  }});
+  monthHolidays.sort((a,b) => parseInt(a) - parseInt(b));
+
+  const dl = document.getElementById('days-left');
+  const wd = document.getElementById('workdays-left');
+  const wn = document.getElementById('week-num');
+  const hm = document.getElementById('holidays-this-month');
+
+  if (dl) dl.innerHTML = '<strong>' + daysLeft + '</strong> dní do konce měsíce';
+  if (wd) wd.innerHTML = '<strong>' + workdays + '</strong> pracovních dní do konce měsíce';
+  if (wn) wn.innerHTML = '<strong>' + week + '</strong>. týden v roce';
+  if (hm) {{
+    if (monthHolidays.length > 0) {{
+      hm.innerHTML = monthHolidays.map(h => '<strong>' + h + '</strong>').join(', ');
+    }} else {{
+      hm.innerHTML = '<span style=\"color:var(--gray20)\">žádné svátky</span>';
+    }}
+  }}
+}}
+async function fetchRates() {{
+  try {{
+    const res = await fetch('https://api.frankfurter.app/latest?from=EUR,USD&to=CZK');
+    const data = await res.json();
+    const eur = document.getElementById('eur-rate');
+    const usd = document.getElementById('usd-rate');
+    if (eur && data.rates && data.rates.CZK) {{
+      eur.textContent = data.rates.CZK.toFixed(2).replace('.',',') + ' Kč';
+    }}
+    // USD→CZK: fetch separately
+    const res2 = await fetch('https://api.frankfurter.app/latest?from=USD&to=CZK');
+    const data2 = await res2.json();
+    if (usd && data2.rates && data2.rates.CZK) {{
+      usd.textContent = data2.rates.CZK.toFixed(2).replace('.',',') + ' Kč';
+    }}
+  }} catch(e) {{
+    const eur = document.getElementById('eur-rate');
+    const usd = document.getElementById('usd-rate');
+    if (eur) eur.textContent = 'nedostupné';
+    if (usd) usd.textContent = 'nedostupné';
+  }}
+}}
+
 const USER_HASH  = "93066bafc9a53ef3842b10a7811cf02982780fe84b3add361e527f6124c66bf0";
 const SESSION_MS = 8 * 60 * 60 * 1000;
 const ICONS   = {"dashboard": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g1\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#26C6DA\"/><stop offset=\"100%\" stop-color=\"#00838F\"/></linearGradient>\n  <filter id=\"sh1\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(0,131,143,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g1)\" filter=\"url(#sh1)\"/>\n  <rect x=\"9\" y=\"42\" width=\"8\" height=\"10\" rx=\"2\" fill=\"rgba(255,255,255,0.45)\"/>\n  <rect x=\"21\" y=\"32\" width=\"8\" height=\"20\" rx=\"2\" fill=\"rgba(255,255,255,0.65)\"/>\n  <rect x=\"33\" y=\"24\" width=\"8\" height=\"28\" rx=\"2\" fill=\"rgba(255,255,255,0.85)\"/>\n  <rect x=\"45\" y=\"16\" width=\"8\" height=\"36\" rx=\"2\" fill=\"rgba(255,255,255,0.95)\"/>\n  <polyline points=\"13,34 25,24 37,17 49,10\" stroke=\"white\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\" opacity=\"0.7\"/>\n  <circle cx=\"13\" cy=\"34\" r=\"2.5\" fill=\"white\" opacity=\"0.8\"/><circle cx=\"25\" cy=\"24\" r=\"2.5\" fill=\"white\" opacity=\"0.8\"/>\n  <circle cx=\"37\" cy=\"17\" r=\"2.5\" fill=\"white\" opacity=\"0.8\"/><circle cx=\"49\" cy=\"10\" r=\"2.5\" fill=\"white\" opacity=\"0.8\"/>\n</svg>", "sleva": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g2\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#FFA726\"/><stop offset=\"100%\" stop-color=\"#E65100\"/></linearGradient>\n  <filter id=\"sh2\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(230,81,0,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g2)\" filter=\"url(#sh2)\"/>\n  <rect x=\"12\" y=\"8\" width=\"36\" height=\"44\" rx=\"5\" fill=\"rgba(255,255,255,0.92)\"/>\n  <rect x=\"16\" y=\"12\" width=\"28\" height=\"11\" rx=\"3\" fill=\"rgba(230,81,0,0.15)\"/>\n  <text x=\"42\" y=\"21\" text-anchor=\"end\" font-size=\"8\" font-weight=\"bold\" fill=\"rgba(230,81,0,0.8)\" font-family=\"monospace\">-25%</text>\n  <rect x=\"16\" y=\"27\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.25)\"/>\n  <rect x=\"26\" y=\"27\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.25)\"/>\n  <rect x=\"36\" y=\"27\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.5)\"/>\n  <rect x=\"16\" y=\"35\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.15)\"/>\n  <rect x=\"26\" y=\"35\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.15)\"/>\n  <rect x=\"36\" y=\"35\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.15)\"/>\n  <rect x=\"16\" y=\"43\" width=\"17\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.15)\"/>\n  <rect x=\"36\" y=\"43\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(230,81,0,0.5)\"/>\n  <text x=\"22\" y=\"41\" font-size=\"8\" font-weight=\"bold\" fill=\"rgba(230,81,0,0.5)\" font-family=\"sans-serif\">%</text>\n</svg>", "marze": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g3\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#66BB6A\"/><stop offset=\"100%\" stop-color=\"#2E7D32\"/></linearGradient>\n  <filter id=\"sh3\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(46,125,50,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g3)\" filter=\"url(#sh3)\"/>\n  <rect x=\"12\" y=\"8\" width=\"36\" height=\"44\" rx=\"5\" fill=\"rgba(255,255,255,0.92)\"/>\n  <rect x=\"16\" y=\"12\" width=\"28\" height=\"11\" rx=\"3\" fill=\"rgba(46,125,50,0.12)\"/>\n  <text x=\"42\" y=\"21\" text-anchor=\"end\" font-size=\"8\" font-weight=\"bold\" fill=\"rgba(46,125,50,0.8)\" font-family=\"monospace\">34.5%</text>\n  <rect x=\"16\" y=\"27\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.2)\"/>\n  <rect x=\"26\" y=\"27\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.2)\"/>\n  <rect x=\"36\" y=\"27\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.5)\"/>\n  <rect x=\"16\" y=\"35\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.12)\"/>\n  <rect x=\"26\" y=\"35\" width=\"7\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.12)\"/>\n  <rect x=\"36\" y=\"35\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.12)\"/>\n  <rect x=\"16\" y=\"43\" width=\"17\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.12)\"/>\n  <rect x=\"36\" y=\"43\" width=\"8\" height=\"6\" rx=\"2\" fill=\"rgba(46,125,50,0.5)\"/>\n  <text x=\"30\" y=\"42\" text-anchor=\"middle\" font-size=\"16\" font-weight=\"bold\" fill=\"rgba(46,125,50,0.45)\" font-family=\"sans-serif\">%</text>\n</svg>", "nahradni": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g7\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#26A69A\"/><stop offset=\"100%\" stop-color=\"#00695C\"/></linearGradient>\n  <filter id=\"sh7\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(0,105,92,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g7)\" filter=\"url(#sh7)\"/>\n  <circle cx=\"22\" cy=\"16\" r=\"6\" fill=\"rgba(255,255,255,0.9)\"/>\n  <path d=\"M10,42 Q10,28 22,28 Q34,28 34,42\" fill=\"rgba(255,255,255,0.7)\"/>\n  <circle cx=\"40\" cy=\"20\" r=\"5\" fill=\"rgba(255,255,255,0.6)\"/>\n  <path d=\"M30,44 Q30,32 40,32 Q50,32 50,44\" fill=\"rgba(255,255,255,0.45)\"/>\n  <rect x=\"8\" y=\"48\" width=\"44\" height=\"3\" rx=\"1.5\" fill=\"rgba(255,255,255,0.3)\"/>\n</svg>", "kanban": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g4\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#AB47BC\"/><stop offset=\"100%\" stop-color=\"#6A1B9A\"/></linearGradient>\n  <filter id=\"sh4\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(106,27,154,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g4)\" filter=\"url(#sh4)\"/>\n  <rect x=\"8\" y=\"10\" width=\"13\" height=\"5\" rx=\"2.5\" fill=\"rgba(255,255,255,0.4)\"/>\n  <rect x=\"24\" y=\"10\" width=\"13\" height=\"5\" rx=\"2.5\" fill=\"rgba(255,255,255,0.4)\"/>\n  <rect x=\"40\" y=\"10\" width=\"13\" height=\"5\" rx=\"2.5\" fill=\"rgba(255,255,255,0.4)\"/>\n  <rect x=\"8\" y=\"18\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.9)\"/>\n  <rect x=\"8\" y=\"33\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.55)\"/>\n  <rect x=\"24\" y=\"18\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.55)\"/>\n  <rect x=\"24\" y=\"33\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.9)\"/>\n  <rect x=\"40\" y=\"18\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.55)\"/>\n  <rect x=\"40\" y=\"33\" width=\"13\" height=\"12\" rx=\"3\" fill=\"rgba(255,255,255,0.75)\"/>\n</svg>", "letak": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g5\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#EF5350\"/><stop offset=\"100%\" stop-color=\"#B71C1C\"/></linearGradient>\n  <filter id=\"sh5\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(183,28,28,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g5)\" filter=\"url(#sh5)\"/>\n  <rect x=\"14\" y=\"14\" width=\"28\" height=\"34\" rx=\"3\" fill=\"rgba(255,255,255,0.35)\" transform=\"rotate(-7 28 31)\"/>\n  <rect x=\"14\" y=\"14\" width=\"28\" height=\"34\" rx=\"3\" fill=\"rgba(255,255,255,0.55)\" transform=\"rotate(5 28 31)\"/>\n  <rect x=\"14\" y=\"11\" width=\"30\" height=\"38\" rx=\"3\" fill=\"white\"/>\n  <rect x=\"14\" y=\"11\" width=\"30\" height=\"9\" rx=\"3\" fill=\"rgba(239,83,80,0.85)\"/>\n  <rect x=\"14\" y=\"17\" width=\"30\" height=\"3\" fill=\"rgba(239,83,80,0.85)\"/>\n  <rect x=\"18\" y=\"24\" width=\"22\" height=\"2.5\" rx=\"1.2\" fill=\"rgba(0,0,0,0.2)\"/>\n  <rect x=\"18\" y=\"29\" width=\"18\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.13)\"/>\n  <rect x=\"18\" y=\"33\" width=\"20\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.13)\"/>\n  <rect x=\"18\" y=\"37\" width=\"15\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.13)\"/>\n  <rect x=\"18\" y=\"42\" width=\"22\" height=\"3\" rx=\"1.5\" fill=\"rgba(239,83,80,0.4)\"/>\n</svg>", "katalog": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g6\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#5C6BC0\"/><stop offset=\"100%\" stop-color=\"#283593\"/></linearGradient>\n  <filter id=\"sh6\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(40,53,147,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g6)\" filter=\"url(#sh6)\"/>\n  <rect x=\"8\" y=\"11\" width=\"44\" height=\"38\" rx=\"5\" fill=\"rgba(255,255,255,0.15)\" stroke=\"rgba(255,255,255,0.4)\" stroke-width=\"1.5\"/>\n  <rect x=\"8\" y=\"11\" width=\"44\" height=\"10\" rx=\"5\" fill=\"rgba(255,255,255,0.3)\"/>\n  <circle cx=\"15\" cy=\"16\" r=\"2.5\" fill=\"rgba(255,255,255,0.8)\"/>\n  <circle cx=\"22\" cy=\"16\" r=\"2.5\" fill=\"rgba(255,255,255,0.5)\"/>\n  <circle cx=\"29\" cy=\"16\" r=\"2.5\" fill=\"rgba(255,255,255,0.3)\"/>\n  <rect x=\"13\" y=\"25\" width=\"15\" height=\"11\" rx=\"2\" fill=\"rgba(255,255,255,0.7)\"/>\n  <rect x=\"32\" y=\"25\" width=\"15\" height=\"11\" rx=\"2\" fill=\"rgba(255,255,255,0.5)\"/>\n  <rect x=\"13\" y=\"39\" width=\"15\" height=\"6\" rx=\"2\" fill=\"rgba(255,255,255,0.4)\"/>\n  <rect x=\"32\" y=\"39\" width=\"15\" height=\"6\" rx=\"2\" fill=\"rgba(255,255,255,0.6)\"/>\n</svg>", "reklamace": "<svg viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\">\n  <defs><linearGradient id=\"g8\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"#78909C\"/><stop offset=\"100%\" stop-color=\"#37474F\"/></linearGradient>\n  <filter id=\"sh8\"><feDropShadow dx=\"0\" dy=\"2\" stdDeviation=\"2.5\" flood-color=\"rgba(55,71,79,0.4)\"/></filter></defs>\n  <rect width=\"60\" height=\"60\" rx=\"13\" fill=\"url(#g8)\" filter=\"url(#sh8)\"/>\n  <rect x=\"11\" y=\"14\" width=\"38\" height=\"38\" rx=\"4\" fill=\"rgba(255,255,255,0.92)\"/>\n  <rect x=\"22\" y=\"10\" width=\"16\" height=\"8\" rx=\"3\" fill=\"rgba(255,255,255,0.92)\"/>\n  <rect x=\"25\" y=\"8\" width=\"10\" height=\"6\" rx=\"3\" fill=\"rgba(120,144,156,0.6)\"/>\n  <line x1=\"16\" y1=\"21\" x2=\"21\" y2=\"26\" stroke=\"#EF5350\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <line x1=\"21\" y1=\"21\" x2=\"16\" y2=\"26\" stroke=\"#EF5350\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <rect x=\"25\" y=\"22\" width=\"20\" height=\"2.5\" rx=\"1.2\" fill=\"rgba(0,0,0,0.15)\"/>\n  <rect x=\"25\" y=\"26\" width=\"14\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.08)\"/>\n  <polyline points=\"16,36 19,39 25,33\" stroke=\"#66BB6A\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" fill=\"none\"/>\n  <rect x=\"29\" y=\"34\" width=\"18\" height=\"2.5\" rx=\"1.2\" fill=\"rgba(0,0,0,0.15)\"/>\n  <rect x=\"29\" y=\"38\" width=\"12\" height=\"2\" rx=\"1\" fill=\"rgba(0,0,0,0.08)\"/>\n  <rect x=\"16\" y=\"44\" width=\"28\" height=\"2\" rx=\"1\" fill=\"rgba(120,144,156,0.3)\"/>\n  <rect x=\"16\" y=\"47\" width=\"20\" height=\"2\" rx=\"1\" fill=\"rgba(120,144,156,0.2)\"/>\n</svg>"};
@@ -206,6 +521,11 @@ function show(ms) {
   const h = new Date().getHours();
   document.getElementById('greeting').textContent = h<12?'Dobré ráno.':h<17?'Dobrý den.':'Dobrý večer.';
   render(); armTimers(ms);
+  updateClock();
+  if (!window._clockInterval) window._clockInterval = setInterval(updateClock, 1000);
+  updateInfoBar();
+  fetchRates();
+  showQuote();
 }
 
 function getIcon(p) {
