@@ -150,7 +150,9 @@ tr:hover td{background:#fdf9f8}
         <div id="barChart"></div>
         <div class="leg">
           <div class="leg-item"><div class="leg-dot" style="background:var(--pastel)"></div>Plán</div>
-          <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div>Obrat 2026</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>Splněno ≥100 %</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#FD8F30"></div>Blízko 90–99 %</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div>Pod plánem &lt;90 %</div>
         </div>
       </div>
       <div class="chart-card">
@@ -164,7 +166,9 @@ tr:hover td{background:#fdf9f8}
         <div id="barChartMarze"></div>
         <div class="leg">
           <div class="leg-item"><div class="leg-dot" style="background:var(--pastel)"></div>Plán</div>
-          <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>Marže 2026</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>Splněno ≥100 %</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#FD8F30"></div>Blízko 90–99 %</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div>Pod plánem &lt;90 %</div>
         </div>
       </div>
       <div class="chart-card">
@@ -305,7 +309,6 @@ function selectOZ(name){
 function kc(n){return Math.round(n).toLocaleString("cs-CZ")+" Kč";}
 function Mf(n){return (Math.round(n/100000)/10).toLocaleString("cs-CZ")+" M Kč";}
 function pct(a,b){return b>0?Math.round(a/b*100):null;}
-function prirazka(o,m){const n=o-m;return n>0?Math.round(m/n*100):null;}
 
 function renderOZ(name){
   document.getElementById("ozDetail").classList.add("visible");
@@ -352,8 +355,8 @@ function renderOZ(name){
     if(!r){ pHtml+=`<div class="period-card"><div class="period-head">${p.label}</div><div class="period-body" style="color:var(--muted);font-size:12px;padding:16px">Bez dat</div></div>`; return; }
     const oPct = pct(r.o26,r.pO);
     const mPct2 = pct(r.m26,r.pM);
-    const oCol = oPct===null?"var(--green)":oPct>=100?"var(--green)":oPct>=90?"#FD8F30":"var(--red)";
-    const mCol = mPct2===null?"var(--green)":mPct2>=100?"var(--green)":mPct2>=90?"#FD8F30":"var(--red)";
+    const oCol = statusColor(r.o26, r.pO);
+    const mCol = statusColor(r.m26, r.pM);
     const pr = prirazka(r.o26,r.m26);
     pHtml+=`<div class="period-card">
       <div class="period-head">${p.label}</div>
@@ -442,11 +445,12 @@ function renderTab(i){
   top8.forEach(r=>{
     const p26=Math.round(r.o26/maxV*100);
     const pPl=r.pO>0?Math.round(r.pO/maxV*100):0;
+    const col=statusColor(r.o26,r.pO);
     bHtml+=`<div class="bar-row">
       <div class="bar-name">${r.oz.split(" ")[0]}</div>
       <div class="bar-track">
         ${pPl>0?`<div class="bar-plan" style="width:${pPl}%"></div>`:""}
-        <div class="bar-act" style="width:${p26}%"></div>
+        <div class="bar-act" style="width:${p26}%;background:${col}"></div>
       </div>
       <div class="bar-val">${Math.round(r.o26/1000)}k</div>
     </div>`;
@@ -457,7 +461,7 @@ function renderTab(i){
   let pH="";
   wp.forEach(r=>{
     const p=Math.round(r.o26/r.pO*100);
-    const col=p>=100?"var(--green)":p>=90?"#FD8F30":"var(--red)";
+    const col=statusColor(r.o26,r.pO);
     pH+=`<div class="plan-row">
       <div class="plan-name">${r.oz.split(" ")[0]}</div>
       <div class="plan-track"><div class="plan-fill" style="width:${Math.min(p,100)}%;background:${col}"></div></div>
@@ -472,11 +476,12 @@ function renderTab(i){
   top8m.forEach(r=>{
     const pm26=Math.round(r.m26/maxM*100);
     const pmPl=r.pM>0?Math.round(r.pM/maxM*100):0;
+    const col=statusColor(r.m26,r.pM);
     bmHtml+=`<div class="bar-row">
       <div class="bar-name">${r.oz.split(" ")[0]}</div>
       <div class="bar-track">
         ${pmPl>0?`<div class="bar-plan" style="width:${pmPl}%"></div>`:""}
-        <div class="bar-act" style="width:${pm26}%;background:${r.pM>0&&r.m26>=r.pM?'var(--red)':'var(--green)'}"></div>
+        <div class="bar-act" style="width:${pm26}%;background:${col}"></div>
       </div>
       <div class="bar-val">${Math.round(r.m26/1000)}k</div>
     </div>`;
@@ -487,7 +492,7 @@ function renderTab(i){
   let pMH="";
   wpm.forEach(r=>{
     const p=Math.round(r.m26/r.pM*100);
-    const col=p>=100?"var(--green)":p>=90?"#FD8F30":"var(--red)";
+    const col=statusColor(r.m26,r.pM);
     pMH+=`<div class="plan-row">
       <div class="plan-name">${r.oz.split(" ")[0]}</div>
       <div class="plan-track"><div class="plan-fill" style="width:${Math.min(p,100)}%;background:${col}"></div></div>
@@ -519,6 +524,21 @@ function renderTab(i){
 }
 
 function prirazka(o,m){const n=o-m;return n>0?Math.round(m/n*100):null;}
+
+function statusColor(actual, plan){
+  if(!plan || plan<=0) return "#999";
+  const p = actual/plan*100;
+  if(p>=100) return "var(--green)";
+  if(p>=90) return "#FD8F30";
+  return "var(--red)";
+}
+function statusBadge(actual, plan){
+  if(!plan || plan<=0) return null;
+  const p = actual/plan*100;
+  if(p>=100) return "b-ok";
+  if(p>=90) return "b-warn";
+  return "b-bad";
+}
 </script>
 </body>
 </html>
