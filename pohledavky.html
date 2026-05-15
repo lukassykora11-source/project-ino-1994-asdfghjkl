@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>INO – Ceníková tabulka</title>
+<title>INO – Pohledávky</title>
 <style>
   @font-face {
     font-family: 'GeneralSans';
@@ -14,32 +14,49 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --red:    #FF442D;
-    --gray10: #E5E5E5;
-    --gray60: #666666;
+    --red:          #FF442D;
+    --green-gray:   #3D5655;
+    --soft-neutral: #FCFAF4;
+    --gray80:       #333333;
+    --gray60:       #666666;
+    --gray10:       #E5E5E5;
   }
 
-  html, body {
-    height: 100%;
-    font-family: 'GeneralSans', 'Helvetica Neue', sans-serif;
-    background: #fff;
+  body {
+    font-family: 'GeneralSans', sans-serif;
+    background: var(--soft-neutral);
+    min-height: 100vh;
+    color: var(--gray80);
     display: flex;
     flex-direction: column;
   }
 
-  .topbar {
+  /* ── HEADER — přesně jako kalkulačka ── */
+  .header {
+    background: var(--red);
+    padding: 20px 40px;
     display: flex;
     align-items: center;
-    padding: 0 28px;
-    height: 58px;
-    background: #fff;
-    border-bottom: 1px solid var(--gray10);
+    gap: 24px;
     flex-shrink: 0;
   }
 
-  .logo svg { height: 22px; width: auto; display: block; }
+  .logo-svg { height: 38px; width: auto; display: block; }
 
-  .sheet { flex: 1; position: relative; }
+  .header-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(255,255,255,0.4);
+  }
+
+  .header-title {
+    font-size: 15px;
+    font-weight: 400;
+    color: #fff;
+  }
+
+  /* ── IFRAME ── */
+  .sheet { flex: 1; position: relative; min-height: 0; }
 
   .sheet iframe {
     position: absolute;
@@ -56,7 +73,7 @@
     align-items: center;
     justify-content: center;
     gap: 12px;
-    background: #fff;
+    background: var(--soft-neutral);
     z-index: 2;
     transition: opacity .3s;
   }
@@ -77,16 +94,12 @@
 </head>
 <body>
 
-<div class="topbar">
-  <a class="logo" href="#">
-    <svg viewBox="0 0 407.1 206.3" xmlns="http://www.w3.org/2000/svg">
-      <path fill="#FF442D" d="M0,202.8h30V6.5H0V202.8z M185.3,166.3V6.4h-29.9v159.9c0,5.5-4.5,10-10,10
-        c-5.5,0-10-4.5-10-10V39.9c0-22-17.9-39.9-39.9-39.9c-22,0-39.9,17.9-39.9,39.9v7.6v154.4h29.9V47.5v-7.6
-        c0-5.5,4.5-10,10-10c5.5,0,10,4.5,10,10v126.4c0,22,17.9,39.9,39.9,39.9C167.4,206.2,185.3,188.3,185.3,166.3
-        M377,104.3c0,41.4-31.2,73.1-72,73.1c-40.8,0-72-31.7-72-73.1s31.2-73.1,72-73.1C345.9,31.2,377,62.9,377,104.3
-        M407.1,104.3c0-57.8-44.2-102-102-102s-102,44.2-102,102c0,57.8,44.2,102,102,102S407.1,162.1,407.1,104.3"/>
-    </svg>
-  </a>
+<div class="header">
+  <svg class="logo-svg" viewBox="0 0 407.1 206.3" xmlns="http://www.w3.org/2000/svg">
+    <path fill="white" d="M0,202.8h30V6.5H0V202.8z M185.3,166.3V6.4h-29.9v159.9c0,5.5-4.5,10-10,10c-5.5,0-10-4.5-10-10V39.9c0-22-17.9-39.9-39.9-39.9c-22,0-39.9,17.9-39.9,39.9v7.6v154.4h29.9V47.5v-7.6c0-5.5,4.5-10,10-10c5.5,0,10,4.5,10,10v126.4c0,22,17.9,39.9,39.9,39.9C167.4,206.2,185.3,188.3,185.3,166.3 M377,104.3c0,41.4-31.2,73.1-72,73.1c-40.8,0-72-31.7-72-73.1s31.2-73.1,72-73.1C345.9,31.2,377,62.9,377,104.3 M407.1,104.3c0-57.8-44.2-102-102-102s-102,44.2-102,102c0,57.8,44.2,102,102,102S407.1,162.1,407.1,104.3"/>
+  </svg>
+  <div class="header-divider"></div>
+  <div class="header-title">Pohledávky</div>
 </div>
 
 <div class="sheet">
@@ -95,8 +108,8 @@
     <span class="loader-text">Načítám tabulku…</span>
   </div>
   <iframe
-    src="https://docs.google.com/spreadsheets/d/13MnSlBAh6BZcnJllcDoU85QBameezka4/edit?usp=sharing&embedded=true&rm=minimal"
-    title="Ceníková tabulka INO"
+    src="https://docs.google.com/spreadsheets/d/13MnSlBAh6BZcnJllcDoU85QBameezka4/edit?usp=sharing&rm=minimal"
+    title="Pohledávky INO"
     onload="document.getElementById('loader').classList.add('hidden')"
   ></iframe>
 </div>
