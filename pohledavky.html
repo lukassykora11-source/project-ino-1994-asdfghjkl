@@ -3,116 +3,753 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>INO – Pohledávky</title>
+<title>INO — Přehled pohledávek</title>
 <style>
-  @font-face {
-    font-family: 'GeneralSans';
-    src: url('GeneralSans-Variable.ttf') format('truetype');
-    font-weight: 100 900;
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #FF442D;
+  --red-dark: #C8341F;
+  --green: #3D5655;
+  --pastel: #C3DCBE;
+  --bg: #FCFAF4;
+  --bg2: #F0EBE1;
+  --bg3: #E8E1D6;
+  --white: #ffffff;
+  --text: #1a1a1a;
+  --muted: #6b6b6b;
+  --border: rgba(61,86,85,0.14);
+  --border2: rgba(61,86,85,0.25);
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --radius: 10px;
+  --topbar-h: 56px;
+  --subbar-h: 44px;
+}
+html { font-size: 14px; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--green);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--topbar-h);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+.logo-block { display: flex; align-items: center; gap: 14px; }
+.logo svg { height: 24px; width: auto; display: block; flex-shrink: 0; }
+.logo-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.2); }
+.logo-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); letter-spacing: 0.04em; text-transform: uppercase; }
 
-  :root {
-    --red:          #FF442D;
-    --green-gray:   #3D5655;
-    --soft-neutral: #FCFAF4;
-    --gray80:       #333333;
-    --gray60:       #666666;
-    --gray10:       #E5E5E5;
-  }
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+.refresh-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.8);
+  font-size: 11px;
+  padding: 5px 11px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.refresh-btn:hover { background: rgba(255,255,255,0.15); color: white; }
+.refresh-btn:disabled { opacity: 0.5; cursor: default; }
+.refresh-btn .ico { display: inline-block; transition: transform 0.4s; }
+.refresh-btn.spinning .ico { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-  body {
-    font-family: 'GeneralSans', sans-serif;
-    background: var(--soft-neutral);
-    min-height: 100vh;
-    color: var(--gray80);
-    display: flex;
-    flex-direction: column;
-  }
+.sync-status { font-size: 11px; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.3); flex-shrink: 0; }
+.sync-dot.ok   { background: #7ecf7e; }
+.sync-dot.err  { background: #ff8877; }
+.sync-dot.spin { background: #ffd066; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-  /* ── HEADER — přesně jako kalkulačka ── */
-  .header {
-    background: var(--red);
-    padding: 20px 40px;
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    flex-shrink: 0;
-  }
+/* ── SUBBAR ── */
+.subbar {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--subbar-h);
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 190;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.subbar::-webkit-scrollbar { display: none; }
+.subbar-sep { width: 1px; height: 20px; background: var(--border2); flex-shrink: 0; }
 
-  .logo-svg { height: 38px; width: auto; display: block; }
+.wtab {
+  padding: 4px 12px; border-radius: 20px;
+  border: 1px solid var(--border2); color: var(--muted);
+  font-size: 12px; cursor: pointer; background: var(--white);
+  font-family: var(--font); transition: all 0.12s; white-space: nowrap; flex-shrink: 0;
+}
+.wtab:hover { border-color: var(--green); color: var(--green); }
+.wtab.active { background: var(--green); border-color: var(--green); color: white; font-weight: 600; }
 
-  .header-divider {
-    width: 1px;
-    height: 28px;
-    background: rgba(255,255,255,0.4);
-  }
+.rep-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); flex-shrink: 0; }
+.rbtn {
+  padding: 4px 12px; border-radius: 20px;
+  border: 1px solid var(--border2); background: var(--white);
+  color: var(--text); font-size: 12px; font-family: var(--font);
+  cursor: pointer; transition: all 0.12s; white-space: nowrap; flex-shrink: 0;
+}
+.rbtn:hover { border-color: var(--green); color: var(--green); }
+.rbtn.active { background: var(--green); border-color: var(--green); color: white; }
+.rbtn.all { background: var(--red); border-color: var(--red); color: white; font-weight: 600; }
+.rbtn.all:hover { background: var(--red-dark); border-color: var(--red-dark); }
 
-  .header-title {
-    font-size: 15px;
-    font-weight: 400;
-    color: #fff;
-  }
+.main { padding: 16px 24px 40px; max-width: 1400px; margin: 0 auto; }
 
-  /* ── IFRAME ── */
-  .sheet { flex: 1; position: relative; min-height: 0; }
+/* ── STATE: loading / error / empty ── */
+.state-msg {
+  text-align: center; padding: 80px 20px;
+  color: var(--muted); font-size: 14px;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.state-msg .spinner {
+  width: 36px; height: 36px; border: 3px solid var(--border2);
+  border-top-color: var(--green); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto 18px;
+}
+.state-msg.error { color: var(--red); }
+.state-msg .err-icon {
+  font-size: 32px; margin-bottom: 14px; display: block;
+}
+.state-msg .err-detail {
+  margin-top: 14px; font-size: 12px; color: var(--muted);
+  background: var(--bg); padding: 10px 14px; border-radius: 6px;
+  display: inline-block; max-width: 500px; text-align: left;
+  font-family: monospace; word-break: break-word; white-space: pre-wrap;
+}
+.state-msg .retry-btn {
+  margin-top: 18px; background: var(--green); color: white;
+  border: none; border-radius: 7px; padding: 8px 18px;
+  font-size: 13px; cursor: pointer; font-family: var(--font);
+  font-weight: 600;
+}
+.state-msg .retry-btn:hover { background: #2c4140; }
 
-  .sheet iframe {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-  }
+/* ── KPI ── */
+.kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 18px; }
+@media (max-width:700px) { .kpis { grid-template-columns: repeat(2,1fr); } }
+@media (max-width:400px) { .kpis { grid-template-columns: 1fr; } }
 
-  .loader {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    background: var(--soft-neutral);
-    z-index: 2;
-    transition: opacity .3s;
-  }
-  .loader.hidden { opacity: 0; pointer-events: none; }
+.kpi { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px 15px; border-left: 3px solid var(--border); }
+.kpi.ktotal { background: var(--green); border-color: var(--green); }
+.kpi.k30  { border-left-color: var(--green); }
+.kpi.k60  { border-left-color: #c06000; }
+.kpi.k90p { border-left-color: var(--red); }
+.kpi-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 5px; }
+.kpi.ktotal .kpi-lbl { color: rgba(255,255,255,0.65); }
+.kpi-val { font-size: 20px; font-weight: 700; line-height: 1; color: var(--text); }
+.kpi.ktotal .kpi-val { color: white; }
+.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.kpi.ktotal .kpi-sub { color: rgba(255,255,255,0.55); }
 
-  .spinner {
-    width: 28px;
-    height: 28px;
-    border: 3px solid var(--gray10);
-    border-top-color: var(--red);
-    border-radius: 50%;
-    animation: spin .7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* ── TABLE ── */
+.table-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 600px; }
 
-  .loader-text { font-size: 13px; color: var(--gray60); }
+thead { position: sticky; top: calc(var(--topbar-h) + var(--subbar-h)); z-index: 100; }
+thead tr { background: var(--green); }
+thead th {
+  padding: 9px 10px; font-weight: 500; font-size: 11px;
+  letter-spacing: 0.03em; text-align: right;
+  color: rgba(255,255,255,0.7); white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+thead th:first-child { text-align: left; color: white; padding-left: 14px; }
+thead th:last-child  { text-align: left; border-right: none; }
+thead th.h30  { color: var(--pastel); }
+thead th.h60  { color: #ffd4a0; }
+thead th.h90, thead th.h180, thead th.h365, thead th.h9999 { color: #ffaaaa; }
+
+tr.grp td {
+  background: var(--bg2); padding: 7px 10px;
+  font-weight: 700; font-size: 12px; color: var(--green);
+  border-top: 2px solid var(--bg3); border-bottom: 1px solid var(--border);
+  text-align: right;
+}
+tr.grp td:first-child { text-align: left; padding-left: 14px; }
+tr.grp td:last-child  { text-align: left; }
+
+.overdue-badge {
+  display: inline-block; background: #fff0ee; color: var(--red);
+  border: 1px solid #ffccc5; border-radius: 10px;
+  font-size: 10px; padding: 1px 7px; margin-left: 8px;
+  font-weight: 600; vertical-align: middle;
+}
+
+tr.drow { transition: background 0.1s; }
+tr.drow:hover { background: #f3ede3; }
+tr.drow td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--bg2); vertical-align: middle; }
+tr.drow td:first-child { text-align: left; padding-left: 22px; }
+tr.drow td:last-child  { text-align: left; }
+
+.name-cell { display: flex; align-items: center; gap: 6px; }
+.org-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); flex-shrink: 0; position: relative; cursor: default; }
+.org-dot::after {
+  content: attr(data-org);
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  background: var(--green); color: white; font-size: 10px;
+  padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 20;
+}
+.org-dot:hover::after { opacity: 1; }
+
+.amt { font-variant-numeric: tabular-nums; }
+.apos { color: var(--text); }
+.aneg { color: var(--red); font-weight: 500; }
+.atot { font-weight: 700; color: var(--text); }
+.atot.neg { color: var(--red); }
+.agrp-pos { color: var(--green); font-weight: 700; }
+.agrp-neg { color: var(--red); font-weight: 600; }
+
+tr.foot td {
+  background: var(--green); color: white; font-weight: 700;
+  font-size: 12.5px; padding: 10px; text-align: right;
+  border-top: 2px solid rgba(255,255,255,0.1);
+}
+tr.foot td:first-child { text-align: left; padding-left: 14px; }
+tr.foot td:last-child  { text-align: left; }
+
+.cbtn {
+  display: inline-block; border: 1px dashed #ccc; background: none;
+  border-radius: 5px; padding: 3px 8px; font-size: 11px; color: var(--muted);
+  cursor: pointer; font-family: var(--font); max-width: 150px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: all 0.12s;
+}
+.cbtn:hover { border-color: var(--green); color: var(--green); border-style: solid; }
+.cbtn.has   { border-style: solid; border-color: var(--green); color: var(--green); background: #edf5ed; }
+
+/* ── MODAL ── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(25,45,40,0.5);
+  display: none; align-items: center; justify-content: center; z-index: 500; padding: 20px;
+}
+.overlay.show { display: flex; }
+.dialog {
+  background: var(--white); border-radius: 14px; padding: 22px 24px 20px;
+  width: 100%; max-width: 420px; box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+}
+.dialog-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.dtitle { font-size: 14px; font-weight: 700; }
+.dsub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.dclose { background: none; border: none; font-size: 22px; color: var(--muted); cursor: pointer; line-height: 1; margin-left: 8px; }
+.author-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.author-row label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.author-row input {
+  flex: 1; border: 1px solid var(--border2); border-radius: 6px;
+  padding: 5px 9px; font-family: var(--font); font-size: 12px;
+  background: var(--bg); color: var(--text); outline: none;
+}
+.author-row input:focus { border-color: var(--green); }
+.dialog textarea {
+  width: 100%; border: 1px solid var(--border2); border-radius: 8px;
+  padding: 10px; font-family: var(--font); font-size: 13px;
+  min-height: 85px; resize: vertical; background: var(--bg); color: var(--text); outline: none;
+}
+.dialog textarea:focus { border-color: var(--green); }
+.dmeta { font-size: 10px; color: #bbb; margin: 5px 0 13px; min-height: 14px; }
+.dbtns { display: flex; gap: 8px; justify-content: flex-end; }
+.btn-x    { background: none; border: 1px solid var(--border2); border-radius: 7px; padding: 7px 13px; font-size: 12px; font-family: var(--font); cursor: pointer; color: var(--muted); }
+.btn-del  { background: none; border: 1px solid #f5ccc5; border-radius: 7px; padding: 7px 12px; font-size: 12px; font-family: var(--font); cursor: pointer; color: var(--red); }
+.btn-save { background: var(--red); border: none; border-radius: 7px; padding: 7px 18px; font-size: 12px; font-family: var(--font); cursor: pointer; color: white; font-weight: 600; }
+.btn-save:hover:not(:disabled) { background: var(--red-dark); }
+.btn-save:disabled { opacity: 0.5; cursor: default; }
+
+@media (max-width: 600px) {
+  .topbar { padding: 0 14px; }
+  .subbar { padding: 0 14px; }
+  .main   { padding: 12px 12px 40px; }
+  .logo-label { display: none; }
+  .refresh-btn span:not(.ico) { display: none; }
+}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <svg class="logo-svg" viewBox="0 0 407.1 206.3" xmlns="http://www.w3.org/2000/svg">
-    <path fill="white" d="M0,202.8h30V6.5H0V202.8z M185.3,166.3V6.4h-29.9v159.9c0,5.5-4.5,10-10,10c-5.5,0-10-4.5-10-10V39.9c0-22-17.9-39.9-39.9-39.9c-22,0-39.9,17.9-39.9,39.9v7.6v154.4h29.9V47.5v-7.6c0-5.5,4.5-10,10-10c5.5,0,10,4.5,10,10v126.4c0,22,17.9,39.9,39.9,39.9C167.4,206.2,185.3,188.3,185.3,166.3 M377,104.3c0,41.4-31.2,73.1-72,73.1c-40.8,0-72-31.7-72-73.1s31.2-73.1,72-73.1C345.9,31.2,377,62.9,377,104.3 M407.1,104.3c0-57.8-44.2-102-102-102s-102,44.2-102,102c0,57.8,44.2,102,102,102S407.1,162.1,407.1,104.3"/>
-  </svg>
-  <div class="header-divider"></div>
-  <div class="header-title">Pohledávky</div>
-</div>
-
-<div class="sheet">
-  <div class="loader" id="loader">
-    <div class="spinner"></div>
-    <span class="loader-text">Načítám tabulku…</span>
+<div class="topbar">
+  <div class="logo-block">
+    <div class="logo">
+      <svg viewBox="0 0 407.1 206.3" xmlns="http://www.w3.org/2000/svg" aria-label="INO logo">
+        <path fill="#FF442D" d="M0,202.8h30V6.5H0V202.8z M185.3,166.3V6.4h-29.9v159.9c0,5.5-4.5,10-10,10
+          c-5.5,0-10-4.5-10-10V39.9c0-22-17.9-39.9-39.9-39.9c-22,0-39.9,17.9-39.9,39.9v7.6v154.4h29.9V47.5v-7.6
+          c0-5.5,4.5-10,10-10c5.5,0,10,4.5,10,10v126.4c0,22,17.9,39.9,39.9,39.9C167.4,206.2,185.3,188.3,185.3,166.3
+          M377,104.3c0,41.4-31.2,73.1-72,73.1c-40.8,0-72-31.7-72-73.1s31.2-73.1,72-73.1C345.9,31.2,377,62.9,377,104.3
+          M407.1,104.3c0-57.8-44.2-102-102-102s-102,44.2-102,102c0,57.8,44.2,102,102,102S407.1,162.1,407.1,104.3"/>
+      </svg>
+    </div>
+    <div class="logo-divider"></div>
+    <div class="logo-label">Pohledávky</div>
   </div>
-  <iframe
-    src="https://docs.google.com/spreadsheets/d/13MnSlBAh6BZcnJllcDoU85QBameezka4/edit?usp=drive_link&ouid=107743878092237337918&rtpof=true&sd=true"
-    title="Pohledávky INO"
-    onload="document.getElementById('loader').classList.add('hidden')"
-  ></iframe>
+  <div class="topbar-right">
+    <button class="refresh-btn" id="refreshBtn" title="Načíst znovu data ze sheetu">
+      <span class="ico">↻</span><span>Obnovit</span>
+    </button>
+    <div class="sync-status">
+      <div class="sync-dot spin" id="syncDot"></div>
+      <span id="syncTxt">Načítám…</span>
+    </div>
+  </div>
 </div>
 
+<div class="subbar" id="subbar" style="display:none">
+  <div id="weekTabs" style="display:flex;gap:5px;flex-shrink:0"></div>
+  <div class="subbar-sep"></div>
+  <span class="rep-label">Obchodník:</span>
+  <div id="repBar" style="display:flex;gap:5px;flex-shrink:0"></div>
+</div>
+
+<div class="main" id="main">
+  <div class="state-msg" id="initialState">
+    <div class="spinner"></div>
+    Načítám data ze Google Sheets…
+  </div>
+</div>
+
+<div id="overlay" class="overlay">
+  <div class="dialog">
+    <div class="dialog-top">
+      <div>
+        <div class="dtitle" id="dTitle"></div>
+        <div class="dsub"   id="dSub"></div>
+      </div>
+      <button class="dclose" id="dClose">×</button>
+    </div>
+    <div class="author-row">
+      <label>Vaše jméno:</label>
+      <input type="text" id="dAuthor" placeholder="např. Jana Haluzíková">
+    </div>
+    <textarea id="dTA" placeholder="Napište komentář k zákazníkovi…"></textarea>
+    <div class="dmeta" id="dMeta"></div>
+    <div class="dbtns">
+      <button class="btn-del"  id="dDel" style="display:none">Smazat</button>
+      <button class="btn-x"    id="dCancel">Zrušit</button>
+      <button class="btn-save" id="dSave">Uložit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const API = 'https://script.google.com/macros/s/AKfycbwZQbhGEZj14YZGyNSyKxczcec9TaaG6EUAxGKgkRx34QHAOxOqWRAZ3UoFSW7JCw9lDg/exec';
+
+const COLS = ['d30','d60','d90','d180','d365','d9999'];
+const COL_LABELS = {d30:'30 dní', d60:'60 dní', d90:'90 dní', d180:'180 dní', d365:'365 dní', d9999:'9999'};
+const COL_CLS    = {d30:'h30', d60:'h60', d90:'h90', d180:'h90', d365:'h90', d9999:'h90'};
+
+let DATA = {};
+let WEEK_KEYS = [];
+let week = null;
+let repFilter = null;
+let comments = {};
+let modalKey = null;
+let savedAuthor = '';
+
+try { savedAuthor = localStorage.getItem('ino_author') || ''; } catch(e) {}
+
+const $ = id => document.getElementById(id);
+
+function setSyncStatus(state, txt) {
+  $('syncDot').className = 'sync-dot ' + state;
+  $('syncTxt').textContent = txt;
+}
+
+function showState(html, isError) {
+  $('subbar').style.display = 'none';
+  $('main').innerHTML = '<div class="state-msg' + (isError ? ' error' : '') + '">' + html + '</div>';
+}
+
+function showError(message, detail) {
+  const html = '<span class="err-icon">⚠️</span>' +
+    '<div style="font-size:15px;font-weight:600;color:var(--red)">' + escapeHtml(message) + '</div>' +
+    (detail ? '<div class="err-detail">' + escapeHtml(detail) + '</div>' : '') +
+    '<div><button class="retry-btn" id="retryBtn">Zkusit znovu</button></div>';
+  showState(html, true);
+  const btn = $('retryBtn');
+  if (btn) btn.addEventListener('click', loadAll);
+}
+
+function apiFetch(params, timeoutMs) {
+  timeoutMs = timeoutMs || 30000;
+  const url = API + '?' + new URLSearchParams(params);
+  return new Promise((resolve, reject) => {
+    const controller = new AbortController();
+    const tm = setTimeout(() => {
+      controller.abort();
+      reject(new Error('Časový limit (' + (timeoutMs/1000) + ' s) vypršel'));
+    }, timeoutMs);
+    fetch(url, { signal: controller.signal, redirect: 'follow' })
+      .then(r => {
+        clearTimeout(tm);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(data => {
+        if (data && data.error) reject(new Error(data.error));
+        else resolve(data);
+      })
+      .catch(err => { clearTimeout(tm); reject(err); });
+  });
+}
+
+function loadAll() {
+  setSyncStatus('spin', 'Načítám…');
+  $('refreshBtn').classList.add('spinning');
+  $('refreshBtn').disabled = true;
+
+  showState('<div class="spinner"></div>Načítám data ze Google Sheets…', false);
+
+  Promise.all([
+    apiFetch({ action: 'getData' }),
+    apiFetch({ action: 'getComments' })
+  ]).then(results => {
+    const dataRes = results[0];
+    const cmtRes  = results[1];
+
+    DATA = (dataRes && dataRes.sheets) || {};
+    WEEK_KEYS = Object.keys(DATA).sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+    comments = (cmtRes && cmtRes.comments) || {};
+
+    $('refreshBtn').classList.remove('spinning');
+    $('refreshBtn').disabled = false;
+
+    if (WEEK_KEYS.length === 0) {
+      showError('Žádná data nebyla nalezena', 'Sheet je prázdný nebo neobsahuje listy s pohledávkami.');
+      setSyncStatus('err', 'Žádná data');
+      return;
+    }
+
+    if (!week || WEEK_KEYS.indexOf(week) === -1) week = WEEK_KEYS[0];
+
+    setSyncStatus('ok', 'Aktuální data');
+    buildUI();
+  }).catch(err => {
+    console.error('Load error:', err);
+    setSyncStatus('err', 'Chyba načítání');
+    $('refreshBtn').classList.remove('spinning');
+    $('refreshBtn').disabled = false;
+    showError(
+      'Nepodařilo se načíst data',
+      'Důvod: ' + (err.message || 'neznámá chyba') +
+      '\n\nMožné příčiny:\n• Apps Script není správně nasazený\n• Sheet není přístupný\n• Problém s internetovým připojením'
+    );
+  });
+}
+
+function buildUI() {
+  $('subbar').style.display = 'flex';
+  $('main').innerHTML =
+    '<div class="kpis" id="kpis"></div>' +
+    '<div class="table-wrap"><div class="table-scroll">' +
+    '<table id="mainTable"><thead id="thead"></thead><tbody id="tbody"></tbody></table>' +
+    '</div></div>';
+
+  $('tbody').addEventListener('click', e => {
+    const b = e.target.closest('.cbtn');
+    if (b) openModal(b.dataset.key, b.dataset.name);
+  });
+
+  renderAll();
+}
+
+function renderAll() {
+  renderWeeks();
+  renderReps();
+  renderThead();
+  renderKPIs();
+  renderTable();
+}
+
+function renderWeeks() {
+  const el = $('weekTabs');
+  el.innerHTML = '';
+  WEEK_KEYS.forEach((w, i) => {
+    const b = document.createElement('button');
+    b.className = 'wtab' + (w === week ? ' active' : '');
+    b.textContent = 'Týden ' + w + (i === 0 ? ' ✦' : '');
+    b.dataset.week = w;
+    el.appendChild(b);
+  });
+}
+
+function allRepsForWeek() {
+  const d = DATA[week] || [];
+  return [...new Set(d.map(r => r.rep).filter(Boolean))];
+}
+
+function renderReps() {
+  const el = $('repBar');
+  el.innerHTML = '';
+  const all = document.createElement('button');
+  all.className = 'rbtn all' + (!repFilter ? ' active' : '');
+  all.textContent = 'Vše';
+  all.dataset.rep = '';
+  el.appendChild(all);
+  allRepsForWeek().forEach(r => {
+    const b = document.createElement('button');
+    b.className = 'rbtn' + (repFilter === r ? ' active' : '');
+    b.textContent = r.split(' ')[0];
+    b.dataset.rep = r;
+    el.appendChild(b);
+  });
+}
+
+function activeCols() {
+  const d = DATA[week] || [];
+  return COLS.filter(k => d.some(r => Math.abs(r[k] || 0) > 0.005));
+}
+
+function renderThead() {
+  const cols = activeCols();
+  let h = '<tr><th>Zákazník</th>';
+  cols.forEach(k => { h += `<th class="${COL_CLS[k]}">${COL_LABELS[k]}</th>`; });
+  h += '<th>Celkem</th><th>Komentář</th></tr>';
+  $('thead').innerHTML = h;
+}
+
+const cs  = v => new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+const csK = v => {
+  const a = Math.abs(v);
+  if (a >= 1000000) return (v/1000000).toFixed(1).replace('.', ',') + ' M Kč';
+  if (a >= 1000)    return Math.round(v/1000) + ' tis. Kč';
+  return Math.round(v) + ' Kč';
+};
+const sum = (arr, k) => arr.reduce((s, r) => s + (r[k] || 0), 0);
+
+function filteredRows() {
+  const d = DATA[week] || [];
+  return repFilter ? d.filter(r => r.rep === repFilter) : d;
+}
+
+function renderKPIs() {
+  const d = filteredRows();
+  const total  = COLS.reduce((s, k) => s + sum(d, k), 0);
+  const s30    = sum(d, 'd30');
+  const s60    = sum(d, 'd60');
+  const over90 = ['d90','d180','d365','d9999'].reduce((s, k) => s + sum(d, k), 0);
+  const kpi = (cls, lbl, val, sub, st) =>
+    `<div class="kpi ${cls}"><div class="kpi-lbl">${lbl}</div><div class="kpi-val" style="${st || ''}">${val}</div><div class="kpi-sub">${sub}</div></div>`;
+  $('kpis').innerHTML =
+    kpi('ktotal', 'Celkem pohledávky', csK(total), d.length + ' zákazníků', '') +
+    kpi('k30',    'Do 30 dní', csK(s30), 'v pořádku', 'color:var(--green)') +
+    kpi('k60',    '60 dní po splatnosti', csK(s60), 'sledovat', 'color:#b05500') +
+    kpi('k90p',   '90+ dní po splatnosti', csK(over90), 'urgovat', 'color:var(--red)');
+}
+
+function renderTable() {
+  const d = filteredRows();
+  const cols = activeCols();
+  const repList = [...new Set(d.map(r => r.rep).filter(Boolean))];
+  const tbody = $('tbody');
+  tbody.innerHTML = '';
+
+  if (d.length === 0) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td colspan="' + (cols.length + 3) + '" style="text-align:center;color:var(--muted);padding:30px;font-style:italic">Žádné záznamy pro tento výběr.</td>';
+    tbody.appendChild(tr);
+    return;
+  }
+
+  repList.forEach(rname => {
+    const rd = d.filter(r => r.rep === rname);
+    const rt = cols.map(k => sum(rd, k));
+    const rtot = rt.reduce((a, b) => a + b, 0);
+    const overdueSum = cols.filter(k => k !== 'd30').reduce((s, k) => s + sum(rd, k), 0);
+    const badge = overdueSum > 0.01
+      ? `<span class="overdue-badge">po splatnosti ${csK(overdueSum)}</span>` : '';
+
+    const grp = document.createElement('tr');
+    grp.className = 'grp';
+    let gh = `<td>${escapeHtml(rname)}${badge}</td>`;
+    rt.forEach(v => {
+      const cls = v < -0.005 ? 'agrp-neg' : (Math.abs(v) < 0.01 ? '' : 'agrp-pos');
+      gh += `<td class="${cls}">${Math.abs(v) < 0.01 ? '' : cs(v)}</td>`;
+    });
+    const rtotCls = rtot < -0.005 ? 'agrp-neg' : 'agrp-pos';
+    gh += `<td class="${rtotCls}">${cs(rtot)}</td><td></td>`;
+    grp.innerHTML = gh;
+    tbody.appendChild(grp);
+
+    rd.forEach(r => {
+      const rtotal = cols.reduce((s, k) => s + (r[k] || 0), 0);
+      const key = week + '__' + r.org;
+      const c = comments[key];
+      const btnTxt = c ? (c.text.length > 22 ? c.text.slice(0, 22) + '…' : c.text) : '+ přidat';
+
+      const tr = document.createElement('tr');
+      tr.className = 'drow';
+
+      const tdN = document.createElement('td');
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'name-cell';
+      const dot = document.createElement('span');
+      dot.className = 'org-dot';
+      dot.dataset.org = r.org;
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = r.name;
+      nameDiv.appendChild(dot);
+      nameDiv.appendChild(nameSpan);
+      tdN.appendChild(nameDiv);
+      tr.appendChild(tdN);
+
+      cols.forEach(k => {
+        const td = document.createElement('td');
+        const v = r[k] || 0;
+        if (Math.abs(v) >= 0.005) {
+          const span = document.createElement('span');
+          span.className = 'amt ' + (v < 0 ? 'aneg' : 'apos');
+          span.textContent = cs(v);
+          td.appendChild(span);
+        }
+        tr.appendChild(td);
+      });
+
+      const tdT = document.createElement('td');
+      tdT.className = 'atot' + (rtotal < -0.005 ? ' neg' : '');
+      if (Math.abs(rtotal) >= 0.01) tdT.textContent = cs(rtotal);
+      tr.appendChild(tdT);
+
+      const tdC = document.createElement('td');
+      const btn = document.createElement('button');
+      btn.className = 'cbtn' + (c ? ' has' : '');
+      btn.textContent = btnTxt;
+      btn.dataset.key = key;
+      btn.dataset.name = r.name;
+      tdC.appendChild(btn);
+      tr.appendChild(tdC);
+
+      tbody.appendChild(tr);
+    });
+  });
+
+  const totals = cols.map(k => sum(d, k));
+  const grand = totals.reduce((a, b) => a + b, 0);
+  const foot = document.createElement('tr');
+  foot.className = 'foot';
+  let fh = `<td>Celkový součet</td>`;
+  totals.forEach(v => { fh += `<td>${Math.abs(v) < 0.01 ? '' : cs(v)}</td>`; });
+  fh += `<td>${cs(grand)}</td><td></td>`;
+  foot.innerHTML = fh;
+  tbody.appendChild(foot);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function openModal(key, name) {
+  modalKey = key;
+  const c = comments[key];
+  $('dTitle').textContent = name;
+  $('dSub').textContent   = 'Týden ' + key.split('__')[0];
+  $('dTA').value          = c ? c.text : '';
+  $('dAuthor').value      = savedAuthor;
+  $('dMeta').textContent  = c ? `Napsal/a: ${c.author || '?'} — ${c.date}` : '';
+  $('dDel').style.display = c ? 'inline-block' : 'none';
+  $('dSave').disabled     = false;
+  $('dSave').textContent  = 'Uložit';
+  $('overlay').classList.add('show');
+  setTimeout(() => $('dTA').focus(), 60);
+}
+
+function closeModal() {
+  $('overlay').classList.remove('show');
+  modalKey = null;
+}
+
+function saveCommentAction() {
+  if (!modalKey) return;
+  const text = $('dTA').value.trim();
+  const author = $('dAuthor').value.trim();
+  if (author) {
+    savedAuthor = author;
+    try { localStorage.setItem('ino_author', author); } catch(e) {}
+  }
+  $('dSave').disabled = true;
+  $('dSave').textContent = 'Ukládám…';
+  setSyncStatus('spin', 'Ukládám…');
+
+  apiFetch({ action: 'saveComment', key: modalKey, text: text, author: author })
+    .then(() => {
+      if (text) {
+        comments[modalKey] = { text: text, author: author, date: new Date().toLocaleString('cs-CZ') };
+      } else {
+        delete comments[modalKey];
+      }
+      setSyncStatus('ok', 'Uloženo');
+      closeModal();
+      renderTable();
+    })
+    .catch(err => {
+      console.error('Save error:', err);
+      setSyncStatus('err', 'Chyba uložení');
+      $('dSave').disabled = false;
+      $('dSave').textContent = 'Uložit';
+      alert('Nepodařilo se uložit komentář.\n\n' + (err.message || ''));
+    });
+}
+
+function deleteCommentAction() {
+  if (!modalKey) return;
+  setSyncStatus('spin', 'Mažu…');
+  apiFetch({ action: 'saveComment', key: modalKey, text: '', author: '' })
+    .then(() => {
+      delete comments[modalKey];
+      setSyncStatus('ok', 'Smazáno');
+      closeModal();
+      renderTable();
+    })
+    .catch(err => {
+      setSyncStatus('err', 'Chyba mazání');
+      alert('Nepodařilo se smazat komentář.\n\n' + (err.message || ''));
+    });
+}
+
+$('weekTabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-week]');
+  if (!b) return;
+  week = b.dataset.week;
+  repFilter = null;
+  renderAll();
+});
+
+$('repBar').addEventListener('click', e => {
+  const b = e.target.closest('[data-rep]');
+  if (!b) return;
+  repFilter = b.dataset.rep || null;
+  renderReps();
+  renderKPIs();
+  renderTable();
+});
+
+$('refreshBtn').addEventListener('click', loadAll);
+$('overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+$('dClose').addEventListener('click',  closeModal);
+$('dCancel').addEventListener('click', closeModal);
+$('dSave').addEventListener('click',   saveCommentAction);
+$('dDel').addEventListener('click',    deleteCommentAction);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+loadAll();
+</script>
 </body>
 </html>
