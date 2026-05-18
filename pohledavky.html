@@ -590,9 +590,9 @@ function renderKPIs() {
     `<div class="kpi ${cls}"><div class="kpi-lbl">${lbl}</div><div class="kpi-val" style="${st || ''}">${val}</div><div class="kpi-sub">${sub}</div></div>`;
   $('kpis').innerHTML =
     kpi('ktotal', 'Celkem pohledávky', csK(total), d.length + ' zákazníků', '') +
-    kpi('k30',    'Do 30 dní', csK(s30), 'v pořádku', 'color:var(--green)') +
-    kpi('k60',    '60 dní po splatnosti', csK(s60), 'sledovat', 'color:#b05500') +
-    kpi('k90p',   '90+ dní po splatnosti', csK(over90), 'urgovat', 'color:var(--red)');
+    kpi('k30',    'Do 30 dní', csK(s30), 'urgovat', 'color:var(--green)') +
+    kpi('k60',    '30–60 dní po splatnosti', csK(s60), 'vyřešit okamžitě', 'color:#b05500') +
+    kpi('k90p',   'Více než 90 dní po splatnosti', csK(over90), 'kritický stav', 'color:var(--red)');
 }
 
 function renderTable() {
@@ -615,7 +615,7 @@ function renderTable() {
     const rtot = rt.reduce((a, b) => a + b, 0);
     const overdueSum = cols.filter(k => k !== 'd30').reduce((s, k) => s + sum(rd, k), 0);
     const badge = overdueSum > 0.01
-      ? `<span class="overdue-badge">po splatnosti ${csK(overdueSum)}</span>` : '';
+      ? `<span class="overdue-badge">po splatnosti nad 30 dní: ${csK(overdueSum)}</span>` : '';
 
     const grp = document.createElement('tr');
     grp.className = 'grp';
