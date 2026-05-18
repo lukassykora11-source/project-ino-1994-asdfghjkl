@@ -162,16 +162,22 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .kpi.ktotal .kpi-sub { color: rgba(255,255,255,0.55); }
 
 /* ── TABLE ── */
-.table-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.table-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); }
 .table-scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 600px; }
 
-thead { position: sticky; top: calc(var(--topbar-h) + var(--subbar-h)); z-index: 100; }
-thead tr { background: var(--green); }
 thead th {
-  padding: 9px 10px; font-weight: 500; font-size: 11px;
-  letter-spacing: 0.03em; text-align: right;
-  color: rgba(255,255,255,0.7); white-space: nowrap;
+  position: sticky;
+  top: calc(var(--topbar-h) + var(--subbar-h));
+  z-index: 100;
+  background: var(--green);
+  padding: 9px 10px;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-align: right;
+  color: rgba(255,255,255,0.7);
+  white-space: nowrap;
   border-right: 1px solid rgba(255,255,255,0.08);
 }
 thead th:first-child { text-align: left; color: white; padding-left: 14px; }
@@ -537,7 +543,9 @@ const sum = (arr, k) => arr.reduce((s, r) => s + (r[k] || 0), 0);
 
 function filteredRows() {
   const d = DATA[week] || [];
-  return repFilter ? d.filter(r => r.rep === repFilter) : d;
+  if (!repFilter) return d;
+  const target = repFilter.trim();
+  return d.filter(r => (r.rep || '').trim() === target);
 }
 
 function renderKPIs() {
