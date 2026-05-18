@@ -166,25 +166,35 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .table-scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; min-width: 600px; }
 
-thead th {
+/* ── HEADER BAR (samostatná sticky lišta nad tabulkou) ── */
+.header-bar {
+  display: grid;
+  background: var(--green);
+  border-radius: var(--radius) var(--radius) 0 0;
   position: sticky;
   top: calc(var(--topbar-h) + var(--subbar-h));
   z-index: 100;
-  background: var(--green);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.hcell {
   padding: 9px 10px;
   font-weight: 500;
   font-size: 11px;
   letter-spacing: 0.03em;
-  text-align: right;
   color: rgba(255,255,255,0.7);
   white-space: nowrap;
+  text-align: right;
   border-right: 1px solid rgba(255,255,255,0.08);
 }
-thead th:first-child { text-align: left; color: white; padding-left: 14px; }
-thead th:last-child  { text-align: left; border-right: none; }
-thead th.h30  { color: var(--pastel); }
-thead th.h60  { color: #ffd4a0; }
-thead th.h90, thead th.h180, thead th.h365, thead th.h9999 { color: #ffaaaa; }
+.hcell.hname { text-align: left; color: white; padding-left: 14px; }
+.hcell.hcmt  { text-align: left; border-right: none; }
+.hcell.h30   { color: var(--pastel); }
+.hcell.h60   { color: #ffd4a0; }
+.hcell.h90, .hcell.h180, .hcell.h365, .hcell.h9999 { color: #ffaaaa; }
+.hcell.htot  { color: white; }
+
+/* Tabulka navazuje na hlavičku bez horního zaokrouhlení */
+.table-wrap.has-header { border-radius: 0 0 var(--radius) var(--radius); border-top: none; }
 
 tr.grp td {
   background: var(--bg2); padding: 7px 10px;
@@ -465,8 +475,9 @@ function buildUI() {
   $('subbar').style.display = 'flex';
   $('main').innerHTML =
     '<div class="kpis" id="kpis"></div>' +
-    '<div class="table-wrap"><div class="table-scroll">' +
-    '<table id="mainTable"><thead id="thead"></thead><tbody id="tbody"></tbody></table>' +
+    '<div class="header-bar" id="headerBar"></div>' +
+    '<div class="table-wrap has-header"><div class="table-scroll">' +
+    '<table id="mainTable"><colgroup id="colgroup"></colgroup><tbody id="tbody"></tbody></table>' +
     '</div></div>';
 
   $('tbody').addEventListener('click', e => {
@@ -526,10 +537,31 @@ function activeCols() {
 
 function renderThead() {
   const cols = activeCols();
-  let h = '<tr><th>Zákazník</th>';
-  cols.forEach(k => { h += `<th class="${COL_CLS[k]}">${COL_LABELS[k]}</th>`; });
-  h += '<th>Celkem</th><th>Komentář</th></tr>';
-  $('thead').innerHTML = h;
+
+  // Definujeme šířky sloupců — odpovídají gridu hlavičky i buňkám tabulky
+  const widthName = '1fr';
+  const widthAmt  = '110px';
+  const widthTot  = '110px';
+  const widthCmt  = '160px';
+
+  // Header bar (mimo tabulku)
+  const hb = $('headerBar');
+  let gridCols = widthName;
+  cols.forEach(() => { gridCols += ' ' + widthAmt; });
+  gridCols += ' ' + widthTot + ' ' + widthCmt;
+  hb.style.gridTemplateColumns = gridCols;
+  let hh = '<div class="hcell hname">Zákazník</div>';
+  cols.forEach(k => { hh += `<div class="hcell hamt ${COL_CLS[k]}">${COL_LABELS[k]}</div>`; });
+  hh += '<div class="hcell hamt htot">Celkem</div>';
+  hh += '<div class="hcell hcmt">Komentář</div>';
+  hb.innerHTML = hh;
+
+  // Colgroup s odpovídajícími šířkami pro tabulku
+  const cg = $('colgroup');
+  let cgHTML = '<col style="width:auto">';
+  cols.forEach(() => { cgHTML += `<col style="width:${widthAmt}">`; });
+  cgHTML += `<col style="width:${widthTot}"><col style="width:${widthCmt}">`;
+  cg.innerHTML = cgHTML;
 }
 
 const cs  = v => new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
