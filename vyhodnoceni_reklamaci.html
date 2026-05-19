@@ -747,7 +747,7 @@ document.addEventListener("DOMContentLoaded", () => {
 /* =====================================================
    CSV PARSER
    ===================================================== */
-function parseCSV(text) {
+function parseCSV(text, skipRows = 0) {
   const lines = [];
   let cur = "", row = [], inQuotes = false;
   for (let i = 0; i < text.length; i++) {
@@ -766,22 +766,40 @@ function parseCSV(text) {
   }
   if (cur.length || row.length) { row.push(cur); lines.push(row); }
   if (!lines.length) return [];
-  const headers = lines[0].map(h => h.trim());
-  return lines.slice(1)
+  // Přeskočit prvních N řádků (např. nadřazené záhlaví "Počet výdejů | Měsíc")
+  const dataLines = skipRows > 0 ? lines.slice(skipRows) : lines;
+  if (!dataLines.length) return [];
+  const headers = dataLines[0].map(h => h.trim());
+  return dataLines.slice(1)
     .filter(r => r.length && r.some(c => c && c.trim()))
     .map(r => Object.fromEntries(headers.map((h, i) => [h, (r[i] ?? "").trim()])));
 }
 
-async function loadCSV(primaryUrl, inlineFallback) {
-  // Pokud je nastaveno primaryUrl, načteme přes fetch ze Sheetu
-  if (primaryUrl && primaryUrl.trim()) {
-    const res = await fetch(primaryUrl, { cache: "no-store" });
-    if (!res.ok) throw new Error("Nepodařilo se načíst: " + primaryUrl);
-    const text = await res.text();
-    return { rows: parseCSV(text), live: true };
+async function loadCSV(primaryUrl, fallbackUrl, skipRows = 0) {
+  const url = primaryUrl && primaryUrl.trim() ? primaryUrl : fallbackUrl;
+  const isLive = !!(primaryUrl && primaryUrl.trim());
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error("Nepodařilo se načíst: " + url);
+  const text = await res.text();
+
+  // Auto-detekce dvojitého záhlaví (pivot tabulka z Google Sheets):
+  // pokud první řádek obsahuje texty jako "Počet výdejů", "Mesic", "Měsíc"
+  // a druhý řádek vypadá jako skutečné záhlaví, přeskočíme první.
+  let effectiveSkip = skipRows;
+  if (effectiveSkip === 0) {
+    const firstRow = text.split("\n")[0] || "";
+    const secondRow = text.split("\n")[1] || "";
+    const pivotIndicators = /počet|p\\u00f4ot|mesic|m[ěe]s[ií]c|sum|total/i;
+    const looksLikePivotHeader =
+      pivotIndicators.test(firstRow) &&
+      /autor|skladn[ií]k|jmeno|name/i.test(secondRow);
+    if (looksLikePivotHeader) {
+      effectiveSkip = 1;
+      console.log("📊 Auto-detekce: přeskakuji první řádek (pivot header) v " + url);
+    }
   }
-  // Jinak použijeme inline ukázková data
-  return { rows: parseCSV(inlineFallback), live: false };
+
+  return { rows: parseCSV(text, effectiveSkip), live: isLive };
 }
 
 /* =====================================================
