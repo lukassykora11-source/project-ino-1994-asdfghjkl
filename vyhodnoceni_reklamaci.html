@@ -832,17 +832,47 @@ async function initApp() {
 }
 
 async function loadAll() {
+  const debugInfo = [];
   try {
+    debugInfo.push("⏳ Načítám reklamace z: " + (CONFIG.REKLAMACE_CSV_URL || "ukázková data"));
+    debugInfo.push("⏳ Načítám sklad z: " + (CONFIG.SKLAD_CSV_URL || "ukázková data"));
+
     const [rek, sk] = await Promise.all([
       loadCSV(CONFIG.REKLAMACE_CSV_URL, INLINE_DATA.REKLAMACE),
       loadCSV(CONFIG.SKLAD_CSV_URL, INLINE_DATA.SKLAD),
     ]);
 
+    debugInfo.push("✓ Reklamace načteny: " + rek.rows.length + " řádků");
+    debugInfo.push("  Sloupce: " + (rek.rows[0] ? Object.keys(rek.rows[0]).join(", ") : "(žádné)"));
+    debugInfo.push("✓ Sklad načten: " + sk.rows.length + " řádků");
+    debugInfo.push("  Sloupce: " + (sk.rows[0] ? Object.keys(sk.rows[0]).join(", ") : "(žádné)"));
+
     state.reklamace = rek.rows.map(normalizeReklamace).filter(r => r.datum);
     state.sklad = normalizeSklad(sk.rows);
     state.dataLive = rek.live && sk.live;
 
-    // Měsíce dostupné v datech (preferujeme ze skladu, kde jsou kompletní)
+    debugInfo.push("✓ Po normalizaci: " + state.reklamace.length + " reklamací, " + state.sklad.length + " skladníků");
+
+    // Pokud načteno 0 reklamací po normalizaci ale CSV byl neprázdný = problém se sloupci
+    if (rek.rows.length > 0 && state.reklamace.length === 0) {
+      showDiagnostic(
+        "⚠️ Reklamace se načetly, ale aplikace nepoznala sloupce",
+        "CSV obsahuje " + rek.rows.length + " řádků, ale aplikace neumí přečíst sloupce.\n\n" +
+        "Sloupce ve Vašem CSV: " + Object.keys(rek.rows[0]).join(", ") + "\n\n" +
+        "Aplikace očekává: datum, skladnik, odberatel, produkt, duvod, mnozstvi, stav",
+        rek.rows[0]
+      );
+    }
+    if (sk.rows.length > 0 && state.sklad.length === 0) {
+      showDiagnostic(
+        "⚠️ Sklad se načetl, ale aplikace nepoznala sloupce",
+        "CSV obsahuje " + sk.rows.length + " řádků.\n\n" +
+        "Sloupce ve Vašem CSV: " + Object.keys(sk.rows[0]).join(", ") + "\n\n" +
+        "Aplikace očekává: skladnik (nebo Autor), 1, 2, 3, ... (čísla měsíců)",
+        sk.rows[0]
+      );
+    }
+
     const monthsRek = [...new Set(state.reklamace.map(r => r.mesic).filter(Boolean))];
     const monthsSkl = [];
     state.sklad.forEach(s => {
@@ -854,10 +884,43 @@ async function loadAll() {
     renderPeriodPills();
     populateFilters();
     render();
+
+    console.log("=== INO Reklamace - načítání dat ===");
+    debugInfo.forEach(l => console.log(l));
   } catch (err) {
-    console.error(err);
-    alert("Chyba při načítání dat: " + err.message);
+    console.error("Chyba při načítání:", err);
+    showDiagnostic(
+      "❌ Nepodařilo se načíst data z Google Sheets",
+      err.message + "\n\n" +
+      "Pravděpodobné příčiny:\n" +
+      "1) Soubor je otevřený přímo z disku (file://). Otevřete přes lokální server nebo nahrajte na GitHub Pages.\n" +
+      "2) Google ještě nepublikoval CSV (zkuste za 5 minut tlačítko ↻ Obnovit).\n" +
+      "3) Publikování v Google Sheets bylo zrušeno."
+    );
   }
+}
+
+/* Diagnostický overlay */
+function showDiagnostic(title, message, sample) {
+  const existing = document.getElementById("diagnostic-box");
+  if (existing) existing.remove();
+
+  const box = document.createElement("div");
+  box.id = "diagnostic-box";
+  box.style.cssText = "background: #FFE3DE; border: 2px solid #FF442D; border-radius: 14px; padding: 20px 24px; margin: 20px 0; color: #3D5655; font-size: 14px; line-height: 1.5;";
+
+  let html = `<h3 style="color: #FF442D; margin-bottom: 10px; font-family: 'Ladislav SB', sans-serif;">${esc(title)}</h3>`;
+  html += `<pre style="white-space: pre-wrap; font-family: 'General Sans', sans-serif; font-size: 13px; margin-bottom: 10px;">${esc(message)}</pre>`;
+  if (sample) {
+    html += `<details style="margin-top: 10px;"><summary style="cursor: pointer; font-weight: 600; color: #3D5655;">📋 Ukázka prvního řádku ze staženého CSV (klikni)</summary>`;
+    html += `<pre style="background: white; padding: 12px; border-radius: 8px; margin-top: 8px; font-size: 11px; overflow-x: auto; font-family: monospace;">${esc(JSON.stringify(sample, null, 2))}</pre>`;
+    html += `</details>`;
+  }
+  box.innerHTML = html;
+
+  const main = document.querySelector(".main");
+  if (main) main.insertBefore(box, main.firstChild);
+  else document.body.appendChild(box);
 }
 
 function setDataStatus(isLive) {
