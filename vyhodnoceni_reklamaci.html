@@ -400,18 +400,27 @@ a:hover { text-decoration: underline; }
 .donut { width: 150px; height: 150px; flex-shrink: 0; }
 .donut-legend { flex: 1; }
 .donut-legend .legend-item {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: flex-start; justify-content: space-between;
   padding: 7px 0; border-bottom: 1px dashed var(--gray-10);
   font-size: 12px;
+  gap: 8px;
 }
 .donut-legend .legend-item:last-child { border-bottom: none; }
 .donut-legend .legend-item .dot {
   display: inline-block; width: 9px; height: 9px;
-  border-radius: 50%; margin-right: 8px; vertical-align: middle;
+  border-radius: 50%; margin-right: 8px;
+  flex-shrink: 0; margin-top: 4px;
 }
-.donut-legend .legend-item .lbl { flex: 1; }
+.donut-legend .legend-item .lbl {
+  flex: 1;
+  display: flex; align-items: flex-start;
+  line-height: 1.3;
+  word-break: break-word;
+}
+.donut-legend .legend-item .lbl-text { flex: 1; }
 .donut-legend .legend-item .num {
   font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ino-green-gray);
+  flex-shrink: 0; white-space: nowrap;
 }
 
 /* ===== Trend ===== */
@@ -509,6 +518,10 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
 }
 .tag.duvod-poskozeny { background: var(--ino-pastel-pink); color: #8a2c4a; }
 .tag.duvod-mnozstvi  { background: var(--ino-pastel-blue); color: var(--ino-blue); }
@@ -956,18 +969,64 @@ function setDataStatus(isLive) {
    NORMALIZACE
    ===================================================== */
 function normalizeReklamace(r) {
-  const datum = r.datum || r.Datum || "";
-  const d = new Date(datum);
+  // Mapování názvů sloupců - aplikace umí ukázková data i reálnou strukturu z INO Sheetu
+  const skladnik =
+    r.skladnik || r.Skladnik || r["Skladník"] ||
+    r["Druh - popis"] || "";
+  const odberatel =
+    r.odberatel || r.Odberatel || r["Odběratel"] ||
+    r["Firma"] || r["firma"] || "";
+  const produkt =
+    r.produkt || r.Produkt ||
+    r["Název položky"] || r["Nazev polozky"] || "";
+
+  // Důvod reklamace = Poznámka - 255 (to je u INO hlavní kategorie).
+  // "Typ - popis" je obecná systémová klasifikace, nepoužívá se.
+  // Fallback: u ukázkových dat (kde žádná Poznámka není) zůstane sloupec "duvod".
+  const duvod =
+    r["Poznámka - 255"] || r["Poznámka"] || r.poznamka ||
+    r.duvod || r.Duvod || r["Důvod"] || "";
+
+  const stav = r.stav || r.Stav || "Vyřízeno";
+  const mnozstvi = parseInt(r.mnozstvi || r.Mnozstvi || r["Množství"] || "1", 10) || 1;
+
+  // Datum: zkusíme více formátů - ISO (2026-05-15), CZ (15.05.2026), nebo z M/R sloupců
+  let datum = r.datum || r.Datum || r["Datum pořízení (DMR)"] || r["Datum"] || "";
+  let dateObj = null;
+  let mesic = null;
+
+  if (datum) {
+    // Zkusit ISO první (2026-05-15)
+    let d = new Date(datum);
+    if (isNaN(d)) {
+      // Zkusit český formát DD.MM.YYYY nebo DD/MM/YYYY
+      const m = String(datum).match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
+      if (m) {
+        d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+      }
+    }
+    if (!isNaN(d)) {
+      dateObj = d;
+      mesic = d.getMonth() + 1;
+    }
+  }
+
+  // Pokud nemáme datum, zkusíme alespoň měsíc ze sloupce (M)
+  if (!mesic && r["Datum pořízení (M)"]) {
+    const m = parseInt(r["Datum pořízení (M)"], 10);
+    if (m >= 1 && m <= 12) mesic = m;
+  }
+
   return {
     datum,
-    dateObj: isNaN(d) ? null : d,
-    mesic: isNaN(d) ? null : (d.getMonth() + 1),
-    skladnik: r.skladnik || r.Skladnik || r["Skladník"] || "",
-    odberatel: r.odberatel || r.Odberatel || r["Odběratel"] || "",
-    produkt: r.produkt || r.Produkt || "",
-    duvod: r.duvod || r.Duvod || r["Důvod"] || "",
-    mnozstvi: parseInt(r.mnozstvi || r.Mnozstvi || r["Množství"] || "0", 10) || 0,
-    stav: r.stav || r.Stav || "",
+    dateObj,
+    mesic,
+    skladnik,
+    odberatel,
+    produkt,
+    duvod,
+    mnozstvi,
+    stav,
   };
 }
 
@@ -1065,9 +1124,10 @@ function populateFilters() {
    ===================================================== */
 function getFiltered() {
   const months = getActiveMonths();
+  const filterKey = state.filters.skladnik ? skladnikKey(state.filters.skladnik) : "";
   return state.reklamace.filter(r => {
     if (r.mesic && !months.includes(r.mesic)) return false;
-    if (state.filters.skladnik && r.skladnik !== state.filters.skladnik) return false;
+    if (filterKey && skladnikKey(r.skladnik) !== filterKey) return false;
     if (state.filters.duvod && r.duvod !== state.filters.duvod) return false;
     if (state.filters.stav && r.stav !== state.filters.stav) return false;
     if (state.search) {
@@ -1093,19 +1153,20 @@ function render() {
 /* ----- KPI ----- */
 function renderKPIs(data) {
   const total = data.length;
-  const pieces = data.reduce((s, r) => s + r.mnozstvi, 0);
+  const unikatniOdberatele = new Set(data.map(r => r.odberatel).filter(Boolean)).size;
 
   const months = getActiveMonths();
+  const filterKey = state.filters.skladnik ? skladnikKey(state.filters.skladnik) : "";
   let vydej = 0;
   state.sklad.forEach(s => {
-    if (state.filters.skladnik && s.skladnik !== state.filters.skladnik) return;
+    if (filterKey && skladnikKey(s.skladnik) !== filterKey) return;
     months.forEach(m => vydej += (s.mesice[m] || 0));
   });
 
   const rate = vydej ? (total / vydej * 1000) : 0;
 
   document.getElementById("kpi-total").textContent  = fmtNum(total);
-  document.getElementById("kpi-pieces").textContent = fmtNum(pieces);
+  document.getElementById("kpi-pieces").textContent = fmtNum(unikatniOdberatele);
   document.getElementById("kpi-vydej").textContent  = fmtNum(vydej);
   document.getElementById("kpi-rate").innerHTML     = rate.toFixed(2) + `<span class="unit">‰</span>`;
 
@@ -1126,28 +1187,42 @@ function renderBarsSkladnici(data) {
   const container = document.getElementById("bars-skladnici");
   const months = getActiveMonths();
 
-  // Reklamace na skladníka (z filtrovaných dat)
-  const rekMap = new Map();
-  data.forEach(r => rekMap.set(r.skladnik, (rekMap.get(r.skladnik) || 0) + 1));
+  // Reklamace na skladníka — agregujeme podle KLÍČE (příjmení)
+  // Tím spárujeme "Vídeňská Jana" z reklamací s "Vídeňská" ze skladu
+  const rekMap = new Map();   // key -> { count, displayName }
+  data.forEach(r => {
+    const k = skladnikKey(r.skladnik);
+    if (!k) return;
+    const cur = rekMap.get(k) || { count: 0, displayName: r.skladnik };
+    cur.count++;
+    rekMap.set(k, cur);
+  });
 
-  // Výdej na skladníka za vybrané období
-  const skMap = new Map();
+  // Výdej na skladníka za vybrané období - klíčujeme stejně
+  const skMap = new Map();    // key -> { sum, displayName }
   state.sklad.forEach(s => {
     let sum = 0;
     months.forEach(m => sum += (s.mesice[m] || 0));
-    if (sum > 0) skMap.set(s.skladnik, sum);
+    if (sum > 0) {
+      const k = skladnikKey(s.skladnik);
+      skMap.set(k, { sum, displayName: s.skladnik });
+    }
   });
 
-  // Spoj — všichni co mají buď reklamace, nebo výdej
-  const all = new Set([...rekMap.keys(), ...skMap.keys()]);
-  const totalVydej = [...skMap.values()].reduce((s,v) => s + v, 0);
+  // Spoj — všichni klíče
+  const allKeys = new Set([...rekMap.keys(), ...skMap.keys()]);
+  const totalVydej = [...skMap.values()].reduce((s,v) => s + v.sum, 0);
 
-  let rows = [...all].map(name => {
-    const rek = rekMap.get(name) || 0;
-    const vyd = skMap.get(name) || 0;
+  let rows = [...allKeys].map(key => {
+    const rekRec = rekMap.get(key);
+    const skRec = skMap.get(key);
+    const rek = rekRec ? rekRec.count : 0;
+    const vyd = skRec ? skRec.sum : 0;
     const rate = vyd ? (rek / vyd * 1000) : 0;
     const podilVydeju = totalVydej ? (vyd / totalVydej * 100) : 0;
-    return { name, rek, vyd, rate, podilVydeju };
+    // Display name: preferujeme sklad (kratší), pokud je
+    const name = (skRec && skRec.displayName) || (rekRec && rekRec.displayName) || key;
+    return { name, key, rek, vyd, rate, podilVydeju };
   })
   .filter(r => r.rek > 0 || r.vyd > 0)
   .sort((a, b) => {
@@ -1161,25 +1236,16 @@ function renderBarsSkladnici(data) {
     return;
   }
 
-  // Max pro vizualizaci - bereme max z podílu výdejů (aby zelený "expected" bar mohl jít na 100%)
+  // Max pro vizualizaci
   const maxPodil = Math.max(...rows.map(r => r.podilVydeju), 1);
   const maxRek = Math.max(...rows.map(r => r.rek), 1);
 
   container.innerHTML = rows.map(r => {
-    // Barva podle míry reklamací
     let stateClass = "state-ok";
     if (r.rate > CONFIG.THRESHOLDS.WATCH) stateClass = "state-alert";
     else if (r.rate > CONFIG.THRESHOLDS.OK) stateClass = "state-watch";
 
-    // Šířka "expected" baru = podíl výdejů (max 100%)
     const expectedW = (r.podilVydeju / maxPodil * 100).toFixed(1);
-    // Šířka "fill" baru = počet reklamací (relativně k max v sadě)
-    // ALE: aby to mělo smysl ve vztahu k výdejům, použijeme přepočet:
-    // počet reklamací na 100 výdejů × měřítko, aby to vizuálně dávalo smysl
-    // Pro jednoduchost: fillW = relativní k max reklamacím * (expected šířka by měla být referencí)
-    // Lepší přístup: fillW = procentuálně z toho, jak by skladník měl být VS jak je
-    //   → ale to už jsme spočítali v `rate` (‰)
-    // Pro vizualizaci: fillW = min(rek/maxRek * maxPodil/maxPodil * 100, 100)
     const fillW = (r.rek / maxRek * 100).toFixed(1);
 
     const rateLabel = r.vyd ? `${r.rate.toFixed(2)} ‰` : "—";
@@ -1212,8 +1278,9 @@ function renderTrend(data) {
     return;
   }
 
+  const filterKey = state.filters.skladnik ? skladnikKey(state.filters.skladnik) : "";
   const baseData = state.reklamace.filter(r => {
-    if (state.filters.skladnik && r.skladnik !== state.filters.skladnik) return false;
+    if (filterKey && skladnikKey(r.skladnik) !== filterKey) return false;
     if (state.filters.duvod && r.duvod !== state.filters.duvod) return false;
     if (state.filters.stav && r.stav !== state.filters.stav) return false;
     return true;
@@ -1227,7 +1294,7 @@ function renderTrend(data) {
   months.forEach(m => {
     let s = 0;
     state.sklad.forEach(sk => {
-      if (state.filters.skladnik && sk.skladnik !== state.filters.skladnik) return;
+      if (filterKey && skladnikKey(sk.skladnik) !== filterKey) return;
       s += (sk.mesice[m] || 0);
     });
     vydByMonth[m] = s;
@@ -1314,27 +1381,27 @@ function renderDonutDuvody(data) {
   const entries = Object.entries(groups).sort((a,b) => b[1] - a[1]);
   const total = entries.reduce((s, [,v]) => s + v, 0);
 
-  const colorMap = {
-    "Vadný kus":       "#FF442D",
-    "Poškozený obal":  "#FFD0E6",
-    "Špatné množství": "#E4EDFF",
-    "Záměna produktu": "#D5CDF0",
-  };
-  const fallbackColors = ["#FD8F30", "#9D9041", "#182F58", "#3D5655"];
-
   if (!total) {
     svg.innerHTML = `<circle cx="21" cy="21" r="15.91549" fill="none" stroke="#E5E5E5" stroke-width="6"/>`;
     legend.innerHTML = `<p style="color: var(--text-muted); font-size: 13px;">Žádná data.</p>`;
     return;
   }
 
+  // Pokud kategorií je hodně (>8), shrnou se ostatní do "Ostatní"
+  const TOP = 8;
+  let topEntries = entries;
+  let restCount = 0;
+  if (entries.length > TOP) {
+    topEntries = entries.slice(0, TOP);
+    restCount = entries.slice(TOP).reduce((s, [,v]) => s + v, 0);
+  }
+
   const R = 15.91549;
   let offset = 25;
   let segments = "";
-  let fbIdx = 0;
-  const items = entries.map(([k, v]) => {
+  const items = topEntries.map(([k, v]) => {
     const pct = v / total * 100;
-    const color = colorMap[k] || fallbackColors[fbIdx++ % fallbackColors.length];
+    const color = duvodColor(k);
     segments += `
       <circle cx="21" cy="21" r="${R}" fill="none"
         stroke="${color}" stroke-width="6"
@@ -1346,6 +1413,20 @@ function renderDonutDuvody(data) {
     return { k, v, pct, color };
   });
 
+  // Připojit "Ostatní" pokud bylo víc kategorií
+  if (restCount > 0) {
+    const pct = restCount / total * 100;
+    const color = "#999999";
+    segments += `
+      <circle cx="21" cy="21" r="${R}" fill="none"
+        stroke="${color}" stroke-width="6"
+        stroke-dasharray="${pct.toFixed(3)} ${(100-pct).toFixed(3)}"
+        stroke-dashoffset="${(100-offset).toFixed(3)}"
+        transform="rotate(-90 21 21)" />
+    `;
+    items.push({ k: `Ostatní (${entries.length - TOP})`, v: restCount, pct, color });
+  }
+
   svg.innerHTML = `
     <circle cx="21" cy="21" r="${R}" fill="none" stroke="#F2F2F2" stroke-width="6"/>
     ${segments}
@@ -1355,7 +1436,7 @@ function renderDonutDuvody(data) {
 
   legend.innerHTML = items.map(it => `
     <div class="legend-item">
-      <span class="lbl"><span class="dot" style="background:${it.color}"></span>${esc(it.k)}</span>
+      <span class="lbl"><span class="dot" style="background:${it.color}"></span><span class="lbl-text">${esc(it.k)}</span></span>
       <span class="num">${it.v} <span style="color: #999; font-weight: 400;">(${it.pct.toFixed(0)}%)</span></span>
     </div>
   `).join("");
@@ -1385,7 +1466,7 @@ function renderTable(data) {
   });
 
   if (!sorted.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Žádné reklamace neodpovídají filtru.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Žádné reklamace neodpovídají filtru.</td></tr>`;
     return;
   }
 
@@ -1395,9 +1476,7 @@ function renderTable(data) {
       <td><strong>${esc(r.skladnik)}</strong></td>
       <td>${esc(r.odberatel)}</td>
       <td>${esc(r.produkt)}</td>
-      <td><span class="tag ${duvodClass(r.duvod)}">${esc(r.duvod)}</span></td>
-      <td class="num">${r.mnozstvi}</td>
-      <td><span class="status ${stavClass(r.stav)}">${esc(r.stav)}</span></td>
+      <td><span class="tag" style="${duvodTagStyle(r.duvod)}">${esc(r.duvod)}</span></td>
     </tr>`;
   }).join("");
 }
@@ -1410,19 +1489,75 @@ function esc(s) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
 }
+/* Stabilní deterministické přiřazení barvy podle textu důvodu.
+   Stejný text vždy dostane stejnou barvu, napříč donutem i tagem v tabulce. */
+const DUVOD_PALETA = [
+  "#FF442D", // INO red
+  "#3D5655", // INO green-gray
+  "#FD8F30", // orange
+  "#182F58", // blue
+  "#9D9041", // olive
+  "#C3DCBE", // pastel green
+  "#FFD0E6", // pastel pink
+  "#E4EDFF", // pastel blue
+  "#D5CDF0", // pastel violet
+  "#F2DAB6", // beige
+];
+function duvodColor(text) {
+  if (!text) return "#CCCCCC";
+  // Hash z textu -> index v paletě. Deterministický (stejný text → stejná barva)
+  let hash = 0;
+  const s = String(text);
+  for (let i = 0; i < s.length; i++) {
+    hash = ((hash << 5) - hash) + s.charCodeAt(i);
+    hash |= 0;
+  }
+  return DUVOD_PALETA[Math.abs(hash) % DUVOD_PALETA.length];
+}
+
+/* Helper pro tag v tabulce – vrací jen CSS variabilní styl */
+function duvodTagStyle(text) {
+  const bg = duvodColor(text);
+  // Tmavé barvy → bílý text; světlé barvy → tmavý text
+  const dark = isDarkColor(bg);
+  return `background:${bg};color:${dark ? "#fff" : "#3D5655"};`;
+}
+function isDarkColor(hex) {
+  const m = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return false;
+  const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+  // Perceptual luminance
+  const lum = (0.299*r + 0.587*g + 0.114*b);
+  return lum < 140;
+}
+
 function fmtNum(n) { return (n || 0).toLocaleString("cs-CZ"); }
 function formatDate(s) {
   if (!s) return "";
-  const d = new Date(s);
+  // Zkusíme ISO první
+  let d = new Date(s);
+  if (isNaN(d)) {
+    // CZ formát DD.MM.YYYY
+    const m = String(s).match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
+    if (m) d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+  }
   if (isNaN(d)) return s;
   return d.toLocaleDateString("cs-CZ", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+/* Normalizace jména skladníka pro párování:
+   "Vídeňská Jana" -> "vídeňská" (jen příjmení)
+   "Archutič"      -> "archutič"
+   Tím spárujeme reklamace (jméno + příjmení) se skladem (jen příjmení). */
+function skladnikKey(name) {
+  if (!name) return "";
+  return String(name).trim().split(/\s+/)[0].toLowerCase();
 }
 function duvodClass(d) {
   const s = (d || "").toLowerCase();
   if (s.includes("poškoz")) return "duvod-poskozeny";
-  if (s.includes("množ"))   return "duvod-mnozstvi";
+  if (s.includes("množ") || s.includes("neshoda množ")) return "duvod-mnozstvi";
   if (s.includes("záměn") || s.includes("zámen")) return "duvod-zamena";
-  if (s.includes("vad"))    return "duvod-vadny";
+  if (s.includes("vad") || s.includes("kvalit")) return "duvod-vadny";
   return "duvod-jine";
 }
 function stavClass(s) {
