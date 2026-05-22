@@ -73,39 +73,48 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .sync-dot.spin { background: #ffd066; animation: pulse 1s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-/* ── SUBBAR ── */
+/* ── SUBBAR (dva řádky: týdny + obchodníci) ── */
 .subbar {
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
-  padding: 0 24px;
+  padding: 8px 24px;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  height: var(--subbar-h);
+  flex-direction: column;
+  gap: 7px;
   position: sticky;
   top: var(--topbar-h);
   z-index: 190;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
-.subbar::-webkit-scrollbar { display: none; }
-.subbar-sep { width: 1px; height: 20px; background: var(--border2); flex-shrink: 0; }
+.subbar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.subbar-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  flex-shrink: 0;
+  width: 78px;
+}
+.subbar-row.weeks { padding-bottom: 7px; border-bottom: 1px solid var(--border); }
 
 .wtab {
   padding: 4px 12px; border-radius: 20px;
   border: 1px solid var(--border2); color: var(--muted);
   font-size: 12px; cursor: pointer; background: var(--white);
-  font-family: var(--font); transition: all 0.12s; white-space: nowrap; flex-shrink: 0;
+  font-family: var(--font); transition: all 0.12s; white-space: nowrap;
 }
 .wtab:hover { border-color: var(--green); color: var(--green); }
 .wtab.active { background: var(--green); border-color: var(--green); color: white; font-weight: 600; }
 
-.rep-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); flex-shrink: 0; }
 .rbtn {
   padding: 4px 12px; border-radius: 20px;
   border: 1px solid var(--border2); background: var(--white);
   color: var(--text); font-size: 12px; font-family: var(--font);
-  cursor: pointer; transition: all 0.12s; white-space: nowrap; flex-shrink: 0;
+  cursor: pointer; transition: all 0.12s; white-space: nowrap;
 }
 .rbtn:hover { border-color: var(--green); color: var(--green); }
 .rbtn.active { background: var(--green); border-color: var(--green); color: white; }
@@ -146,8 +155,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 
 /* ── KPI ── */
 .kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 18px; }
-@media (max-width:700px) { .kpis { grid-template-columns: repeat(2,1fr); } }
-@media (max-width:400px) { .kpis { grid-template-columns: 1fr; } }
 
 .kpi { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px 15px; border-left: 3px solid var(--border); }
 .kpi.ktotal { background: var(--green); border-color: var(--green); }
@@ -290,12 +297,116 @@ tr.foot td:last-child  { text-align: left; }
 .btn-save:hover:not(:disabled) { background: var(--red-dark); }
 .btn-save:disabled { opacity: 0.5; cursor: default; }
 
+/* ── MOBILNÍ KARTY ── */
+.cards-wrap { display: none; }
+
+.card-group-head {
+  background: var(--green);
+  color: white;
+  padding: 10px 14px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  margin-top: 14px;
+  font-weight: 700;
+  font-size: 13px;
+}
+.card-group-head:first-child { margin-top: 0; }
+.card-group-sub {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.75);
+  margin-top: 3px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card-group-sub .cg-overdue { color: #ffb3a8; font-weight: 600; }
+
+.cust-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-top: none;
+  padding: 12px 14px;
+}
+.cust-card:last-of-type { border-radius: 0 0 var(--radius) var(--radius); }
+
+.cust-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.cust-name { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.cust-org  { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.cust-total {
+  font-size: 15px; font-weight: 700; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.cust-total.neg { color: var(--red); }
+
+.cust-amounts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.cust-amt-box {
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+.cust-amt-lbl {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.cust-amt-val {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.cust-amt-val.pos { color: var(--text); }
+.cust-amt-val.neg { color: var(--red); }
+.cust-amt-box.over { background: #fff3f1; }
+
+.cust-card .cbtn {
+  width: 100%;
+  max-width: none;
+  text-align: center;
+  padding: 7px;
+  font-size: 12px;
+}
+
+.card-group-foot {
+  background: var(--green);
+  color: white;
+  padding: 10px 14px;
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 0 0 var(--radius) var(--radius);
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (max-width: 720px) {
+  .table-wrap, .header-bar { display: none !important; }
+  .cards-wrap { display: block; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 600px) {
   .topbar { padding: 0 14px; }
   .subbar { padding: 0 14px; }
   .main   { padding: 12px 12px 40px; }
   .logo-label { display: none; }
   .refresh-btn span:not(.ico) { display: none; }
+}
+
+@media (max-width: 400px) {
+  .kpis { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -327,10 +438,14 @@ tr.foot td:last-child  { text-align: left; }
 </div>
 
 <div class="subbar" id="subbar" style="display:none">
-  <div id="weekTabs" style="display:flex;gap:5px;flex-shrink:0"></div>
-  <div class="subbar-sep"></div>
-  <span class="rep-label">Obchodník:</span>
-  <div id="repBar" style="display:flex;gap:5px;flex-shrink:0"></div>
+  <div class="subbar-row weeks">
+    <span class="subbar-label">Týden:</span>
+    <div id="weekTabs" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+  </div>
+  <div class="subbar-row">
+    <span class="subbar-label">Obchodník:</span>
+    <div id="repBar" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+  </div>
 </div>
 
 <div class="main" id="main">
@@ -476,11 +591,17 @@ function buildUI() {
   $('main').innerHTML =
     '<div class="kpis" id="kpis"></div>' +
     '<div class="header-bar" id="headerBar"></div>' +
-    '<div class="table-wrap has-header"><div class="table-scroll">' +
+    '<div class="table-wrap has-header" id="tableWrap"><div class="table-scroll">' +
     '<table id="mainTable"><colgroup id="colgroup"></colgroup><tbody id="tbody"></tbody></table>' +
-    '</div></div>';
+    '</div></div>' +
+    '<div class="cards-wrap" id="cardsWrap"></div>';
 
   $('tbody').addEventListener('click', e => {
+    const b = e.target.closest('.cbtn');
+    if (b) openModal(b.dataset.key, b.dataset.name);
+  });
+
+  $('cardsWrap').addEventListener('click', e => {
     const b = e.target.closest('.cbtn');
     if (b) openModal(b.dataset.key, b.dataset.name);
   });
@@ -494,6 +615,16 @@ function renderAll() {
   renderThead();
   renderKPIs();
   renderTable();
+  syncSubbarHeight();
+}
+
+// Změří skutečnou výšku subbaru a nastaví CSS proměnnou,
+// aby sticky hlavička tabulky správně navazovala
+function syncSubbarHeight() {
+  const sb = $('subbar');
+  if (!sb) return;
+  const h = sb.offsetHeight;
+  document.documentElement.style.setProperty('--subbar-h', h + 'px');
 }
 
 function renderWeeks() {
@@ -690,6 +821,107 @@ function renderTable() {
   fh += `<td>${cs(grand)}</td><td></td>`;
   foot.innerHTML = fh;
   tbody.appendChild(foot);
+
+  renderCards();
+}
+
+// ── MOBILNÍ KARTOVÉ ZOBRAZENÍ ─────────────────────────────────────────────
+function renderCards() {
+  const wrap = $('cardsWrap');
+  if (!wrap) return;
+  const d = filteredRows();
+  const repList = [...new Set(d.map(r => r.rep).filter(Boolean))];
+  wrap.innerHTML = '';
+
+  if (d.length === 0) {
+    wrap.innerHTML = '<div class="state-msg" style="padding:40px 20px">Žádné záznamy pro tento výběr.</div>';
+    return;
+  }
+
+  repList.forEach(rname => {
+    const rd = d.filter(r => r.rep === rname);
+    const rtot = COLS.reduce((s, k) => s + sum(rd, k), 0);
+    const overdueSum = ['d60','d90','d180','d365','d9999'].reduce((s, k) => s + sum(rd, k), 0);
+
+    // Hlavička skupiny
+    const gh = document.createElement('div');
+    gh.className = 'card-group-head';
+    let subHTML = '<span>Celkem ' + cs(rtot) + ' Kč</span>';
+    if (overdueSum > 0.01) {
+      subHTML += '<span class="cg-overdue">po splatnosti nad 30 dní: ' + csK(overdueSum) + '</span>';
+    }
+    gh.innerHTML = escapeHtml(rname) + '<div class="card-group-sub">' + subHTML + '</div>';
+    wrap.appendChild(gh);
+
+    // Karty zákazníků
+    rd.forEach(r => {
+      const rtotal = COLS.reduce((s, k) => s + (r[k] || 0), 0);
+      const key = week + '__' + r.org;
+      const c = comments[key];
+      const btnTxt = c ? (c.text.length > 30 ? c.text.slice(0, 30) + '…' : c.text) : '+ přidat komentář';
+
+      const card = document.createElement('div');
+      card.className = 'cust-card';
+
+      // Horní řádek: jméno + celkem
+      const top = document.createElement('div');
+      top.className = 'cust-card-top';
+      const nameWrap = document.createElement('div');
+      const nm = document.createElement('div');
+      nm.className = 'cust-name';
+      nm.textContent = r.name;
+      const og = document.createElement('div');
+      og.className = 'cust-org';
+      og.textContent = 'Č. org. ' + r.org;
+      nameWrap.appendChild(nm);
+      nameWrap.appendChild(og);
+      const tot = document.createElement('div');
+      tot.className = 'cust-total' + (rtotal < -0.005 ? ' neg' : '');
+      tot.textContent = cs(rtotal);
+      top.appendChild(nameWrap);
+      top.appendChild(tot);
+      card.appendChild(top);
+
+      // Mřížka částek — jen sloupce které mají hodnotu
+      const amts = document.createElement('div');
+      amts.className = 'cust-amounts';
+      let hasAny = false;
+      COLS.forEach(k => {
+        const v = r[k] || 0;
+        if (Math.abs(v) < 0.005) return;
+        hasAny = true;
+        const box = document.createElement('div');
+        box.className = 'cust-amt-box' + (k !== 'd30' ? ' over' : '');
+        const lbl = document.createElement('div');
+        lbl.className = 'cust-amt-lbl';
+        lbl.textContent = COL_LABELS[k];
+        const val = document.createElement('div');
+        val.className = 'cust-amt-val ' + (v < 0 ? 'neg' : 'pos');
+        val.textContent = cs(v);
+        box.appendChild(lbl);
+        box.appendChild(val);
+        amts.appendChild(box);
+      });
+      if (hasAny) card.appendChild(amts);
+
+      // Tlačítko komentáře
+      const btn = document.createElement('button');
+      btn.className = 'cbtn' + (c ? ' has' : '');
+      btn.textContent = btnTxt;
+      btn.dataset.key = key;
+      btn.dataset.name = r.name;
+      card.appendChild(btn);
+
+      wrap.appendChild(card);
+    });
+  });
+
+  // Celkový součet
+  const totalAll = COLS.reduce((s, k) => s + sum(d, k), 0);
+  const foot = document.createElement('div');
+  foot.className = 'card-group-foot';
+  foot.innerHTML = '<span>Celkový součet</span><span>' + cs(totalAll) + ' Kč</span>';
+  wrap.appendChild(foot);
 }
 
 function escapeHtml(s) {
@@ -788,6 +1020,12 @@ $('dCancel').addEventListener('click', closeModal);
 $('dSave').addEventListener('click',   saveCommentAction);
 $('dDel').addEventListener('click',    deleteCommentAction);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(syncSubbarHeight, 150);
+});
 
 loadAll();
 </script>

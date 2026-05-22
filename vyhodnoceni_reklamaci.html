@@ -541,17 +541,157 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .footer { text-align: center; padding: 32px; color: var(--text-muted); font-size: 11px; }
 
-@media (max-width: 700px) {
-  .main { padding: 20px 16px; }
-  .topbar { padding: 14px 16px 0; }
+/* =======================================================
+   TABLET (do 900px)
+   ======================================================= */
+@media (max-width: 900px) {
+  .main { padding: 22px 20px; }
+  .kpis { grid-template-columns: 1fr 1fr; }
+}
+
+/* =======================================================
+   TELEFON (do 640px)
+   ======================================================= */
+@media (max-width: 640px) {
+
+  /* --- Topbar --- */
+  .topbar { padding: 12px 14px 0; }
   .topbar-brand h2 { display: none; }
-  .pill { padding: 6px 12px; font-size: 12px; }
+  .topbar-brand img { height: 24px; }
+  .topbar-inner { margin-bottom: 10px; }
+
+  /* Tlačítka Obnovit/Odhlásit zkompaktní – jen ikony / kratší */
+  .topbar-actions { gap: 6px; }
+  .topbar-actions .data-status { font-size: 10px; padding: 5px 9px; }
+  .btn-ghost { padding: 6px 10px; font-size: 11px; }
+
+  /* Pilulky – horizontální scroll místo lámání do 5 řádků */
+  .topbar-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 12px;
+    gap: 6px;
+  }
+  .topbar-filters::-webkit-scrollbar { display: none; }
+  .pill {
+    padding: 7px 14px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* --- Hlavní obsah --- */
+  .main { padding: 16px 12px; }
+
+  /* Sekundární filtry – plná šířka pod sebou */
+  .sub-filters { gap: 8px; }
+  .sub-filters .label { width: 100%; margin-bottom: 2px; }
+  .sub-filters select {
+    flex: 1 1 100%;
+    min-width: 0;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  /* --- KPI: 2×2 mřížka --- */
+  .kpis {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .kpi { padding: 14px 14px 14px 16px; }
+  .kpi-label { font-size: 9px; }
+  .kpi-value { font-size: 24px; }
+  .kpi-value .unit { font-size: 13px; }
+  .kpi-sub { font-size: 11px; }
+
+  /* --- Karty grafů --- */
+  .card { padding: 16px 14px; }
+  .card h3 { font-size: 11px; }
+  .card .card-sub { font-size: 12px; margin-bottom: 14px; }
+
+  /* --- Bar chart skladníků --- */
+  /* Jméno NAD barem, hodnota vedle – víc místa pro samotný bar */
+  .bar-row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "name  name"
+      "track value";
+    gap: 4px 10px;
+    margin-bottom: 12px;
+    padding: 0;
+  }
+  .bar-row .name {
+    grid-area: name;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .bar-row .bar-track { grid-area: track; height: 16px; }
+  .bar-row .value { grid-area: value; white-space: nowrap; }
+
+  .bar-legend { gap: 10px 14px; font-size: 10px; }
+
+  /* --- Donut --- */
+  .donut-wrap { flex-direction: column; gap: 16px; }
+  .donut { width: 140px; height: 140px; }
+  .donut-legend { width: 100%; }
+
+  /* --- Trend graf --- */
+  .trend-chart { height: 200px; }
+
+  /* --- Tabulka → KARTOVÝ REŽIM --- */
+  /* Na telefonu se klasická tabulka nevejde, přepneme na karty */
+  .table-head { padding: 14px 16px; flex-direction: column; align-items: stretch; }
+  .table-head .search-box input { min-width: 0; width: 100%; }
+
+  table.reklamace thead { display: none; }
+  table.reklamace,
+  table.reklamace tbody,
+  table.reklamace tr,
+  table.reklamace td { display: block; width: 100%; }
+
+  table.reklamace tr {
+    padding: 14px 16px;
+    border-bottom: 8px solid var(--gray-5);
+  }
+  table.reklamace tr:hover td { background: transparent; }
+
+  table.reklamace td {
+    padding: 3px 0;
+    border: none;
+    font-size: 14px;
+  }
+  /* Štítek sloupce před hodnotou */
+  table.reklamace td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 1px;
+  }
+  /* První buňka (datum) – zvýrazněná jako hlavička karty */
+  table.reklamace td:first-child {
+    font-family: 'Ladislav SB', sans-serif;
+    font-size: 15px;
+    color: var(--ino-green-gray);
+    margin-bottom: 4px;
+  }
+  table.reklamace td:nth-child(2) { /* skladník */
+    margin-bottom: 4px;
+  }
+  .empty-row td { padding: 30px 16px; }
+  .empty-row td::before { content: ""; }
+}
+
+/* Velmi malé displeje (do 380px) – KPI do sloupce */
+@media (max-width: 380px) {
+  .kpis { grid-template-columns: 1fr; }
   .kpi-value { font-size: 26px; }
-  table.reklamace { font-size: 12px; }
-  table.reklamace td, table.reklamace th { padding: 10px 8px; }
-  .bar-row { grid-template-columns: 80px 1fr 90px; gap: 8px; }
-  .donut-wrap { flex-direction: column; }
-  .table-head .search-box input { min-width: 160px; }
 }
 
   </style>
@@ -826,6 +966,7 @@ const state = {
   sort: { key: "datum", dir: "desc" },
   dataLive: false,
   availableMonths: [],
+  duvodColorMap: {},   // kategorie poznámky -> barva (přiřazeno při načtení)
 };
 
 /* =====================================================
@@ -838,7 +979,7 @@ async function initApp() {
     location.reload();
   });
 
-  ["filter-skladnik","filter-duvod","filter-stav"].forEach(id => {
+  ["filter-skladnik","filter-duvod"].forEach(id => {
     document.getElementById(id).addEventListener("change", (e) => {
       const k = id.replace("filter-","");
       state.filters[k] = e.target.value;
@@ -910,6 +1051,9 @@ async function loadAll() {
       for (let m = 1; m <= 12; m++) if ((s.mesice[m] || 0) > 0) monthsSkl.push(m);
     });
     state.availableMonths = [...new Set([...monthsRek, ...monthsSkl])].sort((a,b)=>a-b);
+
+    // Přidělit barvy kategoriím (důvodům / poznámkám)
+    buildDuvodColorMap();
 
     setDataStatus(state.dataLive);
     renderPeriodPills();
@@ -1107,16 +1251,15 @@ function getActiveMonths() {
 function populateFilters() {
   const skl = [...new Set(state.reklamace.map(r => r.skladnik).filter(Boolean))].sort();
   const duv = [...new Set(state.reklamace.map(r => r.duvod).filter(Boolean))].sort();
-  const stv = [...new Set(state.reklamace.map(r => r.stav).filter(Boolean))].sort();
 
   const fillSelect = (id, items) => {
     const el = document.getElementById(id);
+    if (!el) return;
     const first = el.options[0].outerHTML;
     el.innerHTML = first + items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
   };
   fillSelect("filter-skladnik", skl);
   fillSelect("filter-duvod", duv);
-  fillSelect("filter-stav", stv);
 }
 
 /* =====================================================
@@ -1472,11 +1615,11 @@ function renderTable(data) {
 
   tbody.innerHTML = sorted.map(r => {
     return `<tr>
-      <td>${esc(formatDate(r.datum))}</td>
-      <td><strong>${esc(r.skladnik)}</strong></td>
-      <td>${esc(r.odberatel)}</td>
-      <td>${esc(r.produkt)}</td>
-      <td><span class="tag" style="${duvodTagStyle(r.duvod)}">${esc(r.duvod)}</span></td>
+      <td data-label="Datum">${esc(formatDate(r.datum))}</td>
+      <td data-label="Skladník"><strong>${esc(r.skladnik)}</strong></td>
+      <td data-label="Odběratel">${esc(r.odberatel)}</td>
+      <td data-label="Produkt">${esc(r.produkt)}</td>
+      <td data-label="Důvod"><span class="tag" style="${duvodTagStyle(r.duvod)}">${esc(r.duvod)}</span></td>
     </tr>`;
   }).join("");
 }
@@ -1489,8 +1632,12 @@ function esc(s) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
 }
-/* Stabilní deterministické přiřazení barvy podle textu důvodu.
-   Stejný text vždy dostane stejnou barvu, napříč donutem i tagem v tabulce. */
+/* =====================================================
+   BARVY KATEGORIÍ (důvodů / poznámek)
+   ===================================================== */
+
+/* Paleta INO - barvy se přidělují kategoriím v tomto pořadí.
+   Barvy jsou seřazené tak, aby šly po sobě dobře rozeznat. */
 const DUVOD_PALETA = [
   "#FF442D", // INO red
   "#3D5655", // INO green-gray
@@ -1503,9 +1650,68 @@ const DUVOD_PALETA = [
   "#D5CDF0", // pastel violet
   "#F2DAB6", // beige
 ];
+
+/* RUČNÍ MAPA BAREV — sem patří klíčové kategorie, které mají mít
+   pevně danou barvu. Klíč = text poznámky (malými písmeny, bez diakritiky
+   se neřeší - hledá se přes "obsahuje").
+   Když chcete kategorii přebarvit, upravte tady.
+   Necháte-li prázdné, barvy se přidělí automaticky podle pořadí. */
+const DUVOD_RUCNI_BARVY = [
+  // { obsahuje: "dodáno méně", barva: "#FF442D" },
+  // { obsahuje: "dodáno více", barva: "#182F58" },
+];
+
+/* Přidělí barvy všem kategoriím v datech - voláno po načtení.
+   Nejdřív aplikuje ruční mapu, pak zbytek rozdá sekvenčně z palety.
+   Tím je zaručeno, že dvě různé kategorie nikdy nemají stejnou barvu. */
+function buildDuvodColorMap() {
+  const map = {};
+  // Všechny kategorie seřazené podle četnosti (nejčastější první)
+  const counts = {};
+  state.reklamace.forEach(r => {
+    if (r.duvod) counts[r.duvod] = (counts[r.duvod] || 0) + 1;
+  });
+  const kategorie = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+
+  let paletaIdx = 0;
+  const pouziteBarvy = new Set();
+
+  // 1. kolo: ruční barvy
+  kategorie.forEach(kat => {
+    const lc = kat.toLowerCase();
+    const rule = DUVOD_RUCNI_BARVY.find(r => lc.includes(r.obsahuje.toLowerCase()));
+    if (rule) {
+      map[kat] = rule.barva;
+      pouziteBarvy.add(rule.barva);
+    }
+  });
+
+  // 2. kolo: zbytek sekvenčně z palety (přeskakuje už použité barvy)
+  kategorie.forEach(kat => {
+    if (map[kat]) return;
+    // najdi další nepoužitou barvu
+    let pokusy = 0;
+    while (pouziteBarvy.has(DUVOD_PALETA[paletaIdx % DUVOD_PALETA.length]) && pokusy < DUVOD_PALETA.length) {
+      paletaIdx++;
+      pokusy++;
+    }
+    const barva = DUVOD_PALETA[paletaIdx % DUVOD_PALETA.length];
+    map[kat] = barva;
+    pouziteBarvy.add(barva);
+    paletaIdx++;
+  });
+
+  state.duvodColorMap = map;
+}
+
+/* Vrátí barvu pro danou kategorii. Používá předpočítanou mapu;
+   pokud kategorie není v mapě (okrajový případ), spadne na hash. */
 function duvodColor(text) {
   if (!text) return "#CCCCCC";
-  // Hash z textu -> index v paletě. Deterministický (stejný text → stejná barva)
+  if (state.duvodColorMap && state.duvodColorMap[text]) {
+    return state.duvodColorMap[text];
+  }
+  // Fallback - deterministický hash
   let hash = 0;
   const s = String(text);
   for (let i = 0; i < s.length; i++) {
@@ -1515,10 +1721,9 @@ function duvodColor(text) {
   return DUVOD_PALETA[Math.abs(hash) % DUVOD_PALETA.length];
 }
 
-/* Helper pro tag v tabulce – vrací jen CSS variabilní styl */
+/* Helper pro tag v tabulce */
 function duvodTagStyle(text) {
   const bg = duvodColor(text);
-  // Tmavé barvy → bílý text; světlé barvy → tmavý text
   const dark = isDarkColor(bg);
   return `background:${bg};color:${dark ? "#fff" : "#3D5655"};`;
 }
@@ -1526,7 +1731,6 @@ function isDarkColor(hex) {
   const m = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
   if (!m) return false;
   const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
-  // Perceptual luminance
   const lum = (0.299*r + 0.587*g + 0.114*b);
   return lum < 140;
 }
