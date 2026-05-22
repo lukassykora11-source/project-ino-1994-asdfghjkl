@@ -48,6 +48,8 @@ header { background: var(--surface); border-bottom: 2px solid var(--border); pad
 .tab-btn { background: none; border: none; color: var(--muted); padding: 8px 18px; border-radius: 6px; cursor: pointer; font-family: 'GeneralSans', sans-serif; font-size: 13px; font-weight: 500; transition: all .15s; border-bottom: 2px solid transparent; margin-bottom: -2px; }
 .tab-btn:hover { color: var(--text); }
 .tab-btn.active { color: var(--red); border-bottom-color: var(--red); font-weight: 600; }
+.tab-badge { display: inline-block; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; margin-left: 4px; font-family: 'GeneralSans', sans-serif; min-width: 16px; text-align: center; }
+.tab-badge:empty { display: none; }
 .user-info { display: flex; align-items: center; gap: 10px; padding-left: 16px; border-left: 1px solid var(--gray20); margin-left: 8px; }
 .user-name { font-family: 'GeneralSans', sans-serif; font-size: 12px; color: var(--text); font-weight: 600; }
 .user-role { font-size: 10px; color: var(--muted); font-family: 'Ladislav', sans-serif; letter-spacing: 1px; text-transform: uppercase; }
@@ -68,6 +70,11 @@ header { background: var(--surface); border-bottom: 2px solid var(--border); pad
 .search-input:focus, select.filter-select:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(255,68,45,.08); }
 select.filter-select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-color: var(--gray2); padding-right: 32px; }
 .rep-filters, .status-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.rep-all-row { margin-bottom: 8px; }
+.rep-all-btn { width: 100%; background: var(--green-gray); color: #fff; border: none; padding: 7px; border-radius: 6px; cursor: pointer; font-family: 'GeneralSans', sans-serif; font-size: 12px; font-weight: 600; transition: all .15s; }
+.rep-all-btn:hover { background: #2d3f3e; }
+.rep-all-btn.active { background: var(--red); }
+.rep-hint { font-size: 10px; color: var(--gray40); margin-top: 6px; font-style: italic; }
 .chip { padding: 4px 11px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1.5px solid; opacity: .35; transition: all .15s; font-family: 'GeneralSans', sans-serif; }
 .chip.active { opacity: 1; }
 .chip[data-rep="Jirka"]   { color: var(--blue); border-color: var(--blue); background: rgba(24,47,88,.08); }
@@ -175,7 +182,7 @@ td.date-col { font-size: 11px; color: var(--muted); }
 .activity-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
 .activity-type { font-family: 'Ladislav', sans-serif; font-size: 10px; letter-spacing: .8px; text-transform: uppercase; color: var(--green-gray); }
 .activity-date { font-size: 10px; color: var(--muted); }
-.activity-note { font-size: 12px; color: var(--text); line-height: 1.4; }
+.activity-note { font-size: 12px; color: var(--text); line-height: 1.4; white-space: pre-wrap; }
 .activity-author { font-size: 10px; color: var(--muted); margin-top: 4px; }
 
 .add-activity-btn { background: var(--red); color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-family: 'GeneralSans', sans-serif; font-size: 11px; font-weight: 600; transition: background .15s; }
@@ -200,6 +207,90 @@ td.date-col { font-size: 11px; color: var(--muted); }
 
 #activities-tab { display: none; flex: 1; flex-direction: column; padding: 24px 32px; background: var(--bg); overflow: auto; }
 #activities-tab.active { display: flex; }
+#calls-tab { display: none; flex: 1; flex-direction: column; padding: 24px 32px; background: var(--bg); overflow: auto; }
+#calls-tab.active { display: flex; }
+#meetings-tab { display: none; flex: 1; flex-direction: column; padding: 24px 32px; background: var(--bg); overflow: auto; }
+#meetings-tab.active { display: flex; }
+
+/* MŮJ DEN */
+#myday-tab { display: none; flex: 1; flex-direction: column; padding: 24px 32px; background: var(--bg); overflow: auto; }
+#myday-tab.active { display: flex; }
+.myday-greeting { font-family: 'Ladislav', sans-serif; font-size: 26px; color: var(--green-gray); margin-bottom: 2px; }
+.myday-date { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.myday-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; max-width: 1100px; }
+.myday-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.myday-card-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.myday-card-icon { font-size: 18px; }
+.myday-card-title { font-family: 'Ladislav', sans-serif; font-size: 13px; letter-spacing: .5px; color: var(--green-gray); flex: 1; }
+.myday-card-count { background: var(--red); color: #fff; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 12px; font-family: 'GeneralSans', sans-serif; }
+.myday-card-count.zero { background: var(--gray10); color: var(--gray40); }
+.myday-card-body { padding: 8px 0; max-height: 320px; overflow-y: auto; }
+.myday-item { padding: 10px 18px; border-bottom: 1px solid var(--gray5); cursor: pointer; transition: background .1s; }
+.myday-item:last-child { border-bottom: none; }
+.myday-item:hover { background: var(--beige1); }
+.myday-item-title { font-weight: 600; font-size: 13px; color: var(--gray80); margin-bottom: 2px; }
+.myday-item-sub { font-size: 11px; color: var(--muted); }
+.myday-item-when { font-size: 12px; font-weight: 600; color: var(--red); }
+.myday-empty { padding: 24px 18px; text-align: center; color: var(--gray40); font-size: 12px; }
+.myday-card.highlight { border-color: var(--red); box-shadow: 0 4px 16px rgba(255,68,45,.1); }
+
+/* QUICK ACTIVITY z tabulky */
+.quick-act-btn { background: none; border: 1px solid var(--gray20); border-radius: 4px; padding: 3px 8px; font-size: 11px; cursor: pointer; color: var(--muted); font-family: 'GeneralSans', sans-serif; transition: all .15s; }
+.quick-act-btn:hover { border-color: var(--red); color: var(--red); }
+.quick-popover { position: fixed; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,.18); padding: 12px; z-index: 500; width: 280px; display: none; }
+.quick-popover.show { display: block; }
+.quick-popover-title { font-family: 'Ladislav', sans-serif; font-size: 11px; letter-spacing: .5px; color: var(--green-gray); margin-bottom: 8px; }
+.quick-popover select, .quick-popover textarea { width: 100%; background: var(--gray2); border: 1px solid var(--gray10); padding: 7px 9px; border-radius: 4px; font-family: 'GeneralSans', sans-serif; font-size: 12px; outline: none; margin-bottom: 6px; resize: vertical; }
+.quick-popover textarea { min-height: 56px; }
+.quick-popover select:focus, .quick-popover textarea:focus { border-color: var(--red); }
+.quick-popover-btns { display: flex; gap: 6px; }
+.quick-popover-btns button { flex: 1; padding: 6px; border-radius: 4px; cursor: pointer; font-family: 'GeneralSans', sans-serif; font-size: 11px; font-weight: 600; border: none; }
+
+/* ADD COMPANY */
+.add-company-btn { background: var(--red); border: none; color: #fff; padding: 7px 16px; border-radius: 6px; cursor: pointer; font-family: 'GeneralSans', sans-serif; font-size: 12px; font-weight: 600; transition: background .15s; }
+.add-company-btn:hover { background: #e53d28; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(61,86,85,.45); z-index: 600; display: none; align-items: center; justify-content: center; padding: 24px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border-radius: 12px; width: 100%; max-width: 440px; overflow: hidden; }
+.modal-head { padding: 18px 22px; border-bottom: 1px solid var(--border); background: var(--beige1); display: flex; justify-content: space-between; align-items: center; }
+.modal-title { font-family: 'Ladislav', sans-serif; font-size: 17px; color: var(--green-gray); }
+.modal-body { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.modal-field { display: flex; flex-direction: column; gap: 5px; }
+.modal-field label { font-family: 'Ladislav', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.modal-field input, .modal-field select { background: var(--gray2); border: 1px solid var(--gray10); padding: 9px 12px; border-radius: 6px; font-family: 'GeneralSans', sans-serif; font-size: 13px; outline: none; }
+.modal-field input:focus, .modal-field select:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(255,68,45,.08); }
+.modal-foot { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+.modal-btn { padding: 9px 18px; border-radius: 6px; cursor: pointer; font-family: 'GeneralSans', sans-serif; font-size: 13px; font-weight: 600; border: none; }
+.modal-btn-cancel { background: var(--gray5); color: var(--muted); }
+.modal-btn-save { background: var(--red); color: #fff; }
+.modal-btn-save:hover { background: #e53d28; }
+.meeting-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 16px; border-left: 4px solid var(--red); }
+.meeting-card.seen { border-left-color: var(--gray20); opacity: .6; }
+.meeting-card-main { flex: 1; }
+.meeting-card-company { font-family: 'Ladislav', sans-serif; font-size: 15px; color: var(--green-gray); margin-bottom: 3px; }
+.meeting-card-when { font-size: 14px; font-weight: 600; color: var(--red); margin: 4px 0; }
+.meeting-card.seen .meeting-card-when { color: var(--muted); }
+.meeting-card-note { font-size: 12px; color: var(--text); line-height: 1.4; margin-top: 4px; white-space: pre-wrap; }
+.meeting-card-meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.meeting-card-actions { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+.call-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 16px; }
+.call-card.done { opacity: .55; }
+.call-card-main { flex: 1; }
+.call-card-company { font-family: 'Ladislav', sans-serif; font-size: 15px; color: var(--green-gray); margin-bottom: 3px; }
+.call-card-meta { font-size: 12px; color: var(--muted); }
+.call-card-contact { font-size: 12px; color: var(--text); margin-top: 4px; }
+.call-card-contact a { color: var(--red); text-decoration: none; }
+.call-card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.call-btn { padding: 8px 14px; border-radius: 6px; cursor: pointer; font-family: 'GeneralSans', sans-serif; font-size: 12px; font-weight: 600; border: none; transition: all .15s; }
+.call-btn-open { background: var(--green-gray); color: #fff; }
+.call-btn-open:hover { background: #2d3f3e; }
+.call-btn-done { background: var(--red); color: #fff; }
+.call-btn-done:hover { background: #e53d28; }
+.call-section-title { font-family: 'Ladislav', sans-serif; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--green-gray); margin: 20px 0 10px; }
+.request-call-btn { background: var(--blue); color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-family: 'GeneralSans', sans-serif; font-size: 11px; font-weight: 600; transition: background .15s; width: 100%; }
+.request-call-btn:hover { background: #0f1f3d; }
+.request-call-btn:disabled { opacity: .4; cursor: not-allowed; }
+.request-pending-note { background: rgba(24,47,88,.08); color: var(--blue); padding: 8px 12px; border-radius: 6px; font-size: 11px; line-height: 1.4; text-align: center; }
 .act-page-title { font-family: 'Ladislav', sans-serif; font-size: 24px; color: var(--green-gray); margin-bottom: 4px; }
 .act-page-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
 .act-table-wrap { background: var(--surface); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
@@ -263,8 +354,11 @@ td.date-col { font-size: 11px; color: var(--muted); }
       <span class="logo-label">CRM databáze</span>
     </div>
     <nav class="tab-nav">
-      <button class="tab-btn active" data-tab="contacts">Kontakty</button>
+      <button class="tab-btn active" data-tab="myday" id="tab-myday">Můj den</button>
+      <button class="tab-btn" data-tab="contacts">Kontakty</button>
       <button class="tab-btn" data-tab="activities">Aktivity</button>
+      <button class="tab-btn" data-tab="calls" id="tab-calls" style="display:none">K navolání <span id="calls-badge" class="tab-badge"></span></button>
+      <button class="tab-btn" data-tab="meetings" id="tab-meetings" style="display:none">Moje schůzky <span id="meetings-badge" class="tab-badge"></span></button>
     </nav>
     <div class="user-info">
       <div>
@@ -275,7 +369,13 @@ td.date-col { font-size: 11px; color: var(--muted); }
     </div>
   </header>
 
-  <div id="contacts-tab">
+  <div id="myday-tab" class="active">
+    <div class="myday-greeting" id="myday-greeting">Dobrý den</div>
+    <div class="myday-date" id="myday-date"></div>
+    <div class="myday-grid" id="myday-grid"></div>
+  </div>
+
+  <div id="contacts-tab" style="display:none">
     <div class="stats-bar">
       <div class="stat-item"><span class="stat-label">Celkem firem</span><span class="stat-value" id="st-total">—</span></div>
       <div class="stat-item"><span class="stat-label">Moje firmy</span><span class="stat-value" id="st-mine">—</span></div>
@@ -311,17 +411,21 @@ td.date-col { font-size: 11px; color: var(--muted); }
         </div>
         <div class="filter-section">
           <div class="filter-label">Obchodník</div>
-          <div class="rep-filters">
-            <div class="chip active" data-rep="Jirka">Jirka</div>
-            <div class="chip active" data-rep="Gábina">Gábina</div>
-            <div class="chip active" data-rep="Jarda">Jarda</div>
-            <div class="chip active" data-rep="Táňa">Táňa</div>
-            <div class="chip active" data-rep="Pavel">Pavel</div>
-            <div class="chip active" data-rep="Jana">Jana</div>
-            <div class="chip active" data-rep="Zdeněk">Zdeněk</div>
-            <div class="chip active" data-rep="Inpox">Inpox</div>
-            <div class="chip active" data-rep="">Bez obch.</div>
+          <div class="rep-all-row">
+            <button class="rep-all-btn" id="rep-all-btn">Všichni obchodníci</button>
           </div>
+          <div class="rep-filters">
+            <div class="chip" data-rep="Jirka">Jirka</div>
+            <div class="chip" data-rep="Gábina">Gábina</div>
+            <div class="chip" data-rep="Jarda">Jarda</div>
+            <div class="chip" data-rep="Táňa">Táňa</div>
+            <div class="chip" data-rep="Pavel">Pavel</div>
+            <div class="chip" data-rep="Jana">Jana</div>
+            <div class="chip" data-rep="Zdeněk">Zdeněk</div>
+            <div class="chip" data-rep="Inpox">Inpox</div>
+            <div class="chip" data-rep="">Bez obch.</div>
+          </div>
+          <div class="rep-hint">Tip: Ctrl+klik vybere více obchodníků</div>
         </div>
         <button class="reset-btn" id="reset-btn">↺ Resetovat filtry</button>
       </aside>
@@ -329,7 +433,8 @@ td.date-col { font-size: 11px; color: var(--muted); }
       <div class="table-area">
         <div class="table-toolbar">
           <span class="result-count" id="result-count">Načítání…</span>
-          <button class="export-btn" id="export-btn">↓ Export CSV</button>
+          <button class="add-company-btn" id="add-company-btn" style="margin-left:auto">+ Přidat firmu</button>
+          <button class="export-btn" id="export-btn" style="margin-left:8px">↓ Export CSV</button>
         </div>
         <div class="table-scroll">
           <table>
@@ -345,6 +450,7 @@ td.date-col { font-size: 11px; color: var(--muted); }
                 <th data-sort="sales_rep">Obchodník</th>
                 <th data-sort="status">Status</th>
                 <th data-sort="last_activity_date">Posl. akt.</th>
+                <th style="cursor:default">Zápis</th>
               </tr>
             </thead>
             <tbody id="tbody"></tbody>
@@ -385,6 +491,64 @@ td.date-col { font-size: 11px; color: var(--muted); }
       <div id="act-empty" class="act-empty" style="display:none">Žádné aktivity zatím nebyly zaznamenány.</div>
     </div>
   </div>
+
+  <div id="calls-tab">
+    <h1 class="act-page-title">K navolání</h1>
+    <p class="act-page-sub">Firmy, které obchodníci předali k navolání schůzek</p>
+    <div id="calls-content"></div>
+  </div>
+
+  <div id="meetings-tab">
+    <h1 class="act-page-title">Moje schůzky</h1>
+    <p class="act-page-sub">Schůzky, které vám domluvila Kristýna</p>
+    <div id="meetings-content"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="add-company-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Nová firma</span>
+      <button class="detail-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label>Název firmy *</label>
+        <input type="text" id="nc-name" placeholder="např. Nováček s.r.o.">
+      </div>
+      <div class="modal-field">
+        <label>Telefon</label>
+        <input type="text" id="nc-phone" placeholder="např. 777123456">
+      </div>
+      <div class="modal-field">
+        <label>Město</label>
+        <input type="text" id="nc-city" placeholder="např. Hradec Králové">
+      </div>
+      <div class="modal-field">
+        <label>Obchodník</label>
+        <select id="nc-rep"></select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="modal-btn modal-btn-cancel" id="modal-cancel">Zrušit</button>
+      <button class="modal-btn modal-btn-save" id="modal-save">Přidat firmu</button>
+    </div>
+  </div>
+</div>
+
+<div class="quick-popover" id="quick-popover">
+  <div class="quick-popover-title" id="qp-company">—</div>
+  <select id="qp-type">
+    <option value="telefonát">📞 Telefonát</option>
+    <option value="email">✉️ E-mail</option>
+    <option value="schůzka">🤝 Schůzka</option>
+    <option value="poznámka">📝 Poznámka</option>
+  </select>
+  <textarea id="qp-note" placeholder="Poznámka…"></textarea>
+  <div class="quick-popover-btns">
+    <button class="btn-cancel" id="qp-cancel">Zrušit</button>
+    <button class="btn-save" id="qp-save">Uložit</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -398,12 +562,14 @@ let currentUser = null;
 let currentProfile = null;
 let allContacts = [];
 let allActivities = [];
+let allCallRequests = [];
 let filtered = [];
 let currentPage = 1;
 const PER = 50;
 let sortCol = 'id', sortDir = 1;
 let selectedId = null;
-let activeReps = new Set(['Jirka','Gábina','Jarda','Táňa','Pavel','Jana','Zdeněk','Inpox','']);
+const ALL_REPS = ['Jirka','Gábina','Jarda','Táňa','Pavel','Jana','Zdeněk','Inpox',''];
+let activeReps = new Set(ALL_REPS);
 let activeStatus = new Set(['nový','kontaktován','schůzka','nabídka','vyhráno','ztracen']);
 let onlyMine = false;
 let onlyStale = false;
@@ -483,6 +649,16 @@ async function loadProfileAndShowApp(user) {
   if (profile.role !== 'obchodnik') {
     document.getElementById('toggle-mine').style.display = 'none';
   }
+  // Záložka "K navolání" je viditelná pro všechny
+  document.getElementById('tab-calls').style.display = '';
+  // Záložka "Moje schůzky" pro obchodníky a superadminy
+  if (profile.role === 'obchodnik' || profile.role === 'superadmin') {
+    document.getElementById('tab-meetings').style.display = '';
+  }
+  // Tlačítko "Přidat firmu" jen pro obchodníky a superadminy (ne navolávačka)
+  if (profile.role === 'navolavacka') {
+    document.getElementById('add-company-btn').style.display = 'none';
+  }
   await loadData();
 }
 
@@ -506,8 +682,44 @@ async function loadData() {
   const { data: acts } = await sb.from('activities').select('*, contacts(company_name)').order('activity_date', { ascending: false }).limit(500);
   allActivities = acts || [];
   
+  // load call requests
+  await loadCallRequests();
+  
   document.getElementById('loading').style.display = 'none';
   initUI();
+}
+
+async function loadCallRequests() {
+  const { data: reqs, error } = await sb.from('call_requests')
+    .select('*, contacts(id, company_name, phone, email, city, sales_rep)')
+    .order('requested_at', { ascending: false });
+  if (error) { console.error('call_requests load error', error); allCallRequests = []; }
+  else allCallRequests = reqs || [];
+  updateCallsBadge();
+}
+
+function updateCallsBadge() {
+  const pending = allCallRequests.filter(r => r.status === 'čeká').length;
+  const badge = document.getElementById('calls-badge');
+  badge.textContent = pending > 0 ? pending : '';
+  
+  // odznak "Moje schůzky" — nové navolané schůzky pro tohoto obchodníka, které ještě neviděl
+  const meetingsBadge = document.getElementById('meetings-badge');
+  if (meetingsBadge) {
+    const myNew = getMyMeetings().filter(r => !r.seen_by_rep).length;
+    meetingsBadge.textContent = myNew > 0 ? myNew : '';
+  }
+}
+
+function getMyMeetings() {
+  // vyřízené požadavky s termínem schůzky, kde je firma moje (nebo superadmin vidí vše)
+  return allCallRequests.filter(r => {
+    if (r.status !== 'vyřízeno' || !r.meeting_at) return false;
+    const co = r.contacts || {};
+    if (currentProfile.role === 'superadmin') return true;
+    if (currentProfile.role === 'obchodnik') return co.sales_rep === currentProfile.sales_rep_name;
+    return false;
+  }).sort((a, b) => new Date(a.meeting_at) - new Date(b.meeting_at));
 }
 
 function initUI() {
@@ -524,8 +736,20 @@ function initUI() {
   const staleCount = allContacts.filter(c => !c.last_activity_date || new Date(c.last_activity_date) < thirtyDaysAgo).length;
   document.getElementById('st-stale').textContent = staleCount.toLocaleString('cs');
   
+  // Obchodník vidí po přihlášení rovnou jen své firmy
+  if (currentProfile.role === 'obchodnik' && currentProfile.sales_rep_name) {
+    onlyMine = true;
+    document.getElementById('toggle-mine').classList.add('active');
+    // ve filtru obchodníků předvybrat jen sebe
+    activeReps = new Set([currentProfile.sales_rep_name]);
+  }
+  syncRepChips();
+  
   applyFilters();
   renderActivities();
+  renderCalls();
+  renderMeetings();
+  renderMyDay();
 }
 
 // ============ FILTERS ============
@@ -534,24 +758,60 @@ document.getElementById('region-filter').addEventListener('change', applyFilters
 document.getElementById('reset-btn').addEventListener('click', () => {
   document.getElementById('search').value = '';
   document.getElementById('region-filter').value = '';
-  activeReps = new Set(['Jirka','Gábina','Jarda','Táňa','Pavel','Jana','Zdeněk','Inpox','']);
+  activeReps = new Set(ALL_REPS);
   activeStatus = new Set(['nový','kontaktován','schůzka','nabídka','vyhráno','ztracen']);
-  document.querySelectorAll('.chip').forEach(c => c.classList.add('active'));
+  document.querySelectorAll('.chip[data-status]').forEach(c => c.classList.add('active'));
   onlyMine = false; onlyStale = false;
   document.getElementById('toggle-mine').classList.remove('active');
   document.getElementById('toggle-stale').classList.remove('active');
+  syncRepChips();
   applyFilters();
 });
 
+// Synchronizuje vzhled čipů obchodníků + tlačítka "Všichni" podle activeReps
+function syncRepChips() {
+  document.querySelectorAll('.chip[data-rep]').forEach(chip => {
+    chip.classList.toggle('active', activeReps.has(chip.dataset.rep));
+  });
+  const allSelected = activeReps.size === ALL_REPS.length;
+  document.getElementById('rep-all-btn').classList.toggle('active', allSelected);
+}
+
+// Klik na čip obchodníka: prostý klik = jen ten jeden; Ctrl/Cmd+klik = přidat/odebrat
 document.querySelectorAll('.chip[data-rep]').forEach(chip => {
-  chip.addEventListener('click', () => {
+  chip.addEventListener('click', (e) => {
     const rep = chip.dataset.rep;
-    if (activeReps.has(rep)) { if (activeReps.size > 1) activeReps.delete(rep); }
-    else activeReps.add(rep);
-    chip.classList.toggle('active', activeReps.has(rep));
+    if (e.ctrlKey || e.metaKey) {
+      // Ctrl+klik: přepnout tento čip, ale nedovolit prázdný výběr
+      if (activeReps.has(rep)) { if (activeReps.size > 1) activeReps.delete(rep); }
+      else activeReps.add(rep);
+    } else {
+      // prostý klik: pokud je vybraný jen tento, vrať se na všechny; jinak vyber jen tento
+      if (activeReps.size === 1 && activeReps.has(rep)) {
+        activeReps = new Set(ALL_REPS);
+      } else {
+        activeReps = new Set([rep]);
+      }
+    }
+    // ruční výběr obchodníků vypne přepínač "Jen moje firmy"
+    if (onlyMine) {
+      onlyMine = false;
+      document.getElementById('toggle-mine').classList.remove('active');
+    }
+    syncRepChips();
     applyFilters();
   });
 });
+
+// Tlačítko "Všichni obchodníci"
+document.getElementById('rep-all-btn').addEventListener('click', () => {
+  activeReps = new Set(ALL_REPS);
+  onlyMine = false;
+  document.getElementById('toggle-mine').classList.remove('active');
+  syncRepChips();
+  applyFilters();
+});
+
 document.querySelectorAll('.chip[data-status]').forEach(chip => {
   chip.addEventListener('click', () => {
     const s = chip.dataset.status;
@@ -564,6 +824,13 @@ document.querySelectorAll('.chip[data-status]').forEach(chip => {
 document.getElementById('toggle-mine').addEventListener('click', () => {
   onlyMine = !onlyMine;
   document.getElementById('toggle-mine').classList.toggle('active', onlyMine);
+  // sjednotit s filtrem obchodníků, ať nejsou v rozporu
+  if (onlyMine && currentProfile.sales_rep_name) {
+    activeReps = new Set([currentProfile.sales_rep_name]);
+  } else {
+    activeReps = new Set(ALL_REPS);
+  }
+  syncRepChips();
   applyFilters();
 });
 document.getElementById('toggle-stale').addEventListener('click', () => {
@@ -631,8 +898,9 @@ function render() {
   } else {
     nr.style.display = 'none';
     const start = (currentPage - 1) * PER;
-    tbody.innerHTML = filtered.slice(start, start + PER).map(c =>
-      `<tr data-id="${c.id}" class="${selectedId === c.id ? 'selected' : ''}">
+    tbody.innerHTML = filtered.slice(start, start + PER).map(c => {
+      const canQuick = canAddActivity(c);
+      return `<tr data-id="${c.id}" class="${selectedId === c.id ? 'selected' : ''}">
         <td class="id-col">${c.id}</td>
         <td class="company">${esc(c.company_name)}</td>
         <td>${esc(c.ico)}</td>
@@ -643,10 +911,20 @@ function render() {
         <td><span class="badge ${repClass(c.sales_rep)}">${esc(c.sales_rep || '—')}</span></td>
         <td><span class="badge ${statusClass(c.status)}">${esc(c.status)}</span></td>
         <td class="date-col">${fmtDate(c.last_activity_date)}</td>
-      </tr>`
-    ).join('');
+        <td>${canQuick ? `<button class="quick-act-btn" data-quick="${c.id}">+ zápis</button>` : ''}</td>
+      </tr>`;
+    }).join('');
     tbody.querySelectorAll('tr').forEach(tr => {
-      tr.addEventListener('click', () => showDetail(parseInt(tr.dataset.id)));
+      tr.addEventListener('click', (e) => {
+        if (e.target.classList.contains('quick-act-btn')) return;
+        showDetail(parseInt(tr.dataset.id));
+      });
+    });
+    tbody.querySelectorAll('.quick-act-btn').forEach(b => {
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openQuickPopover(parseInt(b.dataset.quick), b);
+      });
     });
   }
   renderPagination();
@@ -746,6 +1024,10 @@ async function showDetail(id) {
       <div class="detail-row"><span class="detail-key">Posl. aktivita</span><span class="detail-val">${fmtDate(c.last_activity_date)}</span></div>
     </div>
     <div class="detail-section">
+      <div class="detail-section-title">Navolávání</div>
+      <div id="call-request-area"></div>
+    </div>
+    <div class="detail-section">
       <div class="detail-section-title">
         <span>Aktivity (${activities ? activities.length : 0})</span>
         ${canAdd ? `<button class="add-activity-btn" id="add-act-btn">+ Přidat</button>` : ''}
@@ -780,6 +1062,8 @@ async function showDetail(id) {
   
   document.getElementById('detail-body').innerHTML = html;
   document.getElementById('detail-panel').classList.remove('hidden');
+  
+  renderCallRequestArea(c);
   
   // Bind events
   if (editable) {
@@ -838,6 +1122,506 @@ document.getElementById('detail-close').addEventListener('click', () => {
   document.querySelectorAll('tbody tr').forEach(tr => tr.classList.remove('selected'));
 });
 
+// ============ NAVOLÁVÁNÍ ============
+function renderCallRequestArea(c) {
+  const area = document.getElementById('call-request-area');
+  if (!area) return;
+  
+  // existující požadavek pro tuto firmu
+  const existing = allCallRequests.find(r => r.contact_id === c.id && r.status === 'čeká');
+  const isOwner = currentProfile.role === 'obchodnik' && c.sales_rep === currentProfile.sales_rep_name;
+  const isAdmin = currentProfile.role === 'superadmin';
+  const isNavol = currentProfile.role === 'navolavacka';
+  
+  if (existing) {
+    let html = `<div class="request-pending-note">📞 Předáno Kristýně k navolání<br>(${esc(existing.requested_by_name || '—')}, ${fmtDate(existing.requested_at)})</div>`;
+    // Navolávačka nebo admin může zadat termín schůzky
+    if (isNavol || isAdmin) {
+      html += `
+        <div class="activity-form" id="resolve-form" style="margin-top:8px">
+          <div style="font-family:'Ladislav';font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--green-gray);margin-bottom:2px">Domluvená schůzka</div>
+          <input type="datetime-local" id="cr-meeting-at" style="width:100%;background:#fff;border:1px solid var(--gray10);padding:8px 10px;border-radius:4px;font-family:'GeneralSans';font-size:12px;outline:none">
+          <textarea id="cr-meeting-note" placeholder="Poznámka k schůzce (kde, s kým, na co se připravit…)"></textarea>
+          <button class="call-btn call-btn-done" id="cr-resolve" style="width:100%">✓ Uložit schůzku a označit jako navoláno</button>
+        </div>`;
+    }
+    // Ten, kdo požádal, nebo admin může zrušit
+    if (isAdmin || existing.requested_by === currentUser.id) {
+      html += `<button class="btn-cancel" id="cr-cancel" style="width:100%;margin-top:6px;padding:7px;border-radius:6px;border:none;cursor:pointer;font-family:'GeneralSans';font-size:11px;font-weight:600">Zrušit požadavek</button>`;
+    }
+    area.innerHTML = html;
+    
+    const resolveBtn = document.getElementById('cr-resolve');
+    if (resolveBtn) resolveBtn.addEventListener('click', () => resolveCallRequest(existing.id, c.id));
+    const cancelBtn = document.getElementById('cr-cancel');
+    if (cancelBtn) cancelBtn.addEventListener('click', () => cancelCallRequest(existing.id));
+    
+  } else {
+    // žádný čekající požadavek — obchodník (vlastník) nebo admin může požádat
+    if (isOwner || isAdmin) {
+      area.innerHTML = `<button class="request-call-btn" id="cr-create">📞 Požádat Kristýnu o navolání</button>`;
+      document.getElementById('cr-create').addEventListener('click', () => createCallRequest(c.id));
+    } else {
+      area.innerHTML = `<div style="font-size:11px;color:var(--muted)">Firma není předána k navolání.</div>`;
+    }
+  }
+}
+
+async function createCallRequest(contactId) {
+  const { error } = await sb.from('call_requests').insert({
+    contact_id: contactId,
+    status: 'čeká',
+    requested_by: currentUser.id,
+    requested_by_name: currentProfile.full_name,
+    requested_at: new Date().toISOString()
+  });
+  if (error) { toast('Chyba: ' + error.message, true); return; }
+  toast('Firma předána Kristýně k navolání');
+  await loadCallRequests();
+  renderCalls();
+  showDetail(contactId);
+}
+
+async function resolveCallRequest(requestId, contactId) {
+  const meetingAtEl = document.getElementById('cr-meeting-at');
+  const meetingNoteEl = document.getElementById('cr-meeting-note');
+  
+  // pokud se vyřizuje ze záložky "K navolání" (bez formuláře), otevři detail firmy
+  if (!meetingAtEl) {
+    document.querySelector('.tab-btn[data-tab="contacts"]').click();
+    showDetail(contactId);
+    toast('Zadejte termín schůzky v detailu firmy');
+    return;
+  }
+  
+  const meetingAt = meetingAtEl.value;
+  if (!meetingAt) {
+    toast('Zadejte datum a čas schůzky', true);
+    meetingAtEl.focus();
+    return;
+  }
+  const meetingNote = meetingNoteEl ? meetingNoteEl.value.trim() : '';
+  const meetingISO = new Date(meetingAt).toISOString();
+  const now = new Date().toISOString();
+  
+  // 1. aktualizovat požadavek
+  const { error } = await sb.from('call_requests').update({
+    status: 'vyřízeno',
+    resolved_by: currentUser.id,
+    resolved_by_name: currentProfile.full_name,
+    resolved_at: now,
+    meeting_at: meetingISO,
+    meeting_note: meetingNote,
+    seen_by_rep: false
+  }).eq('id', requestId);
+  if (error) { toast('Chyba: ' + error.message, true); return; }
+  
+  // 2. vytvořit aktivitu typu schůzka
+  const actNote = 'Schůzka domluvena na ' + fmtDateTime(meetingISO) + (meetingNote ? '\n' + meetingNote : '');
+  await sb.from('activities').insert({
+    contact_id: contactId, type: 'schůzka', note: actNote, activity_date: now,
+    created_by: currentUser.id, created_by_name: currentProfile.full_name
+  });
+  
+  // 3. změnit status firmy na "schůzka"
+  await sb.from('contacts').update({ status: 'schůzka', updated_at: now }).eq('id', contactId);
+  const co = allContacts.find(x => x.id === contactId);
+  if (co) { co.status = 'schůzka'; co.last_activity_date = now; }
+  
+  toast('Schůzka uložena, obchodník bude upozorněn');
+  await loadCallRequests();
+  // reload activities
+  const { data: acts } = await sb.from('activities').select('*, contacts(company_name)').order('activity_date', { ascending: false }).limit(500);
+  allActivities = acts || [];
+  renderCalls();
+  renderMeetings();
+  renderActivities();
+  render();
+  renderMyDay();
+  if (selectedId === contactId) showDetail(contactId);
+}
+
+async function cancelCallRequest(requestId) {
+  const { error } = await sb.from('call_requests').delete().eq('id', requestId);
+  if (error) { toast('Chyba: ' + error.message, true); return; }
+  toast('Požadavek zrušen');
+  await loadCallRequests();
+  renderCalls();
+  if (selectedId) showDetail(selectedId);
+}
+
+function renderCalls() {
+  const container = document.getElementById('calls-content');
+  if (!container) return;
+  
+  const pending = allCallRequests.filter(r => r.status === 'čeká');
+  const done = allCallRequests.filter(r => r.status === 'vyřízeno').slice(0, 30);
+  
+  let html = '';
+  
+  // ČEKAJÍCÍ
+  html += `<div class="call-section-title">Čeká na navolání (${pending.length})</div>`;
+  if (pending.length === 0) {
+    html += `<div class="act-empty" style="padding:32px">Žádné firmy nečekají na navolání.</div>`;
+  } else {
+    html += pending.map(r => {
+      const co = r.contacts || {};
+      const canResolve = currentProfile.role === 'navolavacka' || currentProfile.role === 'superadmin';
+      return `<div class="call-card">
+        <div class="call-card-main">
+          <div class="call-card-company">${esc(co.company_name || '—')}</div>
+          <div class="call-card-meta">Předal: ${esc(r.requested_by_name || '—')} · ${fmtDate(r.requested_at)} · obchodník: ${esc(co.sales_rep || '—')}</div>
+          <div class="call-card-contact">
+            ${co.phone ? `📞 <a href="tel:${esc(co.phone)}">${esc(co.phone)}</a>` : ''}
+            ${co.email ? ` · ✉️ <a href="mailto:${esc(co.email)}">${esc(co.email)}</a>` : ''}
+            ${co.city ? ` · ${esc(co.city)}` : ''}
+          </div>
+        </div>
+        <div class="call-card-actions">
+          <button class="call-btn call-btn-open" data-open="${co.id}">Otevřít firmu</button>
+          ${canResolve ? `<button class="call-btn call-btn-done" data-resolve="${r.id}" data-cid="${co.id}">✓ Navoláno</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  
+  // VYŘÍZENÉ
+  if (done.length > 0) {
+    html += `<div class="call-section-title">Naposledy vyřízené</div>`;
+    html += done.map(r => {
+      const co = r.contacts || {};
+      return `<div class="call-card done">
+        <div class="call-card-main">
+          <div class="call-card-company">${esc(co.company_name || '—')}</div>
+          <div class="call-card-meta">Navolala: ${esc(r.resolved_by_name || '—')} · ${fmtDate(r.resolved_at)}</div>
+        </div>
+        <div class="call-card-actions">
+          <button class="call-btn call-btn-open" data-open="${co.id}">Otevřít firmu</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  
+  container.innerHTML = html;
+  
+  // bind
+  container.querySelectorAll('[data-open]').forEach(b => {
+    b.addEventListener('click', () => {
+      const cid = parseInt(b.dataset.open);
+      document.querySelector('.tab-btn[data-tab="contacts"]').click();
+      showDetail(cid);
+    });
+  });
+  container.querySelectorAll('[data-resolve]').forEach(b => {
+    b.addEventListener('click', () => resolveCallRequest(parseInt(b.dataset.resolve), parseInt(b.dataset.cid)));
+  });
+}
+
+// ============ MOJE SCHŮZKY ============
+function renderMeetings() {
+  const container = document.getElementById('meetings-content');
+  if (!container) return;
+  
+  const meetings = getMyMeetings();
+  const newOnes = meetings.filter(r => !r.seen_by_rep);
+  const seenOnes = meetings.filter(r => r.seen_by_rep);
+  
+  let html = '';
+  
+  // NOVÉ
+  html += `<div class="call-section-title">Nové schůzky (${newOnes.length})</div>`;
+  if (newOnes.length === 0) {
+    html += `<div class="act-empty" style="padding:32px">Žádné nové schůzky. Kristýna vám zatím nic nenavolala.</div>`;
+  } else {
+    html += newOnes.map(r => meetingCardHtml(r, false)).join('');
+  }
+  
+  // POTVRZENÉ
+  if (seenOnes.length > 0) {
+    html += `<div class="call-section-title">Potvrzené schůzky</div>`;
+    html += seenOnes.map(r => meetingCardHtml(r, true)).join('');
+  }
+  
+  container.innerHTML = html;
+  
+  container.querySelectorAll('[data-open]').forEach(b => {
+    b.addEventListener('click', () => {
+      const cid = parseInt(b.dataset.open);
+      document.querySelector('.tab-btn[data-tab="contacts"]').click();
+      showDetail(cid);
+    });
+  });
+  container.querySelectorAll('[data-seen]').forEach(b => {
+    b.addEventListener('click', () => markMeetingSeen(parseInt(b.dataset.seen)));
+  });
+}
+
+function meetingCardHtml(r, seen) {
+  const co = r.contacts || {};
+  return `<div class="meeting-card ${seen ? 'seen' : ''}">
+    <div class="meeting-card-main">
+      <div class="meeting-card-company">${esc(co.company_name || '—')}</div>
+      <div class="meeting-card-when">📅 ${fmtDateTime(r.meeting_at)}</div>
+      ${r.meeting_note ? `<div class="meeting-card-note">${esc(r.meeting_note)}</div>` : ''}
+      <div class="meeting-card-meta">Navolala: ${esc(r.resolved_by_name || '—')} · ${fmtDate(r.resolved_at)}
+        ${co.phone ? ` · 📞 ${esc(co.phone)}` : ''}</div>
+    </div>
+    <div class="meeting-card-actions">
+      <button class="call-btn call-btn-open" data-open="${co.id}">Otevřít firmu</button>
+      ${!seen ? `<button class="call-btn call-btn-done" data-seen="${r.id}">✓ Beru na vědomí</button>` : ''}
+    </div>
+  </div>`;
+}
+
+async function markMeetingSeen(requestId) {
+  const { error } = await sb.from('call_requests').update({
+    seen_by_rep: true,
+    seen_at: new Date().toISOString()
+  }).eq('id', requestId);
+  if (error) { toast('Chyba: ' + error.message, true); return; }
+  const req = allCallRequests.find(r => r.id === requestId);
+  if (req) { req.seen_by_rep = true; }
+  toast('Schůzka potvrzena');
+  updateCallsBadge();
+  renderMeetings();
+  renderMyDay();
+}
+
+// ============ MŮJ DEN ============
+function renderMyDay() {
+  const grid = document.getElementById('myday-grid');
+  if (!grid) return;
+  
+  const hour = new Date().getHours();
+  const greeting = hour < 9 ? 'Dobré ráno' : hour < 12 ? 'Dobré dopoledne' : hour < 18 ? 'Dobrý den' : 'Dobrý večer';
+  const firstName = (currentProfile.full_name || '').split(' ')[0];
+  document.getElementById('myday-greeting').textContent = greeting + (firstName ? ', ' + firstName : '');
+  document.getElementById('myday-date').textContent = new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toDateString();
+  
+  let cards = [];
+  
+  // KARTA 1: Nadcházející schůzky (dnes + zítra + budoucí)
+  const myMeetings = getMyMeetings().filter(r => {
+    if (!r.meeting_at) return false;
+    return new Date(r.meeting_at) >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  });
+  const meetingItems = myMeetings.slice(0, 8).map(r => {
+    const co = r.contacts || {};
+    const md = new Date(r.meeting_at);
+    let whenLabel = fmtDateTime(r.meeting_at);
+    if (md.toDateString() === todayStr) whenLabel = 'DNES ' + md.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
+    else if (md.toDateString() === tomorrowStr) whenLabel = 'ZÍTRA ' + md.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
+    return `<div class="myday-item" data-goto="${co.id}">
+      <div class="myday-item-title">${esc(co.company_name || '—')}</div>
+      <div class="myday-item-when">📅 ${whenLabel}</div>
+      ${r.meeting_note ? `<div class="myday-item-sub">${esc(r.meeting_note)}</div>` : ''}
+    </div>`;
+  });
+  const hasUrgentMeeting = myMeetings.some(r => {
+    const md = new Date(r.meeting_at);
+    return md.toDateString() === todayStr || md.toDateString() === tomorrowStr;
+  });
+  cards.push({
+    icon: '📅', title: 'Nadcházející schůzky', count: myMeetings.length,
+    items: meetingItems, empty: 'Žádné naplánované schůzky.',
+    highlight: hasUrgentMeeting,
+    show: currentProfile.role === 'obchodnik' || currentProfile.role === 'superadmin'
+  });
+  
+  // KARTA 2: Firmy bez aktivity 30+ dní (moje)
+  const thirty = new Date(); thirty.setDate(thirty.getDate() - 30);
+  let myStale = allContacts.filter(c => {
+    if (currentProfile.role === 'obchodnik' && c.sales_rep !== currentProfile.sales_rep_name) return false;
+    if (currentProfile.role === 'navolavacka') return false;
+    if (['vyhráno','ztracen'].includes(c.status)) return false;
+    return !c.last_activity_date || new Date(c.last_activity_date) < thirty;
+  });
+  const staleItems = myStale.slice(0, 10).map(c => `
+    <div class="myday-item" data-goto="${c.id}">
+      <div class="myday-item-title">${esc(c.company_name)}</div>
+      <div class="myday-item-sub">${esc(c.city || '')} · ${c.last_activity_date ? 'posl. ' + fmtDate(c.last_activity_date) : 'zatím bez kontaktu'} · ${esc(c.status)}</div>
+    </div>`);
+  cards.push({
+    icon: '⏰', title: 'Dlouho nekontaktováno', count: myStale.length,
+    items: staleItems, empty: 'Skvělé, vše máte v kontaktu!',
+    show: currentProfile.role === 'obchodnik' || currentProfile.role === 'superadmin'
+  });
+  
+  // KARTA 3: K navolání (čekající)
+  const pendingCalls = allCallRequests.filter(r => r.status === 'čeká');
+  const callItems = pendingCalls.slice(0, 10).map(r => {
+    const co = r.contacts || {};
+    return `<div class="myday-item" data-goto="${co.id}">
+      <div class="myday-item-title">${esc(co.company_name || '—')}</div>
+      <div class="myday-item-sub">Předal: ${esc(r.requested_by_name || '—')} · ${co.phone ? '📞 ' + esc(co.phone) : 'bez telefonu'}</div>
+    </div>`;
+  });
+  cards.push({
+    icon: '📞', title: currentProfile.role === 'navolavacka' ? 'Firmy k obvolání' : 'Čeká na navolání',
+    count: pendingCalls.length, items: callItems,
+    empty: 'Žádné firmy k navolání.',
+    highlight: currentProfile.role === 'navolavacka' && pendingCalls.length > 0,
+    show: true
+  });
+  
+  // KARTA 4: Nové navolané schůzky (jen obchodník) - upozornění
+  if (currentProfile.role === 'obchodnik' || currentProfile.role === 'superadmin') {
+    const newMeetings = getMyMeetings().filter(r => !r.seen_by_rep);
+    const newItems = newMeetings.slice(0, 8).map(r => {
+      const co = r.contacts || {};
+      return `<div class="myday-item" data-goto="${co.id}">
+        <div class="myday-item-title">${esc(co.company_name || '—')}</div>
+        <div class="myday-item-when">📅 ${fmtDateTime(r.meeting_at)}</div>
+        <div class="myday-item-sub">Navolala ${esc(r.resolved_by_name || '—')}</div>
+      </div>`;
+    });
+    if (newMeetings.length > 0) {
+      cards.unshift({
+        icon: '🔔', title: 'Kristýna vám navolala', count: newMeetings.length,
+        items: newItems, empty: '', highlight: true, show: true
+      });
+    }
+  }
+  
+  grid.innerHTML = cards.filter(c => c.show).map(c => `
+    <div class="myday-card ${c.highlight ? 'highlight' : ''}">
+      <div class="myday-card-head">
+        <span class="myday-card-icon">${c.icon}</span>
+        <span class="myday-card-title">${c.title}</span>
+        <span class="myday-card-count ${c.count === 0 ? 'zero' : ''}">${c.count}</span>
+      </div>
+      <div class="myday-card-body">
+        ${c.items.length ? c.items.join('') : `<div class="myday-empty">${c.empty}</div>`}
+      </div>
+    </div>
+  `).join('');
+  
+  grid.querySelectorAll('[data-goto]').forEach(el => {
+    el.addEventListener('click', () => {
+      const cid = parseInt(el.dataset.goto);
+      document.querySelector('.tab-btn[data-tab="contacts"]').click();
+      showDetail(cid);
+    });
+  });
+}
+
+// ============ RYCHLÝ ZÁPIS Z TABULKY ============
+let quickPopoverContactId = null;
+function openQuickPopover(contactId, btnEl) {
+  quickPopoverContactId = contactId;
+  const c = allContacts.find(x => x.id === contactId);
+  const pop = document.getElementById('quick-popover');
+  document.getElementById('qp-company').textContent = c ? c.company_name : '—';
+  document.getElementById('qp-type').value = 'telefonát';
+  document.getElementById('qp-note').value = '';
+  
+  // umístit popover u tlačítka
+  const rect = btnEl.getBoundingClientRect();
+  let left = rect.left - 200;
+  if (left < 10) left = 10;
+  let top = rect.bottom + 6;
+  if (top + 200 > window.innerHeight) top = rect.top - 200;
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+  pop.classList.add('show');
+  document.getElementById('qp-note').focus();
+}
+function closeQuickPopover() {
+  document.getElementById('quick-popover').classList.remove('show');
+  quickPopoverContactId = null;
+}
+document.getElementById('qp-cancel').addEventListener('click', closeQuickPopover);
+document.getElementById('qp-save').addEventListener('click', async () => {
+  if (!quickPopoverContactId) return;
+  const type = document.getElementById('qp-type').value;
+  const note = document.getElementById('qp-note').value.trim();
+  const now = new Date().toISOString();
+  const cid = quickPopoverContactId;
+  const { error } = await sb.from('activities').insert({
+    contact_id: cid, type, note, activity_date: now,
+    created_by: currentUser.id, created_by_name: currentProfile.full_name
+  });
+  if (error) { toast('Chyba: ' + error.message, true); return; }
+  const c = allContacts.find(x => x.id === cid);
+  if (c) c.last_activity_date = now;
+  toast('Zápis uložen');
+  closeQuickPopover();
+  const { data: acts } = await sb.from('activities').select('*, contacts(company_name)').order('activity_date', { ascending: false }).limit(500);
+  allActivities = acts || [];
+  renderActivities();
+  render();
+});
+// zavřít popover kliknutím mimo
+document.addEventListener('click', (e) => {
+  const pop = document.getElementById('quick-popover');
+  if (pop.classList.contains('show') && !pop.contains(e.target) && !e.target.classList.contains('quick-act-btn')) {
+    closeQuickPopover();
+  }
+});
+
+// ============ PŘIDAT FIRMU ============
+function openAddCompanyModal() {
+  const repSel = document.getElementById('nc-rep');
+  const reps = ['','Jirka','Gábina','Jarda','Táňa','Pavel','Jana','Zdeněk','Inpox'];
+  repSel.innerHTML = reps.map(r => `<option value="${r}">${r || '— bez obchodníka —'}</option>`).join('');
+  // přednastavit obchodníka na sebe
+  if (currentProfile.role === 'obchodnik' && currentProfile.sales_rep_name) {
+    repSel.value = currentProfile.sales_rep_name;
+  }
+  document.getElementById('nc-name').value = '';
+  document.getElementById('nc-phone').value = '';
+  document.getElementById('nc-city').value = '';
+  document.getElementById('add-company-modal').classList.add('show');
+  document.getElementById('nc-name').focus();
+}
+function closeAddCompanyModal() {
+  document.getElementById('add-company-modal').classList.remove('show');
+}
+document.getElementById('add-company-btn').addEventListener('click', openAddCompanyModal);
+document.getElementById('modal-close').addEventListener('click', closeAddCompanyModal);
+document.getElementById('modal-cancel').addEventListener('click', closeAddCompanyModal);
+document.getElementById('add-company-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'add-company-modal') closeAddCompanyModal();
+});
+document.getElementById('modal-save').addEventListener('click', async () => {
+  const name = document.getElementById('nc-name').value.trim();
+  if (!name) { toast('Zadejte název firmy', true); document.getElementById('nc-name').focus(); return; }
+  const phone = document.getElementById('nc-phone').value.trim();
+  const city = document.getElementById('nc-city').value.trim();
+  const rep = document.getElementById('nc-rep').value || null;
+  
+  const baseRecord = {
+    company_name: name, phone: phone || null, city: city || null,
+    sales_rep: rep, status: 'nový'
+  };
+  
+  // pokus s created_by_name; pokud sloupec neexistuje, zkus bez něj
+  let { data, error } = await sb.from('contacts')
+    .insert({ ...baseRecord, created_by_name: currentProfile.full_name })
+    .select().single();
+  
+  if (error && /created_by_name/.test(error.message || '')) {
+    ({ data, error } = await sb.from('contacts').insert(baseRecord).select().single());
+  }
+  
+  if (error) { toast('Chyba: ' + error.message, true); return; }
+  
+  allContacts.push(data);
+  toast('Firma „' + name + '" přidána');
+  closeAddCompanyModal();
+  // aktualizovat statistiky a tabulku
+  document.getElementById('st-total').textContent = allContacts.length.toLocaleString('cs');
+  applyFilters();
+  // otevřít detail nové firmy
+  document.querySelector('.tab-btn[data-tab="contacts"]').click();
+  showDetail(data.id);
+});
+
 // ============ ACTIVITIES TAB ============
 function renderActivities() {
   const tbody = document.getElementById('act-tbody');
@@ -865,7 +1649,11 @@ document.querySelectorAll('.tab-btn').forEach(b => {
     const tab = b.dataset.tab;
     document.querySelectorAll('.tab-btn').forEach(x => x.classList.toggle('active', x === b));
     document.getElementById('contacts-tab').style.display = tab === 'contacts' ? '' : 'none';
+    document.getElementById('myday-tab').classList.toggle('active', tab === 'myday');
     document.getElementById('activities-tab').classList.toggle('active', tab === 'activities');
+    document.getElementById('calls-tab').classList.toggle('active', tab === 'calls');
+    document.getElementById('meetings-tab').classList.toggle('active', tab === 'meetings');
+    if (tab === 'myday') renderMyDay();
   });
 });
 
