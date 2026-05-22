@@ -817,7 +817,7 @@ async function loadData() {
   allContacts = all;
   
   // load activities (latest 500 for overview tab)
-  const { data: acts } = await sb.from('activities').select('*, contacts(company_name)').order('activity_date', { ascending: false }).limit(500);
+  const { data: acts } = await sb.from('activities').select('*, contacts(company_name, sales_rep)').order('activity_date', { ascending: false }).limit(500);
   allActivities = acts || [];
   
   // load call requests
@@ -837,7 +837,10 @@ async function loadCallRequests() {
 }
 
 function updateCallsBadge() {
-  const pending = allCallRequests.filter(r => r.status === 'čeká').length;
+  // odznak počítá jen firmy, které uživatel smí vidět
+  const pending = allCallRequests.filter(r =>
+    r.status === 'čeká' && canSeeContactRecord((r.contacts || {}).sales_rep)
+  ).length;
   const badge = document.getElementById('calls-badge');
   badge.textContent = pending > 0 ? pending : '';
   const bnCalls = document.getElementById('bn-calls-badge');
@@ -1283,7 +1286,7 @@ async function showDetail(id) {
       toast('Aktivita uložena');
       showDetail(id); // refresh
       // reload activities for activities tab
-      const { data: acts } = await sb.from('activities').select('*, contacts(company_name)').order('activity_date', { ascending: false }).limit(500);
+      const { data: acts } = await sb.from('activities').select('*, contacts(company_name, sales_rep)').order('activity_date', { ascending: false }).limit(500);
       allActivities = acts || [];
       renderActivities();
       render();
@@ -1406,7 +1409,7 @@ async function resolveCallRequest(requestId, contactId) {
   toast('Schůzka uložena, obchodník bude upozorněn');
   await loadCallRequests();
   // reload activities
-  const { data: acts } = await sb.from('activities').select('*, contacts(company_name)').order('activity_date', { ascending: false }).limit(500);
+  const { data: acts } = await sb.from('activities').select('*, contacts(company_name, sales_rep)').order('activity_date', { ascending: false }).limit(500);
   allActivities = acts || [];
   renderCalls();
   renderMeetings();
@@ -1425,12 +1428,22 @@ async function cancelCallRequest(requestId) {
   if (selectedId) showDetail(selectedId);
 }
 
+// Vrátí true, pokud aktuální uživatel smí vidět záznam dané firmy.
+// Superadmin a navolávačka vidí vše; obchodník jen své firmy.
+function canSeeContactRecord(salesRep) {
+  if (currentProfile.role === 'superadmin' || currentProfile.role === 'navolavacka') return true;
+  if (currentProfile.role === 'obchodnik') return salesRep === currentProfile.sales_rep_name;
+  return false;
+}
+
 function renderCalls() {
   const container = document.getElementById('calls-content');
   if (!container) return;
   
-  const pending = allCallRequests.filter(r => r.status === 'čeká');
-  const done = allCallRequests.filter(r => r.status === 'vyřízeno').slice(0, 30);
+  // obchodník vidí jen své firmy, superadmin a Kristýna vše
+  const visible = allCallRequests.filter(r => canSeeContactRecord((r.contacts || {}).sales_rep));
+  const pending = visible.filter(r => r.status === 'čeká');
+  const done = visible.filter(r => r.status === 'vyřízeno').slice(0, 30);
   
   let html = '';
   
@@ -1628,7 +1641,9 @@ function renderMyDay() {
   });
   
   // KARTA 3: K navolání (čekající)
-  const pendingCalls = allCallRequests.filter(r => r.status === 'čeká');
+  const pendingCalls = allCallRequests.filter(r =>
+    r.status === 'čeká' && canSeeContactRecord((r.contacts || {}).sales_rep)
+  );
   const callItems = pendingCalls.slice(0, 10).map(r => {
     const co = r.contacts || {};
     return `<div class="myday-item" data-goto="${co.id}">
@@ -1726,7 +1741,7 @@ document.getElementById('qp-save').addEventListener('click', async () => {
   if (c) c.last_activity_date = now;
   toast('Zápis uložen');
   closeQuickPopover();
-  const { data: acts } = await sb.from('activities').select('*, contacts(company_name)').order('activity_date', { ascending: false }).limit(500);
+  const { data: acts } = await sb.from('activities').select('*, contacts(company_name, sales_rep)').order('activity_date', { ascending: false }).limit(500);
   allActivities = acts || [];
   renderActivities();
   render();
@@ -1801,13 +1816,17 @@ document.getElementById('modal-save').addEventListener('click', async () => {
 function renderActivities() {
   const tbody = document.getElementById('act-tbody');
   const empty = document.getElementById('act-empty');
-  if (allActivities.length === 0) {
+  
+  // obchodník vidí jen aktivity svých firem; superadmin a Kristýna vše
+  const visible = allActivities.filter(a => canSeeContactRecord((a.contacts || {}).sales_rep));
+  
+  if (visible.length === 0) {
     tbody.innerHTML = '';
     empty.style.display = 'block';
     return;
   }
   empty.style.display = 'none';
-  tbody.innerHTML = allActivities.map(a => `
+  tbody.innerHTML = visible.map(a => `
     <tr>
       <td style="white-space:nowrap;font-size:11px">${fmtDateTime(a.activity_date)}</td>
       <td style="font-weight:600">${esc(a.contacts ? a.contacts.company_name : '—')}</td>
