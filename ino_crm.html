@@ -309,15 +309,134 @@ td.date-col { font-size: 11px; color: var(--muted); }
   .stat-item { padding: 10px 14px; }
   .stat-value { font-size: 20px; }
 }
-@media (max-width: 720px) {
-  header { padding: 0 14px; gap: 12px; height: auto; min-height: 60px; flex-wrap: wrap; padding: 8px 14px; }
-  .logo-label { display: none; }
-  .stats-bar { flex-wrap: wrap; }
-  .stat-item { flex: 1 1 50%; min-width: 140px; }
-  .main { flex-direction: column; height: auto; }
-  .sidebar { width: 100%; max-height: none; }
-  .detail-panel { width: 100%; position: fixed; top: 0; right: 0; bottom: 0; z-index: 200; box-shadow: -8px 0 24px rgba(0,0,0,.2); }
+
+/* ===== MOBILNÍ KARTY (skryté na desktopu) ===== */
+.card-list { display: none; }
+.contact-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  margin: 0 0 10px; overflow: hidden;
 }
+.contact-card-top { padding: 12px 14px 10px; cursor: pointer; }
+.contact-card-name { font-family: 'Ladislav', sans-serif; font-size: 15px; color: var(--green-gray); margin-bottom: 4px; line-height: 1.3; }
+.contact-card-row { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+.contact-card-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.contact-card-actions { display: flex; border-top: 1px solid var(--border); }
+.contact-card-actions a, .contact-card-actions button {
+  flex: 1; padding: 11px 8px; text-align: center; font-family: 'GeneralSans', sans-serif;
+  font-size: 13px; font-weight: 600; border: none; background: none; cursor: pointer;
+  color: var(--green-gray); text-decoration: none; display: flex; align-items: center;
+  justify-content: center; gap: 5px;
+}
+.contact-card-actions a:active, .contact-card-actions button:active { background: var(--beige1); }
+.contact-card-actions .ca-call { color: var(--red); }
+.contact-card-actions > * + * { border-left: 1px solid var(--border); }
+.contact-card-actions .ca-disabled { color: var(--gray20); pointer-events: none; }
+
+/* ===== SPODNÍ NAVIGACE (jen mobil) ===== */
+.bottom-nav { display: none; }
+
+/* ===== MOBIL ≤720px ===== */
+@media (max-width: 720px) {
+  header { padding: 8px 14px; gap: 10px; height: auto; min-height: 56px; }
+  .logo-label { display: none; }
+  .tab-nav { display: none; }
+  .logo-svg { height: 22px; }
+  .user-info { margin-left: auto; padding-left: 0; border-left: none; }
+  .user-role { display: none; }
+  .user-name { font-size: 13px; }
+
+  /* statistiky kompaktně */
+  .stats-bar { flex-wrap: wrap; }
+  .stat-item { flex: 1 1 50%; min-width: 0; padding: 8px 14px; }
+  .stat-value { font-size: 18px; }
+
+  /* layout na výšku */
+  .main { flex-direction: column; height: auto; }
+
+  /* sidebar jako vysouvací panel */
+  .sidebar {
+    width: 100%; max-height: none; position: fixed; top: 0; left: 0; bottom: 0;
+    z-index: 300; transform: translateX(-100%); transition: transform .25s;
+    box-shadow: 4px 0 24px rgba(0,0,0,.2); overflow-y: auto;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(61,86,85,.45); z-index: 250;
+  }
+  .sidebar-backdrop.show { display: block; }
+  .sidebar-mobile-head { display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 4px; }
+  .sidebar-close { display: block; background: none; border: none; font-size: 20px;
+    color: var(--muted); cursor: pointer; }
+
+  /* toolbar: filtr tlačítko + akce */
+  .table-toolbar { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
+  .filter-toggle-btn { display: flex; }
+  .result-count { order: 3; width: 100%; }
+  .add-company-btn, .export-btn { font-size: 12px; padding: 8px 12px; }
+
+  /* skrýt tabulku, ukázat karty */
+  .contacts-table { display: none; }
+  .card-list { display: block; padding: 12px 14px; }
+  .table-scroll { -webkit-overflow-scrolling: touch; }
+
+  /* stránkování kompaktně */
+  .pagination { padding: 10px 14px; flex-wrap: wrap; }
+  .page-numbers { order: 3; width: 100%; justify-content: center; margin-top: 6px; }
+  .page-info { display: none; }
+
+  /* detail na celou obrazovku */
+  .detail-panel { width: 100%; position: fixed; inset: 0; z-index: 400;
+    box-shadow: none; }
+
+  /* obsahové záložky padding */
+  #myday-tab, #activities-tab, #calls-tab, #meetings-tab { padding: 16px 14px 80px; }
+  .myday-grid { grid-template-columns: 1fr; }
+  #contacts-tab { padding-bottom: 64px; }
+
+  /* aktivity tabulka → scroll */
+  .act-table-wrap { overflow-x: auto; }
+  .act-table { font-size: 12px; min-width: 520px; }
+
+  /* spodní navigace */
+  .bottom-nav {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
+    background: var(--surface); border-top: 1px solid var(--border); z-index: 200;
+  }
+  .bottom-nav button {
+    flex: 1; background: none; border: none; cursor: pointer; display: flex;
+    flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    font-family: 'GeneralSans', sans-serif; font-size: 10px; color: var(--muted);
+    padding: 6px 2px; position: relative;
+  }
+  .bottom-nav button.active { color: var(--red); }
+  .bottom-nav button .bn-icon { font-size: 19px; line-height: 1; }
+  .bottom-nav button .bn-badge {
+    position: absolute; top: 4px; right: 50%; transform: translateX(14px);
+    background: var(--red); color: #fff; font-size: 9px; font-weight: 700;
+    min-width: 15px; height: 15px; border-radius: 8px; display: flex;
+    align-items: center; justify-content: center; padding: 0 3px;
+  }
+  .bottom-nav button .bn-badge:empty { display: none; }
+
+  /* modaly a popovery na mobilu */
+  .modal { max-width: 100%; }
+  .quick-popover { width: calc(100vw - 28px); left: 14px !important; }
+  .detail-body { padding: 14px; }
+
+  /* větší klikací plochy */
+  .chip { padding: 7px 13px; font-size: 12px; }
+  .myday-greeting { font-size: 22px; }
+}
+
+/* filtr tlačítko skryté na desktopu */
+.filter-toggle-btn {
+  display: none; background: var(--gray2); border: 1px solid var(--gray10);
+  color: var(--text); padding: 8px 12px; border-radius: 6px; cursor: pointer;
+  font-family: 'GeneralSans', sans-serif; font-size: 12px; font-weight: 600;
+  align-items: center; gap: 6px;
+}
+.filter-toggle-btn:active { background: var(--gray5); }
 </style>
 </head>
 <body>
@@ -384,7 +503,11 @@ td.date-col { font-size: 11px; color: var(--muted); }
     </div>
 
     <div class="main">
-      <aside class="sidebar">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-mobile-head">
+          <div class="filter-label" style="font-size:13px">Filtry</div>
+          <button class="sidebar-close" id="sidebar-close">✕</button>
+        </div>
         <div class="filter-section">
           <div class="filter-label">Hledat</div>
           <input class="search-input" id="search" type="text" placeholder="Název, IČO, město…">
@@ -432,12 +555,13 @@ td.date-col { font-size: 11px; color: var(--muted); }
 
       <div class="table-area">
         <div class="table-toolbar">
+          <button class="filter-toggle-btn" id="filter-toggle-btn">⚙ Filtry</button>
           <span class="result-count" id="result-count">Načítání…</span>
           <button class="add-company-btn" id="add-company-btn" style="margin-left:auto">+ Přidat firmu</button>
           <button class="export-btn" id="export-btn" style="margin-left:8px">↓ Export CSV</button>
         </div>
         <div class="table-scroll">
-          <table>
+          <table class="contacts-table">
             <thead>
               <tr>
                 <th data-sort="id">ID</th>
@@ -455,6 +579,7 @@ td.date-col { font-size: 11px; color: var(--muted); }
             </thead>
             <tbody id="tbody"></tbody>
           </table>
+          <div id="card-list" class="card-list"></div>
           <div id="no-results" class="no-results" style="display:none">Žádné výsledky.</div>
           <div id="loading" class="loading">Načítání dat…</div>
         </div>
@@ -503,7 +628,17 @@ td.date-col { font-size: 11px; color: var(--muted); }
     <p class="act-page-sub">Schůzky, které vám domluvila Kristýna</p>
     <div id="meetings-content"></div>
   </div>
+
+  <nav class="bottom-nav" id="bottom-nav">
+    <button data-tab="myday" class="active"><span class="bn-icon">☀️</span>Můj den</button>
+    <button data-tab="contacts"><span class="bn-icon">🏢</span>Kontakty</button>
+    <button data-tab="calls" id="bn-calls"><span class="bn-icon">📞</span>K navolání<span class="bn-badge" id="bn-calls-badge"></span></button>
+    <button data-tab="meetings" id="bn-meetings"><span class="bn-icon">📅</span>Schůzky<span class="bn-badge" id="bn-meetings-badge"></span></button>
+    <button data-tab="activities"><span class="bn-icon">📋</span>Aktivity</button>
+  </nav>
 </div>
+
+<div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
 <div class="modal-overlay" id="add-company-modal">
   <div class="modal">
@@ -654,6 +789,9 @@ async function loadProfileAndShowApp(user) {
   // Záložka "Moje schůzky" pro obchodníky a superadminy
   if (profile.role === 'obchodnik' || profile.role === 'superadmin') {
     document.getElementById('tab-meetings').style.display = '';
+  } else {
+    // navolávačka nemá schůzky — skrýt i ve spodní navigaci
+    document.getElementById('bn-meetings').style.display = 'none';
   }
   // Tlačítko "Přidat firmu" jen pro obchodníky a superadminy (ne navolávačka)
   if (profile.role === 'navolavacka') {
@@ -702,13 +840,15 @@ function updateCallsBadge() {
   const pending = allCallRequests.filter(r => r.status === 'čeká').length;
   const badge = document.getElementById('calls-badge');
   badge.textContent = pending > 0 ? pending : '';
+  const bnCalls = document.getElementById('bn-calls-badge');
+  if (bnCalls) bnCalls.textContent = pending > 0 ? pending : '';
   
   // odznak "Moje schůzky" — nové navolané schůzky pro tohoto obchodníka, které ještě neviděl
+  const myNew = getMyMeetings().filter(r => !r.seen_by_rep).length;
   const meetingsBadge = document.getElementById('meetings-badge');
-  if (meetingsBadge) {
-    const myNew = getMyMeetings().filter(r => !r.seen_by_rep).length;
-    meetingsBadge.textContent = myNew > 0 ? myNew : '';
-  }
+  if (meetingsBadge) meetingsBadge.textContent = myNew > 0 ? myNew : '';
+  const bnMeetings = document.getElementById('bn-meetings-badge');
+  if (bnMeetings) bnMeetings.textContent = myNew > 0 ? myNew : '';
 }
 
 function getMyMeetings() {
@@ -754,7 +894,7 @@ function initUI() {
 
 // ============ FILTERS ============
 document.getElementById('search').addEventListener('input', applyFilters);
-document.getElementById('region-filter').addEventListener('change', applyFilters);
+document.getElementById('region-filter').addEventListener('change', () => { applyFilters(); closeMobileFilter(); });
 document.getElementById('reset-btn').addEventListener('click', () => {
   document.getElementById('search').value = '';
   document.getElementById('region-filter').value = '';
@@ -891,14 +1031,19 @@ document.querySelectorAll('th[data-sort]').forEach(th => {
 // ============ RENDER TABLE ============
 function render() {
   const tbody = document.getElementById('tbody');
+  const cardList = document.getElementById('card-list');
   const nr = document.getElementById('no-results');
   if (filtered.length === 0) {
     tbody.innerHTML = '';
+    cardList.innerHTML = '';
     nr.style.display = 'block';
   } else {
     nr.style.display = 'none';
     const start = (currentPage - 1) * PER;
-    tbody.innerHTML = filtered.slice(start, start + PER).map(c => {
+    const pageRows = filtered.slice(start, start + PER);
+    
+    // --- desktop tabulka ---
+    tbody.innerHTML = pageRows.map(c => {
       const canQuick = canAddActivity(c);
       return `<tr data-id="${c.id}" class="${selectedId === c.id ? 'selected' : ''}">
         <td class="id-col">${c.id}</td>
@@ -921,6 +1066,36 @@ function render() {
       });
     });
     tbody.querySelectorAll('.quick-act-btn').forEach(b => {
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openQuickPopover(parseInt(b.dataset.quick), b);
+      });
+    });
+    
+    // --- mobilní karty ---
+    cardList.innerHTML = pageRows.map(c => {
+      const canQuick = canAddActivity(c);
+      return `<div class="contact-card" data-id="${c.id}">
+        <div class="contact-card-top" data-open="${c.id}">
+          <div class="contact-card-name">${esc(c.company_name)}</div>
+          <div class="contact-card-row">${esc(c.city || '—')}${c.region ? ' · ' + esc(c.region) : ''}</div>
+          ${c.phone ? `<div class="contact-card-row">📞 ${esc(c.phone)}</div>` : ''}
+          <div class="contact-card-badges">
+            <span class="badge ${repClass(c.sales_rep)}">${esc(c.sales_rep || 'bez obch.')}</span>
+            <span class="badge ${statusClass(c.status)}">${esc(c.status)}</span>
+          </div>
+        </div>
+        <div class="contact-card-actions">
+          ${c.phone ? `<a class="ca-call" href="tel:${esc(c.phone)}">📞 Zavolat</a>` : `<span class="ca-disabled">📞 Bez čísla</span>`}
+          ${canQuick ? `<button class="ca-quick" data-quick="${c.id}">📝 Zápis</button>` : ''}
+          <button class="ca-detail" data-open="${c.id}">Detail →</button>
+        </div>
+      </div>`;
+    }).join('');
+    cardList.querySelectorAll('[data-open]').forEach(el => {
+      el.addEventListener('click', () => showDetail(parseInt(el.dataset.open)));
+    });
+    cardList.querySelectorAll('.ca-quick').forEach(b => {
       b.addEventListener('click', (e) => {
         e.stopPropagation();
         openQuickPopover(parseInt(b.dataset.quick), b);
@@ -1644,18 +1819,36 @@ function renderActivities() {
 }
 
 // ============ TABS ============
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(x => x.classList.toggle('active', x.dataset.tab === tab));
+  document.querySelectorAll('.bottom-nav button').forEach(x => x.classList.toggle('active', x.dataset.tab === tab));
+  document.getElementById('contacts-tab').style.display = tab === 'contacts' ? '' : 'none';
+  document.getElementById('myday-tab').classList.toggle('active', tab === 'myday');
+  document.getElementById('activities-tab').classList.toggle('active', tab === 'activities');
+  document.getElementById('calls-tab').classList.toggle('active', tab === 'calls');
+  document.getElementById('meetings-tab').classList.toggle('active', tab === 'meetings');
+  if (tab === 'myday') renderMyDay();
+  window.scrollTo(0, 0);
+}
 document.querySelectorAll('.tab-btn').forEach(b => {
-  b.addEventListener('click', () => {
-    const tab = b.dataset.tab;
-    document.querySelectorAll('.tab-btn').forEach(x => x.classList.toggle('active', x === b));
-    document.getElementById('contacts-tab').style.display = tab === 'contacts' ? '' : 'none';
-    document.getElementById('myday-tab').classList.toggle('active', tab === 'myday');
-    document.getElementById('activities-tab').classList.toggle('active', tab === 'activities');
-    document.getElementById('calls-tab').classList.toggle('active', tab === 'calls');
-    document.getElementById('meetings-tab').classList.toggle('active', tab === 'meetings');
-    if (tab === 'myday') renderMyDay();
-  });
+  b.addEventListener('click', () => switchTab(b.dataset.tab));
 });
+document.querySelectorAll('.bottom-nav button').forEach(b => {
+  b.addEventListener('click', () => switchTab(b.dataset.tab));
+});
+
+// ============ MOBILNÍ FILTR (vysouvací panel) ============
+function openMobileFilter() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-backdrop').classList.add('show');
+}
+function closeMobileFilter() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-backdrop').classList.remove('show');
+}
+document.getElementById('filter-toggle-btn').addEventListener('click', openMobileFilter);
+document.getElementById('sidebar-close').addEventListener('click', closeMobileFilter);
+document.getElementById('sidebar-backdrop').addEventListener('click', closeMobileFilter);
 
 // ============ EXPORT CSV ============
 document.getElementById('export-btn').addEventListener('click', () => {
