@@ -1187,7 +1187,7 @@ function parseCSV(text, skipRows = 0) {
     .map(r => Object.fromEntries(headers.map((h, i) => [h, (r[i] ?? "").trim()])));
 }
 
-async function loadCSV(primaryUrl, fallbackData, skipRows = 0) {
+async function loadCSV(primaryUrl, fallbackSource, skipRows = 0) {
   const isLive = !!(primaryUrl && primaryUrl.trim());
   let text;
   if (isLive) {
@@ -1195,7 +1195,16 @@ async function loadCSV(primaryUrl, fallbackData, skipRows = 0) {
     if (!res.ok) throw new Error("Nepodařilo se načíst: " + primaryUrl);
     text = await res.text();
   } else {
-    text = fallbackData;
+    // Fallback: buď cesta k souboru (zdrojová verze), nebo inline data (sestavená verze)
+    if (fallbackSource && fallbackSource.indexOf("\n") === -1 && fallbackSource.length < 300) {
+      // Vypadá jako cesta k souboru
+      const res = await fetch(fallbackSource, { cache: "no-store" });
+      if (!res.ok) throw new Error("Nepodařilo se načíst: " + fallbackSource);
+      text = await res.text();
+    } else {
+      // Inline CSV data
+      text = fallbackSource;
+    }
   }
 
   // Auto-detekce dvojitého záhlaví (pivot tabulka z Google Sheets):
@@ -1205,13 +1214,13 @@ async function loadCSV(primaryUrl, fallbackData, skipRows = 0) {
   if (effectiveSkip === 0) {
     const firstRow = text.split("\n")[0] || "";
     const secondRow = text.split("\n")[1] || "";
-    const pivotIndicators = /počet|p\\u00f4ot|mesic|m[ěe]s[ií]c|sum|total/i;
+    const pivotIndicators = /počet|mesic|m[ěe]s[ií]c|sum|total/i;
     const looksLikePivotHeader =
       pivotIndicators.test(firstRow) &&
       /autor|skladn[ií]k|jmeno|name/i.test(secondRow);
     if (looksLikePivotHeader) {
       effectiveSkip = 1;
-      console.log("📊 Auto-detekce: přeskakuji první řádek (pivot header) v " + url);
+      console.log("📊 Auto-detekce: přeskakuji první řádek (pivot header)");
     }
   }
 
