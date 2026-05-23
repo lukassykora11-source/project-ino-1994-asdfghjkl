@@ -54,6 +54,7 @@ body{font-family:'GS',sans-serif;background:var(--soft);color:var(--text)}
 
 .table-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-top:6px}
 .table-head-bar{background:var(--green);padding:9px 14px;display:flex;align-items:center;justify-content:space-between}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .table-head-title{font-family:'LAD',sans-serif;font-size:12px;color:var(--pastel);text-transform:uppercase;letter-spacing:0.04em}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;color:var(--muted);font-weight:400;padding:7px 10px;border-bottom:1px solid var(--border);background:var(--soft);white-space:nowrap}
@@ -114,8 +115,7 @@ tr:hover td{background:#fdf9f8}
   .tab{font-size:11px;padding:5px 10px}
   .dash-body{padding:12px}
   .topbar{padding:10px 12px}
-  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .oz-compare{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
   table{min-width:600px}
   .bar-name{width:50px;font-size:10px}
   .metric-value{font-size:17px}
@@ -179,20 +179,23 @@ tr:hover td{background:#fdf9f8}
         <div class="table-head-title">Detail obchodníků</div>
         <div style="font-size:10px;color:rgba(195,220,190,0.65)">řazeno dle obratu 2026</div>
       </div>
+      <div class="table-scroll">
       <table>
         <thead><tr>
           <th>Obchodník</th>
           <th class="r">Plán obratu</th>
           <th class="r">Obrat 2026</th>
+          <th class="r">Plnění obratu</th>
           <th class="r">Plán marže</th>
           <th class="r">Marže 2026</th>
+          <th class="r">Plnění marže</th>
           <th class="r">Obrat 2025</th>
           <th class="r">Marže 2025</th>
-          <th class="r">Plnění</th>
           <th class="r">Přirážka 2026</th>
         </tr></thead>
         <tbody id="tableBody"></tbody>
       </table>
+      </div>
     </div>
   </div>
 
@@ -216,6 +219,7 @@ tr:hover td{background:#fdf9f8}
         <div class="table-head-bar">
           <div class="table-head-title">Srovnání všech období</div>
         </div>
+        <div class="table-scroll">
         <table>
           <thead><tr>
             <th>Období</th>
@@ -231,6 +235,7 @@ tr:hover td{background:#fdf9f8}
           </tr></thead>
           <tbody id="ozTableBody"></tbody>
         </table>
+        </div>
       </div>
     </div>
   </div>
@@ -360,7 +365,7 @@ function renderOZ(name){
   document.getElementById("ozMetrics").innerHTML = `
     <div class="metric">
       <div class="metric-label">Obrat 2026 (celoročně)</div>
-      <div class="metric-value">${ytd ? Mf(ytd.o26) : "—"}</div>
+      <div class="metric-value">${ytd ? kc(ytd.o26) : "—"}</div>
       <div class="metric-sub">leden – nyní</div>
       ${mYY!==null?`<div class="metric-delta ${mYY>=0?"up":"dn"}">${mYY>=0?"+":""}${mYY}% vs 2025</div>`:""}
     </div>
@@ -391,8 +396,8 @@ function renderOZ(name){
       <div class="period-body">
         <div class="card-section">
           <div class="card-section-title">Obrat</div>
-          <div class="period-row"><span class="period-key">Skutečnost 2026</span><span class="period-val">${Mf(r.o26)}</span></div>
-          <div class="period-row"><span class="period-key">Plán</span><span class="period-val" style="color:var(--muted)">${r.pO>0?Mf(r.pO):"—"}</span></div>
+          <div class="period-row"><span class="period-key">Skutečnost 2026</span><span class="period-val">${kc(r.o26)}</span></div>
+          <div class="period-row"><span class="period-key">Plán</span><span class="period-val" style="color:var(--muted)">${r.pO>0?kc(r.pO):"—"}</span></div>
           ${r.pO>0?`<div class="period-bar-wrap">
             <div class="period-bar-label">Plnění plánu obratu</div>
             <div class="period-bar-track"><div class="period-bar-fill" style="width:${Math.min(oPct,100)}%;background:${oCol}"></div></div>
@@ -401,8 +406,8 @@ function renderOZ(name){
         </div>
         <div class="card-section">
           <div class="card-section-title">Marže</div>
-          <div class="period-row"><span class="period-key">Skutečnost 2026</span><span class="period-val">${Mf(r.m26)}</span></div>
-          <div class="period-row"><span class="period-key">Plán</span><span class="period-val" style="color:var(--muted)">${r.pM>0?Mf(r.pM):"—"}</span></div>
+          <div class="period-row"><span class="period-key">Skutečnost 2026</span><span class="period-val">${kc(r.m26)}</span></div>
+          <div class="period-row"><span class="period-key">Plán</span><span class="period-val" style="color:var(--muted)">${r.pM>0?kc(r.pM):"—"}</span></div>
           ${r.pM>0?`<div class="period-bar-wrap">
             <div class="period-bar-label">Plnění plánu marže</div>
             <div class="period-bar-track"><div class="period-bar-fill" style="width:${Math.min(mPct2,100)}%;background:${mCol}"></div></div>
@@ -546,18 +551,21 @@ function renderTab(i){
   let tHtml="";
   sorted.forEach((r,idx)=>{
     const p=r.pO>0?Math.round(r.o26/r.pO*100):null;
-    const bc=p===null?"":p>=100?"b-ok":p>=90?"b-warn":"b-bad";
+    const pM=r.pM>0?Math.round(r.m26/r.pM*100):null;
+    const bcO=statusBadge(r.o26,r.pO)||"";
+    const bcM=statusBadge(r.m26,r.pM)||"";
     const pr=prirazka(r.o26,r.m26);
     const isHL = p!==null && p>=100;
     tHtml+=`<tr class="${isHL?"hl":""}">
       <td>${r.oz}</td>
       <td class="r">${r.pO>0?kc(r.pO):"—"}</td>
       <td class="r" style="font-weight:500">${kc(r.o26)}</td>
+      <td class="r">${p!==null?`<span class="badge ${bcO}">${p}%</span>`:"—"}</td>
       <td class="r">${r.pM>0?kc(r.pM):"—"}</td>
-      <td class="r">${kc(r.m26)}</td>
+      <td class="r" style="font-weight:500">${kc(r.m26)}</td>
+      <td class="r">${pM!==null?`<span class="badge ${bcM}">${pM}%</span>`:"—"}</td>
       <td class="r" style="color:var(--muted)">${kc(r.o25)}</td>
       <td class="r" style="color:var(--muted)">${kc(r.m25)}</td>
-      <td class="r">${p!==null?`<span class="badge ${bc}">${p}%</span>`:"—"}</td>
       <td class="r" style="font-weight:500">${pr!==null?pr+"%":"—"}</td>
     </tr>`;
   });
