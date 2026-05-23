@@ -935,11 +935,10 @@ tr.rate-alert td.rate-cell { color: var(--ino-red); font-weight: 600; }
 
       <!-- Skladníci - bar chart -->
       <div class="card" style="margin-bottom: 20px;">
-        <h3>Skladníci — reklamace vs. výdej</h3>
-        <p class="card-sub">Světle zelený pruh = podíl výdejů skladníka, tmavá barva = počet reklamací (barva podle míry reklamací)</p>
+        <h3>Skladníci — míra reklamací</h3>
+        <p class="card-sub">Délka pruhu = míra reklamací v ‰ (počet reklamací na 1000 naskenovaných položek). Férové srovnání i pro skladníky s rozdílným objemem práce.</p>
         <div id="bars-skladnici"></div>
         <div class="bar-legend">
-          <span class="bar-legend-item"><span class="sw exp"></span>Podíl výdejů</span>
           <span class="bar-legend-item"><span class="sw ok"></span>OK ≤ 0,5 ‰</span>
           <span class="bar-legend-item"><span class="sw watch"></span>Sledovat 0,5–1,0 ‰</span>
           <span class="bar-legend-item"><span class="sw alert"></span>Problém &gt; 1,0 ‰</span>
@@ -1672,17 +1671,18 @@ function renderBarsSkladnici(data) {
     return;
   }
 
-  // Max pro vizualizaci
-  const maxPodil = Math.max(...rows.map(r => r.podilVydeju), 1);
-  const maxRek = Math.max(...rows.map(r => r.rek), 1);
+  // Max pro vizualizaci - délka baru podle MÍRY reklamací (‰), ne počtu.
+  // Důvod: počet sám o sobě je zavádějící (kdo skenuje víc, má víc reklamací).
+  // Míra ‰ je férový ukazatel kvality práce.
+  const maxRate = Math.max(...rows.map(r => r.rate), 0.01);
 
   container.innerHTML = rows.map(r => {
     let stateClass = "state-ok";
     if (r.rate > CONFIG.THRESHOLDS.WATCH) stateClass = "state-alert";
     else if (r.rate > CONFIG.THRESHOLDS.OK) stateClass = "state-watch";
 
-    const expectedW = (r.podilVydeju / maxPodil * 100).toFixed(1);
-    const fillW = (r.rek / maxRek * 100).toFixed(1);
+    // Šířka baru = míra reklamací relativně k nejvyšší míře v sadě
+    const fillW = (r.rate / maxRate * 100).toFixed(1);
 
     const rateLabel = r.vyd ? `${r.rate.toFixed(2)} ‰` : "—";
     const tooltipTxt = `${r.name} • Reklamace: ${r.rek} • Výdeje: ${fmtNum(r.vyd)} • Míra: ${rateLabel}`;
@@ -1691,12 +1691,11 @@ function renderBarsSkladnici(data) {
       <div class="bar-row" title="${esc(tooltipTxt)}">
         <div class="name">${esc(r.name)}</div>
         <div class="bar-track">
-          <div class="bar-expected" style="width: ${expectedW}%"></div>
           <div class="bar-fill ${stateClass}" style="width: ${fillW}%"></div>
         </div>
         <div class="value">
-          <span class="val-main">${r.rek}</span>
-          <span class="val-rate">${rateLabel}</span>
+          <span class="val-main">${r.rate.toFixed(2)} ‰</span>
+          <span class="val-rate">${r.rek}× / ${fmtNum(r.vyd)} sken.</span>
         </div>
       </div>`;
   }).join("");
