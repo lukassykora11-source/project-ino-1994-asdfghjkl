@@ -541,7 +541,43 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .footer { text-align: center; padding: 32px; color: var(--text-muted); font-size: 11px; }
 
-/* ===== Záložky (taby) v topbaru ===== */
+/* Mini-bar v buňce tabulky skladníků */
+.mini-bar {
+  height: 5px;
+  background: var(--gray-5);
+  border-radius: 100px;
+  margin-top: 5px;
+  overflow: hidden;
+  max-width: 160px;
+}
+.mini-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width .4s ease;
+}
+
+/* Bodový graf skladníků */
+.scatter-label {
+  fill: var(--ino-green-gray);
+  font-size: 10px;
+  font-family: 'General Sans', sans-serif;
+  font-weight: 500;
+}
+.scatter-axis-title {
+  fill: var(--text-muted);
+  font-size: 11px;
+  font-family: 'General Sans', sans-serif;
+  font-weight: 500;
+}
+
+/* Záhlaví seřaditelné tabulky skladníků */
+#skladnici-table th[data-sk-sort] { cursor: pointer; user-select: none; }
+#skladnici-table th[data-sk-sort]:hover { color: var(--ino-red); }
+#skladnici-table th .arr { opacity: 0.4; margin-left: 4px; font-size: 9px; }
+#skladnici-table th.active { color: var(--ino-red); }
+#skladnici-table th.active .arr { opacity: 1; }
+
+
 .topbar-tabs {
   display: flex;
   gap: 4px;
@@ -933,15 +969,38 @@ tr.rate-alert td.rate-cell { color: var(--ino-red); font-weight: 600; }
         </div>
       </section>
 
-      <!-- Skladníci - bar chart -->
+      <!-- Skladníci - bodový graf -->
       <div class="card" style="margin-bottom: 20px;">
-        <h3>Skladníci — míra reklamací</h3>
-        <p class="card-sub">Délka pruhu = míra reklamací v ‰ (počet reklamací na 1000 naskenovaných položek). Férové srovnání i pro skladníky s rozdílným objemem práce.</p>
-        <div id="bars-skladnici"></div>
+        <h3>Skladníci — naskenováno vs. míra reklamací</h3>
+        <p class="card-sub">Každý bod = jeden skladník. Vodorovně: kolik naskenoval. Svisle: jaká je jeho míra reklamací v %. Velikost bodu = počet reklamací. Vpravo dole = hodně práce, málo chyb (ideál). Vlevo/vpravo nahoře = vysoká chybovost.</p>
+        <div id="skladnici-scatter"></div>
         <div class="bar-legend">
           <span class="bar-legend-item"><span class="sw ok"></span>OK ≤ 0,5 ‰</span>
           <span class="bar-legend-item"><span class="sw watch"></span>Sledovat 0,5–1,0 ‰</span>
           <span class="bar-legend-item"><span class="sw alert"></span>Problém &gt; 1,0 ‰</span>
+        </div>
+      </div>
+
+      <!-- Skladníci - tabulka -->
+      <div class="card table-card" style="margin-bottom: 20px;">
+        <div class="table-head">
+          <div>
+            <h3>Skladníci — kusy i procenta</h3>
+            <p class="card-sub">Klikněte na záhlaví sloupce pro seřazení</p>
+          </div>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="reklamace report-table" id="skladnici-table">
+            <thead>
+              <tr>
+                <th data-sk-sort="name">Skladník<span class="arr">▾</span></th>
+                <th data-sk-sort="vyd" class="num">Naskenováno<span class="arr">▾</span></th>
+                <th data-sk-sort="rek" class="num">Reklamací<span class="arr">▾</span></th>
+                <th data-sk-sort="rate">Míra reklamací<span class="arr">▾</span></th>
+              </tr>
+            </thead>
+            <tbody id="skladnici-tbody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -1286,6 +1345,20 @@ async function initApp() {
     });
   });
 
+  // Třídění tabulky skladníků (na záložce Přehled)
+  document.querySelectorAll("#skladnici-table th[data-sk-sort]").forEach(th => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.skSort;
+      if (skladniciSort.key === key) {
+        skladniciSort.dir = skladniciSort.dir === "asc" ? "desc" : "asc";
+      } else {
+        skladniciSort.key = key;
+        skladniciSort.dir = (key === "name") ? "asc" : "desc";
+      }
+      renderSkladniciTable();
+    });
+  });
+
   await loadAll();
 }
 
@@ -1617,13 +1690,14 @@ function describePeriod() {
   return "";
 }
 
-/* ----- Skladníci: barevný bar podle stavu ----- */
+/* ----- Skladníci: tabulka + bodový graf ----- */
+/* Stav třídění tabulky skladníků */
+const skladniciSort = { key: "rate", dir: "desc" };
+
 function renderBarsSkladnici(data) {
-  const container = document.getElementById("bars-skladnici");
   const months = getActiveMonths();
 
   // Reklamace na skladníka — agregujeme podle KLÍČE (příjmení)
-  // Tím spárujeme "Vídeňská Jana" z reklamací s "Vídeňská" ze skladu
   const rekMap = new Map();   // key -> { count, displayName }
   data.forEach(r => {
     const k = skladnikKey(r.skladnik);
@@ -1633,7 +1707,7 @@ function renderBarsSkladnici(data) {
     rekMap.set(k, cur);
   });
 
-  // Výdej na skladníka za vybrané období - klíčujeme stejně
+  // Výdej na skladníka za vybrané období
   const skMap = new Map();    // key -> { sum, displayName }
   state.sklad.forEach(s => {
     let sum = 0;
@@ -1644,61 +1718,167 @@ function renderBarsSkladnici(data) {
     }
   });
 
-  // Spoj — všichni klíče
+  // Spoj
   const allKeys = new Set([...rekMap.keys(), ...skMap.keys()]);
-  const totalVydej = [...skMap.values()].reduce((s,v) => s + v.sum, 0);
 
   let rows = [...allKeys].map(key => {
     const rekRec = rekMap.get(key);
     const skRec = skMap.get(key);
     const rek = rekRec ? rekRec.count : 0;
     const vyd = skRec ? skRec.sum : 0;
-    const rate = vyd ? (rek / vyd * 1000) : 0;
-    const podilVydeju = totalVydej ? (vyd / totalVydej * 100) : 0;
-    // Display name: preferujeme sklad (kratší), pokud je
+    // Míra: % i ‰. vSkladu = false znamená "nemáme čím počítat"
+    const vSkladu = !!skRec;
+    const ratePromile = vyd ? (rek / vyd * 1000) : 0;
+    const ratePct = vyd ? (rek / vyd * 100) : 0;
     const name = (skRec && skRec.displayName) || (rekRec && rekRec.displayName) || key;
-    return { name, key, rek, vyd, rate, podilVydeju };
+    return { name, key, rek, vyd, vSkladu, ratePromile, ratePct };
   })
-  .filter(r => r.rek > 0 || r.vyd > 0)
-  .sort((a, b) => {
-    // Sort: nejprve podle míry reklamací (problém nahoru), pak podle počtu
-    if (a.rate !== b.rate) return b.rate - a.rate;
-    return b.rek - a.rek;
-  });
+  .filter(r => r.rek > 0 || r.vyd > 0);
+
+  // Uložíme pro překreslení při třídění
+  state._skladniciRows = rows;
+  renderSkladniciTable();
+  renderSkladniciScatter(rows);
+}
+
+/* Tabulka skladníků - seřaditelná */
+function renderSkladniciTable() {
+  const rows = state._skladniciRows || [];
+  const tbody = document.getElementById("skladnici-tbody");
+  if (!tbody) return;
 
   if (!rows.length) {
-    container.innerHTML = `<p style="color: var(--text-muted); padding: 20px 0;">Žádná data pro vybrané období.</p>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="4">Žádná data pro vybrané období.</td></tr>`;
     return;
   }
 
-  // Max pro vizualizaci - délka baru podle MÍRY reklamací (‰), ne počtu.
-  // Důvod: počet sám o sobě je zavádějící (kdo skenuje víc, má víc reklamací).
-  // Míra ‰ je férový ukazatel kvality práce.
-  const maxRate = Math.max(...rows.map(r => r.rate), 0.01);
+  // Třídění
+  const k = skladniciSort.key;
+  const sorted = [...rows].sort((a, b) => {
+    let av, bv;
+    if (k === "name") { av = a.name; bv = b.name; return skladniciSort.dir === "asc" ? av.localeCompare(bv, "cs") : bv.localeCompare(av, "cs"); }
+    if (k === "vyd")  { av = a.vyd; bv = b.vyd; }
+    else if (k === "rek") { av = a.rek; bv = b.rek; }
+    else { av = a.ratePct; bv = b.ratePct; }   // rate
+    return skladniciSort.dir === "asc" ? av - bv : bv - av;
+  });
 
-  container.innerHTML = rows.map(r => {
-    let stateClass = "state-ok";
-    if (r.rate > CONFIG.THRESHOLDS.WATCH) stateClass = "state-alert";
-    else if (r.rate > CONFIG.THRESHOLDS.OK) stateClass = "state-watch";
+  // Aktualizovat šipky v záhlaví
+  document.querySelectorAll("#skladnici-table th[data-sk-sort]").forEach(th => {
+    const isActive = th.dataset.skSort === skladniciSort.key;
+    th.classList.toggle("active", isActive);
+    const arr = th.querySelector(".arr");
+    if (arr) arr.textContent = isActive ? (skladniciSort.dir === "asc" ? "▲" : "▼") : "▾";
+  });
 
-    // Šířka baru = míra reklamací relativně k nejvyšší míře v sadě
-    const fillW = (r.rate / maxRate * 100).toFixed(1);
+  tbody.innerHTML = sorted.map(r => {
+    // Barva podle míry
+    let rateClass = "rate-ok";
+    if (r.vSkladu) {
+      if (r.ratePromile > CONFIG.THRESHOLDS.WATCH) rateClass = "rate-alert";
+      else if (r.ratePromile > CONFIG.THRESHOLDS.OK) rateClass = "rate-watch";
+    }
 
-    const rateLabel = r.vyd ? `${r.rate.toFixed(2)} ‰` : "—";
-    const tooltipTxt = `${r.name} • Reklamace: ${r.rek} • Výdeje: ${fmtNum(r.vyd)} • Míra: ${rateLabel}`;
+    // Buňka míry
+    let rateCell;
+    if (!r.vSkladu) {
+      rateCell = `<span style="color: var(--gray-40); font-size: 12px;">není ve skladu</span>`;
+    } else {
+      rateCell = `<strong>${r.ratePct.toFixed(2)} %</strong> <span style="color: var(--gray-40); font-size: 11px;">(${r.ratePromile.toFixed(2)} ‰)</span>`;
+    }
 
-    return `
-      <div class="bar-row" title="${esc(tooltipTxt)}">
-        <div class="name">${esc(r.name)}</div>
-        <div class="bar-track">
-          <div class="bar-fill ${stateClass}" style="width: ${fillW}%"></div>
-        </div>
-        <div class="value">
-          <span class="val-main">${r.rate.toFixed(2)} ‰</span>
-          <span class="val-rate">${r.rek}× / ${fmtNum(r.vyd)} sken.</span>
-        </div>
-      </div>`;
+    // Mini-bar míry (vizuální doplněk v buňce)
+    const maxRate = Math.max(...rows.filter(x => x.vSkladu).map(x => x.ratePct), 0.01);
+    const barW = r.vSkladu ? (r.ratePct / maxRate * 100).toFixed(1) : 0;
+    const barColor = rateClass === "rate-alert" ? "var(--ino-red)"
+                   : rateClass === "rate-watch" ? "var(--ino-orange)"
+                   : "var(--ino-green-gray)";
+
+    return `<tr class="${rateClass}">
+      <td data-label="Skladník"><strong>${esc(r.name)}</strong></td>
+      <td data-label="Naskenováno" class="num">${fmtNum(r.vyd)}</td>
+      <td data-label="Reklamací" class="num">${r.rek}</td>
+      <td data-label="Míra reklamací" class="rate-cell">
+        ${rateCell}
+        ${r.vSkladu ? `<div class="mini-bar"><div class="mini-bar-fill" style="width:${barW}%; background:${barColor};"></div></div>` : ""}
+      </td>
+    </tr>`;
   }).join("");
+}
+
+/* Bodový graf - osa X = naskenováno, osa Y = míra % */
+function renderSkladniciScatter(rows) {
+  const container = document.getElementById("skladnici-scatter");
+  if (!container) return;
+
+  // Jen skladníci, co jsou ve skladu (mají souřadnici X)
+  const pts = rows.filter(r => r.vSkladu && r.vyd > 0);
+  if (!pts.length) {
+    container.innerHTML = `<p style="color: var(--text-muted); padding: 16px 0;">Žádná data pro bodový graf.</p>`;
+    return;
+  }
+
+  const W = 600, H = 320, padL = 52, padR = 24, padT = 20, padB = 48;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+
+  const maxX = Math.max(...pts.map(p => p.vyd), 1);
+  const maxY = Math.max(...pts.map(p => p.ratePct), 0.1) * 1.15;
+
+  const xPos = v => padL + (v / maxX) * innerW;
+  const yPos = v => padT + innerH - (v / maxY) * innerH;
+
+  // Prahová čára (hranice OK/sledovat) - v %
+  const watchPct = CONFIG.THRESHOLDS.OK / 10;   // 0.5 ‰ = 0.05 %
+  const alertPct = CONFIG.THRESHOLDS.WATCH / 10; // 1.0 ‰ = 0.1 %
+
+  // Gridlines Y
+  let grid = "";
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (innerH / 4) * i;
+    const val = maxY - (maxY / 4) * i;
+    grid += `<line x1="${padL}" y1="${y}" x2="${padL+innerW}" y2="${y}" class="trend-grid"/>`;
+    grid += `<text x="${padL-8}" y="${y+3}" text-anchor="end" class="trend-label">${val.toFixed(2)}%</text>`;
+  }
+
+  // Prahové čáry (jen pokud se vejdou do grafu)
+  let thresholds = "";
+  if (alertPct < maxY) {
+    const y = yPos(alertPct);
+    thresholds += `<line x1="${padL}" y1="${y}" x2="${padL+innerW}" y2="${y}" stroke="var(--ino-red)" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>`;
+  }
+  if (watchPct < maxY) {
+    const y = yPos(watchPct);
+    thresholds += `<line x1="${padL}" y1="${y}" x2="${padL+innerW}" y2="${y}" stroke="var(--ino-orange)" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>`;
+  }
+
+  // Body
+  const dots = pts.map(p => {
+    const cx = xPos(p.vyd), cy = yPos(p.ratePct);
+    let color = "var(--ino-green-gray)";
+    if (p.ratePromile > CONFIG.THRESHOLDS.WATCH) color = "var(--ino-red)";
+    else if (p.ratePromile > CONFIG.THRESHOLDS.OK) color = "var(--ino-orange)";
+    // Velikost bodu podle počtu reklamací
+    const r = Math.max(5, Math.min(16, 5 + Math.sqrt(p.rek) * 2.2));
+    return `
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.75">
+        <title>${esc(p.name)}: ${p.rek} reklamací z ${fmtNum(p.vyd)} naskenovaných = ${p.ratePct.toFixed(2)} %</title>
+      </circle>
+      <text x="${cx}" y="${cy - r - 4}" text-anchor="middle" class="scatter-label">${esc(p.name)}</text>
+    `;
+  }).join("");
+
+  // Osy + popisky
+  container.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%; height:auto;">
+      ${grid}
+      ${thresholds}
+      <line x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}" class="trend-axis"/>
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" class="trend-axis"/>
+      ${dots}
+      <text x="${padL+innerW/2}" y="${H-8}" text-anchor="middle" class="scatter-axis-title">Naskenováno položek →</text>
+      <text x="14" y="${padT+innerH/2}" text-anchor="middle" class="scatter-axis-title" transform="rotate(-90 14 ${padT+innerH/2})">Míra reklamací (%) →</text>
+    </svg>
+  `;
 }
 
 /* ----- Trend ----- */
