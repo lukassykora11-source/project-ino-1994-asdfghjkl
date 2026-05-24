@@ -48,7 +48,7 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 28px;
+  gap: 26px;
   padding: 40px 20px;
 }
 #picker svg.logo { height: 52px; width: auto; }
@@ -80,13 +80,37 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
 .p-num { font-family: 'Ladislav', sans-serif; font-size: 38px; color: var(--red); line-height: 1; margin-bottom: 4px; }
 .p-lbl { font-size: 11px; color: var(--pg); letter-spacing: 1px; text-transform: uppercase; font-weight: 400; }
 
+.p-restore {
+  margin-top: 8px;
+  display: none;
+  background: rgba(255,68,45,0.12);
+  border: 1px solid rgba(255,68,45,0.4);
+  border-radius: 10px;
+  padding: 12px 20px;
+  color: var(--bg);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.p-restore:hover { background: rgba(255,68,45,0.22); }
+.p-restore b { color: var(--red); font-weight: 400; }
+
+.p-load {
+  margin-top: 2px;
+  position: relative;
+  font-size: 12px;
+  color: rgba(195,220,190,0.6);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.p-load input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
 /* ── EDITOR ── */
 #editor { display: none; flex-direction: row; min-height: 100vh; }
 
-/* Sidebar */
 .sb {
-  width: 290px;
-  min-width: 290px;
+  width: 300px;
+  min-width: 300px;
   background: #1e2f2e;
   display: flex;
   flex-direction: column;
@@ -106,12 +130,18 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
 .sb-head svg { height: 26px; width: auto; }
 .sb-head-title { font-family: 'Ladislav', sans-serif; font-size: 17px; color: var(--bg); }
 .sb-head-title span { color: var(--red); }
+.sb-save-status {
+  margin-left: auto;
+  font-size: 9px;
+  color: rgba(195,220,190,0.4);
+  font-weight: 300;
+}
 .sb-sec { padding: 12px 16px; border-bottom: 1px solid rgba(195,220,190,0.06); }
 .sb-sec.grow { flex: 1; }
 .sb-lbl { font-size: 9px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(195,220,190,0.5); margin-bottom: 8px; }
 .f { margin-bottom: 7px; }
 .f-lbl { font-size: 9px; color: rgba(195,220,190,0.45); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
-.f input, .f textarea {
+.f input, .f textarea, .f select {
   width: 100%;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(195,220,190,0.12);
@@ -123,24 +153,36 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
   font-weight: 300;
   resize: none;
 }
-.f input:focus, .f textarea:focus { outline: none; border-color: var(--red); }
+.f input:focus, .f textarea:focus, .f select:focus { outline: none; border-color: var(--red); }
 .f input::placeholder, .f textarea::placeholder { color: rgba(252,250,244,0.22); }
+.f select option { background: #1e2f2e; }
+.f-row { display: flex; gap: 7px; }
+.f-row .f { flex: 1; margin-bottom: 7px; }
 
-/* Product panels */
 .pp { background: rgba(255,255,255,0.03); border-radius: 7px; margin-bottom: 7px; overflow: hidden; }
+.pp.incomplete { border: 1px solid rgba(255,200,80,0.35); }
 .pp-head {
-  display: flex; align-items: center; gap: 7px;
-  padding: 8px 11px; cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  padding: 8px 10px; cursor: pointer;
   border-bottom: 1px solid rgba(195,220,190,0.06);
 }
 .pp-head:hover { background: rgba(255,255,255,0.03); }
 .pp-n { font-family: 'Ladislav', sans-serif; font-size: 14px; color: var(--red); min-width: 16px; }
 .pp-name { font-size: 11px; color: var(--bg); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 300; }
+.pp-warn { color: #ffc850; font-size: 11px; display: none; }
+.pp.incomplete .pp-warn { display: inline; }
+.pp-move {
+  color: rgba(195,220,190,0.4);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0 1px;
+  user-select: none;
+}
+.pp-move:hover { color: var(--red); }
 .pp-tog { color: rgba(195,220,190,0.4); font-size: 12px; transition: transform 0.2s; }
 .pp-tog.open { transform: rotate(180deg); }
 .pp-body { padding: 9px 11px; display: flex; flex-direction: column; gap: 6px; }
 
-/* Image upload */
 .iu {
   border: 2px dashed rgba(195,220,190,0.2);
   border-radius: 6px;
@@ -154,7 +196,34 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
 .iu input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .iu-hint { font-size: 10px; color: rgba(195,220,190,0.32); pointer-events: none; font-weight: 300; }
 
-/* Buttons */
+.crop-ctrl { display: none; flex-direction: column; gap: 4px; padding-top: 2px; }
+.crop-ctrl.show { display: flex; }
+.crop-row { display: flex; align-items: center; gap: 8px; }
+.crop-row label { font-size: 9px; color: rgba(195,220,190,0.5); min-width: 56px; }
+.crop-row input[type=range] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  background: rgba(195,220,190,0.2);
+  border-radius: 3px;
+  outline: none;
+}
+.crop-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px; height: 13px;
+  background: var(--red);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.crop-row input[type=range]::-moz-range-thumb {
+  width: 13px; height: 13px;
+  background: var(--red);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+.crop-hint { font-size: 9px; color: rgba(195,220,190,0.35); font-weight: 300; }
+
 .btn-pdf {
   margin: 12px 16px 5px;
   background: var(--red); color: white; border: none; border-radius: 8px;
@@ -162,39 +231,60 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
   letter-spacing: 1px; cursor: pointer; text-transform: uppercase; transition: all 0.2s;
 }
 .btn-pdf:hover { background: #e03520; box-shadow: 0 4px 14px rgba(255,68,45,0.35); }
+.btn-row { display: flex; gap: 6px; margin: 4px 16px 0; }
+.btn-sm {
+  flex: 1;
+  background: transparent; color: rgba(195,220,190,0.55);
+  border: 1px solid rgba(195,220,190,0.12);
+  border-radius: 8px; padding: 8px 6px; font-family: 'GS', sans-serif;
+  font-size: 11px; cursor: pointer; transition: all 0.2s;
+  position: relative;
+}
+.btn-sm:hover { color: var(--bg); border-color: rgba(195,220,190,0.3); }
+.btn-sm input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .btn-back {
-  margin: 4px 16px 16px;
-  background: transparent; color: rgba(195,220,190,0.45);
-  border: 1px solid rgba(195,220,190,0.1);
-  border-radius: 8px; padding: 8px; font-family: 'GS', sans-serif;
+  margin: 6px 16px 16px;
+  background: transparent; color: rgba(195,220,190,0.4);
+  border: none;
+  padding: 4px; font-family: 'GS', sans-serif;
   font-size: 11px; cursor: pointer; transition: all 0.2s;
 }
-.btn-back:hover { color: var(--bg); border-color: rgba(195,220,190,0.3); }
+.btn-back:hover { color: var(--bg); }
 
-/* Canvas */
+.mode-toggle { display: flex; gap: 6px; margin-top: 4px; }
+.mode-opt {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(195,220,190,0.12);
+  border-radius: 6px;
+  padding: 7px 6px;
+  font-size: 10px;
+  color: rgba(195,220,190,0.6);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  line-height: 1.4;
+}
+.mode-opt.active { background: rgba(255,68,45,0.15); border-color: var(--red); color: var(--bg); }
+
 .canvas {
-  flex: 1; background: #141f1e; padding: 30px;
+  flex: 1; background: #141f1e; padding: 26px 30px;
   display: flex; flex-direction: column; align-items: center; overflow-y: auto;
 }
 .canvas-hint {
-  font-size: 11px; color: rgba(195,220,190,0.4); margin-bottom: 8px; font-weight: 300;
-  text-align: center; line-height: 1.6; max-width: 520px;
+  font-size: 11px; color: rgba(195,220,190,0.4); margin-bottom: 6px; font-weight: 300;
+  text-align: center; line-height: 1.6; max-width: 540px;
 }
 .canvas-hint b { color: var(--pg); font-weight: 400; }
-.canvas-warn {
-  font-size: 11px; color: #ffcc66; margin-bottom: 18px; font-weight: 300;
-  text-align: center; max-width: 520px;
+.check-banner {
+  font-size: 11px; margin-bottom: 14px; font-weight: 300;
+  text-align: center; max-width: 540px; padding: 7px 14px;
+  border-radius: 8px;
 }
+.check-banner.ok { background: rgba(120,200,120,0.12); color: #9fd99f; }
+.check-banner.warn { background: rgba(255,200,80,0.12); color: #ffcc66; }
 
-/* ──────────────────────────────
-   LETÁK — PŘESNÉ A4
-   A4 = 210mm × 297mm
-   Používáme mm jednotky, takže tisk
-   sedí 1:1. Na obrazovce přepočítáno.
-   ────────────────────────────── */
-.letak-outer {
-  /* zmenšený náhled na obrazovce */
-}
+/* ── LETÁK A4 ── */
 .letak {
   width: 210mm;
   height: 297mm;
@@ -202,17 +292,37 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  /* náhled na obrazovce zmenšíme transformem */
   transform: scale(var(--preview-scale, 0.85));
   transform-origin: top center;
   box-shadow: 0 20px 70px rgba(0,0,0,0.6);
+  position: relative;
 }
-/* kompenzace výšky kvůli scale */
 .letak-outer {
   height: calc(297mm * var(--preview-scale, 0.85));
 }
 
-/* Header */
+.crop-marks { display: none; }
+.letak.bleed .crop-marks { display: block; }
+.crop-marks .cm { position: absolute; background: #000; }
+.cm.t { width: 0.25mm; height: 4mm; }
+.cm.h { height: 0.25mm; width: 4mm; }
+.cm-tl-v { top: 0; left: 3mm; }
+.cm-tl-h { top: 3mm; left: 0; }
+.cm-tr-v { top: 0; right: 3mm; }
+.cm-tr-h { top: 3mm; right: 0; }
+.cm-bl-v { bottom: 0; left: 3mm; }
+.cm-bl-h { bottom: 3mm; left: 0; }
+.cm-br-v { bottom: 0; right: 3mm; }
+.cm-br-h { bottom: 3mm; right: 0; }
+
+.letak-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.letak.bleed .letak-content { margin: 3mm; }
+
 .lh {
   background: white;
   padding: 6mm 9mm 5mm;
@@ -228,7 +338,6 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
 
 .redbar { background: var(--red); height: 1.8mm; flex-shrink: 0; }
 
-/* Products grid */
 .lp {
   background: var(--pg);
   flex: 1;
@@ -243,7 +352,6 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
 .lp.n6 { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
 .lp.n8 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr 1fr; }
 
-/* Card */
 .lc {
   background: white;
   border-radius: 2.8mm;
@@ -254,7 +362,6 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
   min-height: 0;
 }
 
-/* Layout 2 — obrázek vlevo, text vpravo */
 .lp.n2 .lc { flex-direction: row; }
 .lp.n2 .lc-img { width: 55%; flex-shrink: 0; height: auto; }
 .lp.n2 .lc-body { justify-content: center; padding: 7mm 8mm; }
@@ -263,10 +370,9 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
   background: #eef5ec;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden; flex-shrink: 0;
+  position: relative;
 }
-/* Layout 1 — obrázek roste */
 .lp.n1 .lc-img { flex: 1; min-height: 0; }
-/* Ostatní — proporční výšky */
 .lp.n4 .lc-img { height: 56%; }
 .lp.n6 .lc-img { height: 54%; }
 .lp.n8 .lc-img { height: 50%; }
@@ -304,8 +410,20 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
 
 .lc-pr {
   margin-top: 2.5mm; padding-top: 2.5mm; border-top: 0.3mm solid #eee;
+  display: flex; align-items: flex-end; gap: 3mm;
 }
 .lp.n8 .lc-pr { margin-top: 1.5mm; padding-top: 1.5mm; }
+
+.lc-price-old {
+  font-family: 'GS', sans-serif; font-weight: 300;
+  color: #b0b0b0; text-decoration: line-through;
+  line-height: 1; padding-bottom: 0.5mm;
+}
+.lp.n1 .lc-price-old { font-size: 6mm; }
+.lp.n2 .lc-price-old { font-size: 5mm; }
+.lp.n4 .lc-price-old { font-size: 4mm; }
+.lp.n6 .lc-price-old { font-size: 3.6mm; }
+.lp.n8 .lc-price-old { font-size: 3.2mm; }
 
 .lc-price {
   font-family: 'GS', sans-serif; font-weight: 300;
@@ -319,7 +437,6 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
 
 .lc-pnote { font-size: 2.4mm; font-weight: 300; color: #aaa; margin-top: 0.6mm; display: block; }
 
-/* Footer */
 .lf {
   background: white;
   border-top: 1mm solid var(--pg);
@@ -331,35 +448,21 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
 .lf-url { font-family: 'Ladislav', sans-serif; font-size: 5mm; color: var(--red); }
 .greenbar { background: var(--gg); height: 2mm; flex-shrink: 0; }
 
-/* ──────────────────────────────
-   PRINT — KLÍČOVÉ NASTAVENÍ
-   ────────────────────────────── */
+/* ── PRINT ── */
 @media print {
-  /* vynutí tisk barev přesně jak jsou */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  html, body {
-    background: white !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
+  html, body { background: white !important; margin: 0 !important; padding: 0 !important; }
   #picker { display: none !important; }
   #editor { display: block !important; }
-  .sb, .canvas-hint, .canvas-warn { display: none !important; }
+  .sb, .canvas-hint, .check-banner { display: none !important; }
   .canvas {
-    padding: 0 !important;
-    margin: 0 !important;
-    background: white !important;
-    display: block !important;
-    overflow: visible !important;
+    padding: 0 !important; margin: 0 !important;
+    background: white !important; display: block !important; overflow: visible !important;
   }
-  .letak-outer {
-    height: auto !important;
-    width: auto !important;
-  }
-  /* leták v tisku — přesně A4, žádný scale */
+  .letak-outer { height: auto !important; width: auto !important; }
   .letak {
     width: 210mm !important;
     height: 297mm !important;
@@ -368,10 +471,7 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
     page-break-after: avoid;
     page-break-inside: avoid;
   }
-  @page {
-    size: A4 portrait;
-    margin: 0;
-  }
+  @page { size: A4 portrait; margin: 0; }
 }
 </style>
 </head>
@@ -389,6 +489,8 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
     <div class="p-card" onclick="startEditor(6)"><div class="p-num">6</div><div class="p-lbl">produktů</div></div>
     <div class="p-card" onclick="startEditor(8)"><div class="p-num">8</div><div class="p-lbl">produktů</div></div>
   </div>
+  <div class="p-restore" id="restore-btn" onclick="restoreDraft()">Obnovit rozpracovaný leták &mdash; <b id="restore-info"></b></div>
+  <div class="p-load">Načíst uložený leták ze souboru<input type="file" accept=".json,application/json" onchange="loadFromFile(event)"></div>
 </div>
 
 <!-- EDITOR -->
@@ -397,6 +499,7 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
     <div class="sb-head">
       <svg viewBox="0 0 407.1 206.3" xmlns="http://www.w3.org/2000/svg"><path fill="#FF442D" d="M0,202.8h30V6.5H0V202.8z M185.3,166.3V6.4h-29.9v159.9c0,5.5-4.5,10-10,10c-5.5,0-10-4.5-10-10V39.9c0-22-17.9-39.9-39.9-39.9c-22,0-39.9,17.9-39.9,39.9v7.6v154.4h29.9V47.5v-7.6c0-5.5,4.5-10,10-10c5.5,0,10,4.5,10,10v126.4c0,22,17.9,39.9,39.9,39.9C167.4,206.2,185.3,188.3,185.3,166.3 M377,104.3c0,41.4-31.2,73.1-72,73.1c-40.8,0-72-31.7-72-73.1s31.2-73.1,72-73.1C345.9,31.2,377,62.9,377,104.3 M407.1,104.3c0-57.8-44.2-102-102-102s-102,44.2-102,102c0,57.8,44.2,102,102,102S407.1,162.1,407.1,104.3"/></svg>
       <div class="sb-head-title"><span>INO</span> Editor</div>
+      <div class="sb-save-status" id="save-status">uloženo</div>
     </div>
 
     <div class="sb-sec">
@@ -416,16 +519,27 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
       <div class="f"><div class="f-lbl">Poznámka</div><input id="f-note" type="text" placeholder="Ceny jsou uvedeny bez DPH." oninput="render()"></div>
     </div>
 
+    <div class="sb-sec">
+      <div class="sb-lbl">Režim tisku</div>
+      <div class="mode-toggle">
+        <div class="mode-opt active" id="mode-office" onclick="setMode('office')">Kancelář<br><span style="opacity:0.6">běžné PDF</span></div>
+        <div class="mode-opt" id="mode-print" onclick="setMode('print')">Tiskárna<br><span style="opacity:0.6">spadávka 3 mm</span></div>
+      </div>
+    </div>
+
     <button class="btn-pdf" onclick="window.print()">&#8595; Uložit jako PDF</button>
-    <button class="btn-back" onclick="goBack()">&#8592; Zpět na výběr</button>
+    <div class="btn-row">
+      <button class="btn-sm" onclick="saveToFile()">&#128190; Uložit leták</button>
+      <button class="btn-sm">&#128193; Načíst leták<input type="file" accept=".json,application/json" onchange="loadFromFile(event)"></button>
+    </div>
+    <button class="btn-back" onclick="goBack()">&#8592; Zpět na výběr (změní počet produktů)</button>
   </div>
 
   <div class="canvas">
     <div class="canvas-hint">
-      Náhled odpovídá <b>A4 (210 &times; 297 mm)</b>.<br>
-      Pro tisk klikněte <b>Uložit jako PDF</b> &rarr; v dialogu: <b>formát A4</b>, <b>okraje: Žádné</b>, <b>Měřítko: 100&nbsp;%</b>, zapnout <b>Grafika na pozadí</b>.
+      Náhled odpovídá <b>A4 (210 &times; 297 mm)</b>. Tisk: <b>Uložit jako PDF</b> &rarr; <b>A4</b>, <b>okraje Žádné</b>, <b>měřítko 100&nbsp;%</b>, zapnout <b>Grafika na pozadí</b>.
     </div>
-    <div class="canvas-warn" id="warn"></div>
+    <div class="check-banner ok" id="check-banner">Vše vyplněno</div>
     <div class="letak-outer">
       <div class="letak" id="letak"></div>
     </div>
@@ -435,16 +549,26 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
 <script>
 var count = 0;
 var prods = [];
+var printMode = 'office';
+var STORAGE_KEY = 'ino_letak_draft_v2';
+var TAGS = ['', 'NOVINKA', 'AKCE', 'TIP', 'VÝPRODEJ', 'DOPORUČUJEME', 'SLEVA', 'NÁŠ TIP'];
 
 var LOGO_SVG = '<svg class="logo" viewBox="0 0 407.1 206.3" xmlns="http://www.w3.org/2000/svg"><path fill="#FF442D" d="M0,202.8h30V6.5H0V202.8z M185.3,166.3V6.4h-29.9v159.9c0,5.5-4.5,10-10,10c-5.5,0-10-4.5-10-10V39.9c0-22-17.9-39.9-39.9-39.9c-22,0-39.9,17.9-39.9,39.9v7.6v154.4h29.9V47.5v-7.6c0-5.5,4.5-10,10-10c5.5,0,10,4.5,10,10v126.4c0,22,17.9,39.9,39.9,39.9C167.4,206.2,185.3,188.3,185.3,166.3 M377,104.3c0,41.4-31.2,73.1-72,73.1c-40.8,0-72-31.7-72-73.1s31.2-73.1,72-73.1C345.9,31.2,377,62.9,377,104.3 M407.1,104.3c0-57.8-44.2-102-102-102s-102,44.2-102,102c0,57.8,44.2,102,102,102S407.1,162.1,407.1,104.3"/></svg>';
 
 var PH_SVG = '<div class="lc-img-ph"><svg width="32" height="32" viewBox="0 0 44 44" fill="none"><rect x="2" y="6" width="40" height="30" rx="4" stroke="#8ab08a" stroke-width="1.8" fill="none"/><circle cx="14" cy="16" r="4" stroke="#8ab08a" stroke-width="1.8" fill="none"/><path d="M2 28 L14 18 L24 26 L32 20 L42 30" stroke="#8ab08a" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg><span>Foto produktu</span></div>';
 
+var CROP_MARKS_HTML =
+  '<div class="crop-marks">' +
+  '<div class="cm t cm-tl-v"></div><div class="cm h cm-tl-h"></div>' +
+  '<div class="cm t cm-tr-v"></div><div class="cm h cm-tr-h"></div>' +
+  '<div class="cm t cm-bl-v"></div><div class="cm h cm-bl-h"></div>' +
+  '<div class="cm t cm-br-v"></div><div class="cm h cm-br-h"></div>' +
+  '</div>';
+
 function fitPreview() {
-  // přepočítá scale tak, aby se A4 náhled vešel do canvasu
   var canvas = document.querySelector('.canvas');
   if (!canvas) return;
-  var avail = canvas.clientHeight - 120; // rezerva na hinty
+  var avail = canvas.clientHeight - 130;
   var mmToPx = 96 / 25.4;
   var a4hPx = 297 * mmToPx;
   var scale = avail / a4hPx;
@@ -454,12 +578,18 @@ function fitPreview() {
 }
 window.addEventListener('resize', fitPreview);
 
+function newProduct() {
+  return { name:'', tag:'', desc:'', price:'', priceOld:'', img:null, imgX:50, imgY:50, imgZoom:100 };
+}
+
 function startEditor(n) {
   count = n;
   prods = [];
-  for (var i = 0; i < n; i++) {
-    prods.push({ name: '', tag: '', desc: '', price: '', img: null });
-  }
+  for (var i = 0; i < n; i++) prods.push(newProduct());
+  enterEditor();
+}
+
+function enterEditor() {
   document.getElementById('picker').style.display = 'none';
   document.getElementById('editor').style.display = 'flex';
   buildPanels();
@@ -470,37 +600,188 @@ function startEditor(n) {
 function goBack() {
   document.getElementById('picker').style.display = 'flex';
   document.getElementById('editor').style.display = 'none';
-  var ids = ['f-promo','f-validity','f-url','f-note'];
-  for (var i = 0; i < ids.length; i++) {
-    document.getElementById(ids[i]).value = '';
+  checkDraft();
+}
+
+function getState() {
+  return {
+    count: count,
+    printMode: printMode,
+    promo: gv('f-promo'),
+    validity: gv('f-validity'),
+    url: gv('f-url'),
+    note: gv('f-note'),
+    prods: prods,
+    savedAt: new Date().toISOString()
+  };
+}
+
+function autoSave() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(getState()));
+    var s = document.getElementById('save-status');
+    if (s) s.textContent = 'uloženo';
+  } catch(e) {
+    var s2 = document.getElementById('save-status');
+    if (s2) s2.textContent = '';
   }
+}
+
+function checkDraft() {
+  var raw = null;
+  try { raw = localStorage.getItem(STORAGE_KEY); } catch(e) {}
+  var btn = document.getElementById('restore-btn');
+  if (raw) {
+    try {
+      var d = JSON.parse(raw);
+      var info = d.count + ' produkt(ů)';
+      if (d.promo) info += ' · ' + d.promo;
+      document.getElementById('restore-info').textContent = info;
+      btn.style.display = 'block';
+    } catch(e) { btn.style.display = 'none'; }
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+function restoreDraft() {
+  var raw = null;
+  try { raw = localStorage.getItem(STORAGE_KEY); } catch(e) {}
+  if (!raw) return;
+  try { applyState(JSON.parse(raw)); }
+  catch(e) { alert('Rozpracovaný leták se nepodařilo načíst.'); }
+}
+
+function applyState(d) {
+  count = d.count || 6;
+  printMode = d.printMode || 'office';
+  prods = [];
+  for (var i = 0; i < count; i++) {
+    var p = (d.prods && d.prods[i]) ? d.prods[i] : newProduct();
+    if (p.imgX === undefined) p.imgX = 50;
+    if (p.imgY === undefined) p.imgY = 50;
+    if (p.imgZoom === undefined) p.imgZoom = 100;
+    if (p.priceOld === undefined) p.priceOld = '';
+    prods.push(p);
+  }
+  document.getElementById('picker').style.display = 'none';
+  document.getElementById('editor').style.display = 'flex';
+  setVal('f-promo', d.promo);
+  setVal('f-validity', d.validity);
+  setVal('f-url', d.url);
+  setVal('f-note', d.note);
+  setMode(printMode);
+  buildPanels();
+  render();
+  fitPreview();
+}
+
+function saveToFile() {
+  var state = getState();
+  var blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  var name = (state.promo || 'INO-letak').replace(/[^a-zA-Z0-9-_]/g, '_');
+  a.download = name + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function loadFromFile(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try { applyState(JSON.parse(ev.target.result)); }
+    catch(err) { alert('Soubor se nepodařilo načíst — není to platný leták.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function buildPanels() {
   var wrap = document.getElementById('pp-wrap');
   wrap.innerHTML = '';
   for (var i = 0; i < count; i++) {
+    var p = prods[i];
     var d = document.createElement('div');
     d.className = 'pp';
+    d.id = 'pp' + i;
+
+    var tagOpts = '';
+    for (var t = 0; t < TAGS.length; t++) {
+      var tv = TAGS[t];
+      var lbl = tv === '' ? '— bez štítku —' : tv;
+      var sel = (p.tag === tv) ? ' selected' : '';
+      tagOpts += '<option value="' + tv + '"' + sel + '>' + lbl + '</option>';
+    }
+    var customSel = (TAGS.indexOf(p.tag) === -1 && p.tag) ? ' selected' : '';
+    tagOpts += '<option value="__custom__"' + customSel + '>+ vlastní text…</option>';
+
+    var moveUp = i > 0
+      ? '<span class="pp-move" onclick="event.stopPropagation();moveProd(' + i + ',-1)" title="Nahoru">&#9650;</span>'
+      : '<span class="pp-move" style="opacity:0.15">&#9650;</span>';
+    var moveDn = i < count-1
+      ? '<span class="pp-move" onclick="event.stopPropagation();moveProd(' + i + ',1)" title="Dolů">&#9660;</span>'
+      : '<span class="pp-move" style="opacity:0.15">&#9660;</span>';
+
+    var imgArea, cropShow;
+    if (p.img) {
+      imgArea = '<div class="iu has-img" id="iu' + i + '"><img src="' + p.img + '"><input type="file" accept="image/*" onchange="handleImg(event,' + i + ')"></div>';
+      cropShow = ' show';
+    } else {
+      imgArea = '<div class="iu" id="iu' + i + '"><span class="iu-hint">Klikněte pro nahrání fotky</span><input type="file" accept="image/*" onchange="handleImg(event,' + i + ')"></div>';
+      cropShow = '';
+    }
+
     d.innerHTML =
       '<div class="pp-head" onclick="togglePP(' + i + ')">' +
+        moveUp + moveDn +
         '<span class="pp-n">' + (i+1) + '</span>' +
-        '<span class="pp-name" id="ppname' + i + '">Produkt ' + (i+1) + '</span>' +
+        '<span class="pp-name" id="ppname' + i + '">' + (esc(p.name) || 'Produkt ' + (i+1)) + '</span>' +
+        '<span class="pp-warn" title="Nevyplněná pole">&#9888;</span>' +
         '<span class="pp-tog' + (i===0?' open':'') + '" id="pptog' + i + '">&#9662;</span>' +
       '</div>' +
       '<div class="pp-body" id="ppbody' + i + '" style="' + (i===0?'':'display:none') + '">' +
         '<div class="f-lbl">Foto</div>' +
-        '<div class="iu" id="iu' + i + '">' +
-          '<span class="iu-hint">Klikn&#283;te pro nahr&#225;n&#237; fotky</span>' +
-          '<input type="file" accept="image/*" onchange="handleImg(event,' + i + ')">' +
+        imgArea +
+        '<div class="crop-ctrl' + cropShow + '" id="crop' + i + '">' +
+          '<div class="crop-hint">Úprava výřezu fotky:</div>' +
+          '<div class="crop-row"><label>Přiblížení</label><input type="range" min="100" max="250" value="' + p.imgZoom + '" oninput="updProd(' + i + ',\'imgZoom\',this.value)"></div>' +
+          '<div class="crop-row"><label>Posun &#8596;</label><input type="range" min="0" max="100" value="' + p.imgX + '" oninput="updProd(' + i + ',\'imgX\',this.value)"></div>' +
+          '<div class="crop-row"><label>Posun &#8597;</label><input type="range" min="0" max="100" value="' + p.imgY + '" oninput="updProd(' + i + ',\'imgY\',this.value)"></div>' +
         '</div>' +
-        '<div class="f"><div class="f-lbl">&#352;t&#237;tek (NOVINKA, AKCE&hellip;)</div><input type="text" placeholder="NOVINKA" oninput="updProd(' + i + ',\'tag\',this.value)"></div>' +
-        '<div class="f"><div class="f-lbl">N&#225;zev produktu</div><input type="text" placeholder="N&#225;zev produktu" oninput="updProd(' + i + ',\'name\',this.value)"></div>' +
-        '<div class="f"><div class="f-lbl">Popis</div><textarea rows="2" placeholder="Kr&#225;tk&#253; popis&hellip;" oninput="updProd(' + i + ',\'desc\',this.value)"></textarea></div>' +
-        '<div class="f"><div class="f-lbl">Cena</div><input type="text" placeholder="1 290 K&#269;" oninput="updProd(' + i + ',\'price\',this.value)"></div>' +
+        '<div class="f"><div class="f-lbl">Štítek</div><select onchange="onTagChange(' + i + ',this.value)">' + tagOpts + '</select></div>' +
+        '<div class="f" id="tagcustomwrap' + i + '" style="' + (customSel?'':'display:none') + '"><input type="text" placeholder="Vlastní štítek" value="' + (customSel?esc(p.tag):'') + '" oninput="updProd(' + i + ',\'tag\',this.value)"></div>' +
+        '<div class="f"><div class="f-lbl">Název produktu</div><input type="text" placeholder="Název produktu" value="' + esc(p.name) + '" oninput="updProd(' + i + ',\'name\',this.value)"></div>' +
+        '<div class="f"><div class="f-lbl">Popis</div><textarea rows="2" placeholder="Krátký popis…" oninput="updProd(' + i + ',\'desc\',this.value)">' + esc(p.desc) + '</textarea></div>' +
+        '<div class="f-row">' +
+          '<div class="f"><div class="f-lbl">Cena</div><input type="text" placeholder="1 290 Kč" value="' + esc(p.price) + '" oninput="updProd(' + i + ',\'price\',this.value)"></div>' +
+          '<div class="f"><div class="f-lbl">Původní cena</div><input type="text" placeholder="1 590 Kč" value="' + esc(p.priceOld) + '" oninput="updProd(' + i + ',\'priceOld\',this.value)"></div>' +
+        '</div>' +
       '</div>';
     wrap.appendChild(d);
   }
+  updateWarnings();
+}
+
+function onTagChange(i, val) {
+  var wrap = document.getElementById('tagcustomwrap' + i);
+  if (val === '__custom__') {
+    wrap.style.display = 'block';
+    var cust = wrap.querySelector('input');
+    prods[i].tag = cust.value || '';
+    cust.focus();
+  } else {
+    wrap.style.display = 'none';
+    prods[i].tag = val;
+  }
+  render();
 }
 
 function togglePP(i) {
@@ -511,10 +792,20 @@ function togglePP(i) {
   tog.className = open ? 'pp-tog' : 'pp-tog open';
 }
 
+function moveProd(i, dir) {
+  var j = i + dir;
+  if (j < 0 || j >= count) return;
+  var tmp = prods[i]; prods[i] = prods[j]; prods[j] = tmp;
+  buildPanels();
+  render();
+}
+
 function updProd(i, key, val) {
   prods[i][key] = val;
-  var el = document.getElementById('ppname' + i);
-  if (el) el.textContent = prods[i].name || ('Produkt ' + (i+1));
+  if (key === 'name') {
+    var el = document.getElementById('ppname' + i);
+    if (el) el.textContent = val || ('Produkt ' + (i+1));
+  }
   render();
 }
 
@@ -524,9 +815,15 @@ function handleImg(e, i) {
   var reader = new FileReader();
   reader.onload = function(ev) {
     prods[i].img = ev.target.result;
+    prods[i].imgX = 50; prods[i].imgY = 50; prods[i].imgZoom = 100;
     var area = document.getElementById('iu' + i);
     area.className = 'iu has-img';
     area.innerHTML = '<img src="' + ev.target.result + '"><input type="file" accept="image/*" onchange="handleImg(event,' + i + ')">';
+    var crop = document.getElementById('crop' + i);
+    if (crop) crop.className = 'crop-ctrl show';
+    // resetovat slidery
+    var rows = crop ? crop.querySelectorAll('input[type=range]') : [];
+    if (rows.length === 3) { rows[0].value = 100; rows[1].value = 50; rows[2].value = 50; }
     render();
   };
   reader.readAsDataURL(file);
@@ -536,53 +833,108 @@ function gv(id) {
   var el = document.getElementById(id);
   return el ? el.value : '';
 }
+function setVal(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.value = val || '';
+}
+
+function setMode(m) {
+  printMode = m;
+  document.getElementById('mode-office').className = 'mode-opt' + (m==='office'?' active':'');
+  document.getElementById('mode-print').className = 'mode-opt' + (m==='print'?' active':'');
+  render();
+}
+
+function updateWarnings() {
+  var incomplete = 0;
+  for (var i = 0; i < count; i++) {
+    var p = prods[i];
+    var bad = !p.name || !p.price || !p.img;
+    var panel = document.getElementById('pp' + i);
+    if (panel) {
+      panel.className = bad ? 'pp incomplete' : 'pp';
+      if (bad) incomplete++;
+    }
+  }
+  var banner = document.getElementById('check-banner');
+  if (banner) {
+    if (incomplete === 0) {
+      banner.className = 'check-banner ok';
+      banner.textContent = '\u2713 Vše vyplněno — leták je připraven k tisku';
+    } else {
+      banner.className = 'check-banner warn';
+      banner.textContent = '\u26A0 ' + incomplete + ' produkt(ů) má nevyplněný název, cenu nebo foto';
+    }
+  }
+}
 
 function render() {
-  var promo    = gv('f-promo')    || 'N&#225;zev akce';
-  var validity = gv('f-validity') || 'Platnost nab&#237;dky';
+  var promo    = gv('f-promo')    || 'Název akce';
+  var validity = gv('f-validity') || 'Platnost nabídky';
   var url      = gv('f-url')      || 'www.ino.cz';
   var note     = gv('f-note')     || 'Ceny jsou uvedeny bez DPH.';
 
   var cards = '';
   for (var i = 0; i < prods.length; i++) {
     var p = prods[i];
-    var imgHtml = p.img ? '<img src="' + p.img + '" alt="">' : PH_SVG;
-    var desc = (count <= 6 && p.desc) ? '<div class="lc-desc">' + p.desc + '</div>' : '';
+    var imgHtml;
+    if (p.img) {
+      var zoom = p.imgZoom || 100;
+      var ox = (p.imgX === undefined) ? 50 : p.imgX;
+      var oy = (p.imgY === undefined) ? 50 : p.imgY;
+      imgHtml = '<img src="' + p.img + '" alt="" style="object-position:' + ox + '% ' + oy + '%;transform:scale(' + (zoom/100) + ');">';
+    } else {
+      imgHtml = PH_SVG;
+    }
+    var desc = (count <= 6 && p.desc) ? '<div class="lc-desc">' + esc(p.desc) + '</div>' : '';
+    var oldPrice = p.priceOld ? '<div class="lc-price-old">' + esc(p.priceOld) + '</div>' : '';
     cards +=
       '<div class="lc">' +
         '<div class="lc-img">' + imgHtml + '</div>' +
         '<div class="lc-body">' +
-          '<div class="lc-tag">' + (p.tag || '\u00a0') + '</div>' +
-          '<div class="lc-name">' + (p.name || 'N&#225;zev produktu') + '</div>' +
+          '<div class="lc-tag">' + (esc(p.tag) || '\u00a0') + '</div>' +
+          '<div class="lc-name">' + (esc(p.name) || 'Název produktu') + '</div>' +
           desc +
           '<div class="lc-pr">' +
-            '<div class="lc-price">' + (p.price || '&mdash;') + '</div>' +
-            '<span class="lc-pnote">cena bez DPH</span>' +
+            oldPrice +
+            '<div>' +
+              '<div class="lc-price">' + (esc(p.price) || '\u2014') + '</div>' +
+              '<span class="lc-pnote">cena bez DPH</span>' +
+            '</div>' +
           '</div>' +
         '</div>' +
       '</div>';
   }
 
   var letak = document.getElementById('letak');
+  letak.className = 'letak' + (printMode === 'print' ? ' bleed' : '');
   letak.innerHTML =
-    '<div class="lh">' +
-      '<div class="lh-left">' +
-        LOGO_SVG +
-        '<div class="lh-tagline">Inteligentn&#237; odpov&#283;&#271; na pot&#345;eby kancel&#225;&#345;&#237;</div>' +
+    CROP_MARKS_HTML +
+    '<div class="letak-content">' +
+      '<div class="lh">' +
+        '<div class="lh-left">' +
+          LOGO_SVG +
+          '<div class="lh-tagline">Inteligentní odpověď na potřeby kanceláří</div>' +
+        '</div>' +
+        '<div class="lh-right">' +
+          '<div class="lh-validity">' + esc(validity) + '</div>' +
+          '<div class="lh-promo">' + esc(promo) + '</div>' +
+        '</div>' +
       '</div>' +
-      '<div class="lh-right">' +
-        '<div class="lh-validity">' + validity + '</div>' +
-        '<div class="lh-promo">' + promo + '</div>' +
+      '<div class="redbar"></div>' +
+      '<div class="lp n' + count + '">' + cards + '</div>' +
+      '<div class="lf">' +
+        '<div class="lf-note">' + esc(note) + '</div>' +
+        '<div class="lf-url">' + esc(url) + '</div>' +
       '</div>' +
-    '</div>' +
-    '<div class="redbar"></div>' +
-    '<div class="lp n' + count + '">' + cards + '</div>' +
-    '<div class="lf">' +
-      '<div class="lf-note">' + note + '</div>' +
-      '<div class="lf-url">' + url + '</div>' +
-    '</div>' +
-    '<div class="greenbar"></div>';
+      '<div class="greenbar"></div>' +
+    '</div>';
+
+  updateWarnings();
+  autoSave();
 }
+
+window.addEventListener('DOMContentLoaded', checkDraft);
 </script>
 </body>
 </html>
