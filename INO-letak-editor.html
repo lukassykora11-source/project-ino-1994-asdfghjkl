@@ -177,43 +177,56 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
   display: flex; flex-direction: column; align-items: center; overflow-y: auto;
 }
 .canvas-hint {
-  font-size: 11px; color: rgba(195,220,190,0.3); margin-bottom: 18px; font-weight: 300;
+  font-size: 11px; color: rgba(195,220,190,0.4); margin-bottom: 8px; font-weight: 300;
+  text-align: center; line-height: 1.6; max-width: 520px;
+}
+.canvas-hint b { color: var(--pg); font-weight: 400; }
+.canvas-warn {
+  font-size: 11px; color: #ffcc66; margin-bottom: 18px; font-weight: 300;
+  text-align: center; max-width: 520px;
 }
 
-/* ── LETÁK A4 ──
-   96dpi: 1mm = 3.7795px
-   A4 = 210mm × 297mm = 793.7 × 1122.5px
-   Zobrazujeme šířku 700px → scale = 700/793.7 = 0.8819
-   výška = 297 * 3.7795 * 0.8819 = 990px
-   Ale pro jednoduchost: width 700, height 990
-*/
-.letak-outer { width: 700px; }
+/* ──────────────────────────────
+   LETÁK — PŘESNÉ A4
+   A4 = 210mm × 297mm
+   Používáme mm jednotky, takže tisk
+   sedí 1:1. Na obrazovce přepočítáno.
+   ────────────────────────────── */
+.letak-outer {
+  /* zmenšený náhled na obrazovce */
+}
 .letak {
-  width: 700px;
-  height: 990px;
+  width: 210mm;
+  height: 297mm;
   background: var(--bg);
-  border-radius: 5px;
   overflow: hidden;
-  box-shadow: 0 20px 70px rgba(0,0,0,0.6);
   display: flex;
   flex-direction: column;
+  /* náhled na obrazovce zmenšíme transformem */
+  transform: scale(var(--preview-scale, 0.85));
+  transform-origin: top center;
+  box-shadow: 0 20px 70px rgba(0,0,0,0.6);
+}
+/* kompenzace výšky kvůli scale */
+.letak-outer {
+  height: calc(297mm * var(--preview-scale, 0.85));
 }
 
 /* Header */
 .lh {
   background: white;
-  padding: 16px 24px 14px;
+  padding: 6mm 9mm 5mm;
   display: flex; align-items: center; justify-content: space-between;
   flex-shrink: 0;
 }
-.lh-left { display: flex; align-items: center; gap: 14px; }
-.lh svg.logo { height: 34px; width: auto; }
-.lh-tagline { font-family: 'Ladislav', sans-serif; font-size: 14px; color: var(--gg); }
+.lh-left { display: flex; align-items: center; gap: 5mm; }
+.lh svg.logo { height: 11mm; width: auto; }
+.lh-tagline { font-family: 'Ladislav', sans-serif; font-size: 5mm; color: var(--gg); }
 .lh-right { text-align: right; }
-.lh-validity { font-size: 10px; font-weight: 300; color: #aaa; margin-bottom: 2px; }
-.lh-promo { font-family: 'Ladislav', sans-serif; font-size: 16px; color: var(--gg); }
+.lh-validity { font-size: 3mm; font-weight: 300; color: #aaa; margin-bottom: 1mm; }
+.lh-promo { font-family: 'Ladislav', sans-serif; font-size: 5.5mm; color: var(--gg); }
 
-.redbar { background: var(--red); height: 5px; flex-shrink: 0; }
+.redbar { background: var(--red); height: 1.8mm; flex-shrink: 0; }
 
 /* Products grid */
 .lp {
@@ -221,8 +234,8 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
   flex: 1;
   min-height: 0;
   display: grid;
-  padding: 14px 16px;
-  gap: 10px;
+  padding: 5mm 5.5mm;
+  gap: 3.5mm;
 }
 .lp.n1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
 .lp.n2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
@@ -233,18 +246,18 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
 /* Card */
 .lc {
   background: white;
-  border-radius: 8px;
+  border-radius: 2.8mm;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 8px rgba(61,86,85,0.12);
+  box-shadow: 0 0.6mm 2.4mm rgba(61,86,85,0.12);
   min-height: 0;
 }
 
 /* Layout 2 — obrázek vlevo, text vpravo */
 .lp.n2 .lc { flex-direction: row; }
-.lp.n2 .lc-img { width: 55%; flex-shrink: 0; min-height: 0; }
-.lp.n2 .lc-body { justify-content: center; padding: 20px 22px; }
+.lp.n2 .lc-img { width: 55%; flex-shrink: 0; height: auto; }
+.lp.n2 .lc-body { justify-content: center; padding: 7mm 8mm; }
 
 .lc-img {
   background: #eef5ec;
@@ -253,82 +266,112 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
 }
 /* Layout 1 — obrázek roste */
 .lp.n1 .lc-img { flex: 1; min-height: 0; }
-/* Ostatní — fixní výšky */
+/* Ostatní — proporční výšky */
 .lp.n4 .lc-img { height: 56%; }
 .lp.n6 .lc-img { height: 54%; }
 .lp.n8 .lc-img { height: 50%; }
 
 .lc-img img { width: 100%; height: 100%; object-fit: cover; }
 .lc-img-ph {
-  display: flex; flex-direction: column; align-items: center; gap: 5px; opacity: 0.32;
+  display: flex; flex-direction: column; align-items: center; gap: 1.5mm; opacity: 0.32;
 }
-.lc-img-ph span { font-size: 9px; font-weight: 300; color: var(--gg); }
+.lc-img-ph span { font-size: 2.6mm; font-weight: 300; color: var(--gg); }
 
 .lc-body {
-  padding: 10px 12px 12px;
-  display: flex; flex-direction: column; gap: 3px;
+  padding: 3.5mm 4mm 4mm;
+  display: flex; flex-direction: column; gap: 1mm;
   flex-shrink: 0;
 }
-.lp.n1 .lc-body { padding: 16px 20px 18px; flex-shrink: 0; }
+.lp.n1 .lc-body { padding: 6mm 7mm 7mm; flex-shrink: 0; }
 .lp.n2 .lc-body { flex-shrink: 1; flex: 1; min-height: 0; }
-.lp.n8 .lc-body { padding: 7px 9px 9px; }
+.lp.n8 .lc-body { padding: 2.5mm 3mm 3mm; }
 
 .lc-tag {
-  font-size: 8px; font-weight: 400; letter-spacing: 1.8px;
-  text-transform: uppercase; color: var(--gg); min-height: 11px;
+  font-size: 2.2mm; font-weight: 400; letter-spacing: 0.5mm;
+  text-transform: uppercase; color: var(--gg); min-height: 3mm;
 }
 .lc-name { font-family: 'Ladislav', sans-serif; color: #111; line-height: 1.15; }
-.lp.n1 .lc-name { font-size: 28px; }
-.lp.n2 .lc-name { font-size: 22px; }
-.lp.n4 .lc-name { font-size: 16px; }
-.lp.n6 .lc-name { font-size: 14px; }
-.lp.n8 .lc-name { font-size: 13px; }
+.lp.n1 .lc-name { font-size: 10mm; }
+.lp.n2 .lc-name { font-size: 7.5mm; }
+.lp.n4 .lc-name { font-size: 5.5mm; }
+.lp.n6 .lc-name { font-size: 4.6mm; }
+.lp.n8 .lc-name { font-size: 4.2mm; }
 
-.lc-desc { font-size: 11px; font-weight: 300; color: #777; line-height: 1.5; }
-.lp.n1 .lc-desc { font-size: 13px; line-height: 1.6; }
-.lp.n2 .lc-desc { font-size: 12px; }
-.lp.n8 .lc-desc { font-size: 10px; display: none; }
+.lc-desc { font-size: 3mm; font-weight: 300; color: #777; line-height: 1.5; }
+.lp.n1 .lc-desc { font-size: 4mm; line-height: 1.6; }
+.lp.n2 .lc-desc { font-size: 3.6mm; }
+.lp.n8 .lc-desc { display: none; }
 
 .lc-pr {
-  margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;
+  margin-top: 2.5mm; padding-top: 2.5mm; border-top: 0.3mm solid #eee;
 }
-.lp.n8 .lc-pr { margin-top: 5px; padding-top: 5px; }
+.lp.n8 .lc-pr { margin-top: 1.5mm; padding-top: 1.5mm; }
 
 .lc-price {
   font-family: 'GS', sans-serif; font-weight: 300;
-  color: var(--red); line-height: 1; letter-spacing: -0.3px;
+  color: var(--red); line-height: 1; letter-spacing: -0.1mm;
 }
-.lp.n1 .lc-price { font-size: 34px; }
-.lp.n2 .lc-price { font-size: 28px; }
-.lp.n4 .lc-price { font-size: 22px; }
-.lp.n6 .lc-price { font-size: 20px; }
-.lp.n8 .lc-price { font-size: 16px; }
+.lp.n1 .lc-price { font-size: 11mm; }
+.lp.n2 .lc-price { font-size: 9mm; }
+.lp.n4 .lc-price { font-size: 7mm; }
+.lp.n6 .lc-price { font-size: 6.2mm; }
+.lp.n8 .lc-price { font-size: 5.2mm; }
 
-.lc-pnote { font-size: 9px; font-weight: 300; color: #aaa; margin-top: 2px; display: block; }
+.lc-pnote { font-size: 2.4mm; font-weight: 300; color: #aaa; margin-top: 0.6mm; display: block; }
 
 /* Footer */
 .lf {
   background: white;
-  border-top: 3px solid var(--pg);
-  padding: 10px 24px;
+  border-top: 1mm solid var(--pg);
+  padding: 3.5mm 9mm;
   display: flex; align-items: center; justify-content: space-between;
   flex-shrink: 0;
 }
-.lf-note { font-size: 10px; font-weight: 300; color: #aaa; }
-.lf-url { font-family: 'Ladislav', sans-serif; font-size: 15px; color: var(--red); }
-.greenbar { background: var(--gg); height: 6px; flex-shrink: 0; }
+.lf-note { font-size: 2.8mm; font-weight: 300; color: #aaa; }
+.lf-url { font-family: 'Ladislav', sans-serif; font-size: 5mm; color: var(--red); }
+.greenbar { background: var(--gg); height: 2mm; flex-shrink: 0; }
 
-/* ── PRINT ── */
+/* ──────────────────────────────
+   PRINT — KLÍČOVÉ NASTAVENÍ
+   ────────────────────────────── */
 @media print {
-  body { background: white !important; }
+  /* vynutí tisk barev přesně jak jsou */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  html, body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
   #picker { display: none !important; }
-  #editor { display: flex !important; }
-  .sb, .canvas-hint { display: none !important; }
-  .canvas { padding: 0 !important; background: white !important; display: block !important; }
-  .letak-outer, .letak { width: 100% !important; }
-  .letak { height: auto !important; min-height: 100vh; box-shadow: none !important; border-radius: 0 !important; }
-  .lp { flex: 1; }
-  @page { size: A4 portrait; margin: 0; }
+  #editor { display: block !important; }
+  .sb, .canvas-hint, .canvas-warn { display: none !important; }
+  .canvas {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+  .letak-outer {
+    height: auto !important;
+    width: auto !important;
+  }
+  /* leták v tisku — přesně A4, žádný scale */
+  .letak {
+    width: 210mm !important;
+    height: 297mm !important;
+    transform: none !important;
+    box-shadow: none !important;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
 }
 </style>
 </head>
@@ -378,7 +421,11 @@ body { font-family: 'GS', sans-serif; font-weight: 300; background: #18272b; min
   </div>
 
   <div class="canvas">
-    <div class="canvas-hint">Náhled A4 &nbsp;·&nbsp; Tisk: Uložit jako PDF, A4, bez okrajů, zapnout grafiku na pozadí</div>
+    <div class="canvas-hint">
+      Náhled odpovídá <b>A4 (210 &times; 297 mm)</b>.<br>
+      Pro tisk klikněte <b>Uložit jako PDF</b> &rarr; v dialogu: <b>formát A4</b>, <b>okraje: Žádné</b>, <b>Měřítko: 100&nbsp;%</b>, zapnout <b>Grafika na pozadí</b>.
+    </div>
+    <div class="canvas-warn" id="warn"></div>
     <div class="letak-outer">
       <div class="letak" id="letak"></div>
     </div>
@@ -393,6 +440,20 @@ var LOGO_SVG = '<svg class="logo" viewBox="0 0 407.1 206.3" xmlns="http://www.w3
 
 var PH_SVG = '<div class="lc-img-ph"><svg width="32" height="32" viewBox="0 0 44 44" fill="none"><rect x="2" y="6" width="40" height="30" rx="4" stroke="#8ab08a" stroke-width="1.8" fill="none"/><circle cx="14" cy="16" r="4" stroke="#8ab08a" stroke-width="1.8" fill="none"/><path d="M2 28 L14 18 L24 26 L32 20 L42 30" stroke="#8ab08a" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg><span>Foto produktu</span></div>';
 
+function fitPreview() {
+  // přepočítá scale tak, aby se A4 náhled vešel do canvasu
+  var canvas = document.querySelector('.canvas');
+  if (!canvas) return;
+  var avail = canvas.clientHeight - 120; // rezerva na hinty
+  var mmToPx = 96 / 25.4;
+  var a4hPx = 297 * mmToPx;
+  var scale = avail / a4hPx;
+  if (scale > 0.95) scale = 0.95;
+  if (scale < 0.3) scale = 0.3;
+  document.documentElement.style.setProperty('--preview-scale', scale.toFixed(3));
+}
+window.addEventListener('resize', fitPreview);
+
 function startEditor(n) {
   count = n;
   prods = [];
@@ -403,6 +464,7 @@ function startEditor(n) {
   document.getElementById('editor').style.display = 'flex';
   buildPanels();
   render();
+  fitPreview();
 }
 
 function goBack() {
@@ -446,7 +508,7 @@ function togglePP(i) {
   var tog = document.getElementById('pptog' + i);
   var open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'flex';
-  if (open) { tog.className = 'pp-tog'; } else { tog.className = 'pp-tog open'; }
+  tog.className = open ? 'pp-tog' : 'pp-tog open';
 }
 
 function updProd(i, key, val) {
