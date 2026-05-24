@@ -432,7 +432,7 @@ tr.foot td:last-child  { text-align: left; }
     </button>
     <div class="sync-status">
       <div class="sync-dot spin" id="syncDot"></div>
-      <span id="syncTxt">Načítám…</span>
+      <span id="syncTxt">Šťourám se v datech…</span>
     </div>
   </div>
 </div>
@@ -451,7 +451,7 @@ tr.foot td:last-child  { text-align: left; }
 <div class="main" id="main">
   <div class="state-msg" id="initialState">
     <div class="spinner"></div>
-    Načítám data ze Google Sheets…
+    Vytahuji kostlivce ze skříně…
   </div>
 </div>
 
@@ -543,11 +543,11 @@ function apiFetch(params, timeoutMs) {
 }
 
 function loadAll() {
-  setSyncStatus('spin', 'Načítám…');
+  setSyncStatus('spin', 'Šťourám se v datech…');
   $('refreshBtn').classList.add('spinning');
   $('refreshBtn').disabled = true;
 
-  showState('<div class="spinner"></div>Načítám data ze Google Sheets…', false);
+  showState('<div class="spinner"></div>Vytahuji kostlivce ze skříně…', false);
 
   Promise.all([
     apiFetch({ action: 'getData' }),
