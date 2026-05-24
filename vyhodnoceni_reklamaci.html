@@ -980,7 +980,7 @@ tr.rate-alert td.rate-cell { color: var(--ino-red); font-weight: 600; }
       <!-- Skladníci - bodový graf -->
       <div class="card" style="margin-bottom: 20px;">
         <h3>Skladníci — naskenováno vs. míra reklamací</h3>
-        <p class="card-sub">Každý bod = jeden skladník. Vodorovně: kolik naskenoval. Svisle: kolik udělá reklamací na 1000 naskenovaných položek (‰). Velikost bodu = počet reklamací. Vpravo dole = hodně práce, málo chyb (ideál). Vlevo/vpravo nahoře = vysoká chybovost.</p>
+        <p class="card-sub">Každý bod = jeden skladník. Vodorovně: kolik naskenoval položek. Svisle: kolik udělá reklamací na každých 1000 naskenovaných položek. Velikost bodu = celkový počet reklamací. Vpravo dole = hodně práce, málo chyb (ideál). Vlevo/vpravo nahoře = vysoká chybovost.</p>
         <div id="skladnici-scatter"></div>
         <div class="bar-legend">
           <span class="bar-legend-item"><span class="sw ok"></span>OK ≤ 0,5 ‰</span>
@@ -1898,27 +1898,27 @@ function renderSkladniciScatter(rows) {
     return;
   }
 
-  const W = 600, H = 320, padL = 52, padR = 24, padT = 20, padB = 48;
+  const W = 600, H = 340, padL = 64, padR = 24, padT = 20, padB = 52;
   const innerW = W - padL - padR, innerH = H - padT - padB;
 
   const maxX = Math.max(...pts.map(p => p.vyd), 1);
-  // Osa Y v PROMILE (reklamací na 1000 naskenovaných)
+  // Osa Y: počet reklamací na 1000 naskenovaných (číselně = promile, ale bez jednotky)
   const maxY = Math.max(...pts.map(p => p.ratePromile), 1) * 1.15;
 
   const xPos = v => padL + (v / maxX) * innerW;
   const yPos = v => padT + innerH - (v / maxY) * innerH;
 
-  // Prahové čáry přímo v promile
-  const watchVal = CONFIG.THRESHOLDS.OK;    // 0.5 ‰
-  const alertVal = CONFIG.THRESHOLDS.WATCH; // 1.0 ‰
+  // Prahové čáry
+  const watchVal = CONFIG.THRESHOLDS.OK;    // 0.5
+  const alertVal = CONFIG.THRESHOLDS.WATCH; // 1.0
 
-  // Gridlines Y - hodnoty v ‰
+  // Gridlines Y - čistá čísla (kolik reklamací na 1000 naskenovaných)
   let grid = "";
   for (let i = 0; i <= 4; i++) {
     const y = padT + (innerH / 4) * i;
     const val = maxY - (maxY / 4) * i;
     grid += `<line x1="${padL}" y1="${y}" x2="${padL+innerW}" y2="${y}" class="trend-grid"/>`;
-    grid += `<text x="${padL-8}" y="${y+3}" text-anchor="end" class="trend-label">${val.toFixed(1)} ‰</text>`;
+    grid += `<text x="${padL-10}" y="${y+3}" text-anchor="end" class="trend-label">${val.toFixed(1)}</text>`;
   }
 
   // Prahové čáry (jen pokud se vejdou do grafu)
@@ -1932,7 +1932,7 @@ function renderSkladniciScatter(rows) {
     thresholds += `<line x1="${padL}" y1="${y}" x2="${padL+innerW}" y2="${y}" stroke="var(--ino-orange)" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>`;
   }
 
-  // Body — pozice podle promile
+  // Body — pozice podle počtu reklamací na 1000
   const computed = pts.map(p => {
     const cx = xPos(p.vyd), cy = yPos(p.ratePromile);
     let color = "var(--ino-green-gray)";
@@ -1985,7 +1985,7 @@ function renderSkladniciScatter(rows) {
 
   const dots = computed.map(c => `
     <circle cx="${c.cx}" cy="${c.cy}" r="${c.r}" fill="${c.color}" opacity="0.78">
-      <title>${esc(c.p.name)}: ${c.p.rek} reklamací z ${fmtNum(c.p.vyd)} naskenovaných = ${c.p.ratePromile.toFixed(2)} ‰ (na 1000)</title>
+      <title>${esc(c.p.name)}: na 1000 naskenovaných ${c.p.ratePromile.toFixed(1)} reklamace (celkem ${c.p.rek} reklamací z ${fmtNum(c.p.vyd)})</title>
     </circle>
   `).join("");
 
@@ -1993,7 +1993,6 @@ function renderSkladniciScatter(rows) {
   const labelEls = labels.map(L => {
     const c = L.ref;
     const offset = Math.abs(L.ly - (c.cy - c.r - 5));
-    // Spojnice jen když je label dál od bodu
     const leader = offset > 4
       ? `<line x1="${c.cx}" y1="${L.ly + 3}" x2="${c.cx}" y2="${c.cy - (L.ly > c.cy ? -c.r : c.r)}" stroke="var(--gray-20)" stroke-width="0.75"/>`
       : "";
@@ -2009,8 +2008,8 @@ function renderSkladniciScatter(rows) {
       <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" class="trend-axis"/>
       ${dots}
       ${labelEls}
-      <text x="${padL+innerW/2}" y="${H-8}" text-anchor="middle" class="scatter-axis-title">Naskenováno položek →</text>
-      <text x="14" y="${padT+innerH/2}" text-anchor="middle" class="scatter-axis-title" transform="rotate(-90 14 ${padT+innerH/2})">Reklamací na 1000 naskenovaných →</text>
+      <text x="${padL+innerW/2}" y="${H-10}" text-anchor="middle" class="scatter-axis-title">Naskenováno položek →</text>
+      <text x="16" y="${padT+innerH/2}" text-anchor="middle" class="scatter-axis-title" transform="rotate(-90 16 ${padT+innerH/2})">Reklamací na 1000 položek →</text>
     </svg>
   `;
 }
