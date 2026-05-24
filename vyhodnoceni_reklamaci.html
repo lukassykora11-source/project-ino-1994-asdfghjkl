@@ -980,7 +980,7 @@ tr.rate-alert td.rate-cell { color: var(--ino-red); font-weight: 600; }
       <!-- Skladníci - bodový graf -->
       <div class="card" style="margin-bottom: 20px;">
         <h3>Skladníci — naskenováno vs. míra reklamací</h3>
-        <p class="card-sub">Každý bod = jeden skladník. Vodorovně: kolik naskenoval. Svisle: jaká je jeho míra reklamací v %. Velikost bodu = počet reklamací. Vpravo dole = hodně práce, málo chyb (ideál). Vlevo/vpravo nahoře = vysoká chybovost.</p>
+        <p class="card-sub">Každý bod = jeden skladník. Vodorovně: kolik naskenoval. Svisle: kolik udělá reklamací na 1000 naskenovaných položek (‰). Velikost bodu = počet reklamací. Vpravo dole = hodně práce, málo chyb (ideál). Vlevo/vpravo nahoře = vysoká chybovost.</p>
         <div id="skladnici-scatter"></div>
         <div class="bar-legend">
           <span class="bar-legend-item"><span class="sw ok"></span>OK ≤ 0,5 ‰</span>
@@ -1902,38 +1902,39 @@ function renderSkladniciScatter(rows) {
   const innerW = W - padL - padR, innerH = H - padT - padB;
 
   const maxX = Math.max(...pts.map(p => p.vyd), 1);
-  const maxY = Math.max(...pts.map(p => p.ratePct), 0.1) * 1.15;
+  // Osa Y v PROMILE (reklamací na 1000 naskenovaných)
+  const maxY = Math.max(...pts.map(p => p.ratePromile), 1) * 1.15;
 
   const xPos = v => padL + (v / maxX) * innerW;
   const yPos = v => padT + innerH - (v / maxY) * innerH;
 
-  // Prahová čára (hranice OK/sledovat) - v %
-  const watchPct = CONFIG.THRESHOLDS.OK / 10;   // 0.5 ‰ = 0.05 %
-  const alertPct = CONFIG.THRESHOLDS.WATCH / 10; // 1.0 ‰ = 0.1 %
+  // Prahové čáry přímo v promile
+  const watchVal = CONFIG.THRESHOLDS.OK;    // 0.5 ‰
+  const alertVal = CONFIG.THRESHOLDS.WATCH; // 1.0 ‰
 
-  // Gridlines Y
+  // Gridlines Y - hodnoty v ‰
   let grid = "";
   for (let i = 0; i <= 4; i++) {
     const y = padT + (innerH / 4) * i;
     const val = maxY - (maxY / 4) * i;
     grid += `<line x1="${padL}" y1="${y}" x2="${padL+innerW}" y2="${y}" class="trend-grid"/>`;
-    grid += `<text x="${padL-8}" y="${y+3}" text-anchor="end" class="trend-label">${val.toFixed(2)}%</text>`;
+    grid += `<text x="${padL-8}" y="${y+3}" text-anchor="end" class="trend-label">${val.toFixed(1)} ‰</text>`;
   }
 
   // Prahové čáry (jen pokud se vejdou do grafu)
   let thresholds = "";
-  if (alertPct < maxY) {
-    const y = yPos(alertPct);
+  if (alertVal < maxY) {
+    const y = yPos(alertVal);
     thresholds += `<line x1="${padL}" y1="${y}" x2="${padL+innerW}" y2="${y}" stroke="var(--ino-red)" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>`;
   }
-  if (watchPct < maxY) {
-    const y = yPos(watchPct);
+  if (watchVal < maxY) {
+    const y = yPos(watchVal);
     thresholds += `<line x1="${padL}" y1="${y}" x2="${padL+innerW}" y2="${y}" stroke="var(--ino-orange)" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>`;
   }
 
-  // Body — nejprve spočítáme pozice, pak rozmístíme popisky bez překryvu
+  // Body — pozice podle promile
   const computed = pts.map(p => {
-    const cx = xPos(p.vyd), cy = yPos(p.ratePct);
+    const cx = xPos(p.vyd), cy = yPos(p.ratePromile);
     let color = "var(--ino-green-gray)";
     if (p.ratePromile > CONFIG.THRESHOLDS.WATCH) color = "var(--ino-red)";
     else if (p.ratePromile > CONFIG.THRESHOLDS.OK) color = "var(--ino-orange)";
@@ -1984,7 +1985,7 @@ function renderSkladniciScatter(rows) {
 
   const dots = computed.map(c => `
     <circle cx="${c.cx}" cy="${c.cy}" r="${c.r}" fill="${c.color}" opacity="0.78">
-      <title>${esc(c.p.name)}: ${c.p.rek} reklamací z ${fmtNum(c.p.vyd)} naskenovaných = ${c.p.ratePct.toFixed(2)} %</title>
+      <title>${esc(c.p.name)}: ${c.p.rek} reklamací z ${fmtNum(c.p.vyd)} naskenovaných = ${c.p.ratePromile.toFixed(2)} ‰ (na 1000)</title>
     </circle>
   `).join("");
 
@@ -2009,7 +2010,7 @@ function renderSkladniciScatter(rows) {
       ${dots}
       ${labelEls}
       <text x="${padL+innerW/2}" y="${H-8}" text-anchor="middle" class="scatter-axis-title">Naskenováno položek →</text>
-      <text x="14" y="${padT+innerH/2}" text-anchor="middle" class="scatter-axis-title" transform="rotate(-90 14 ${padT+innerH/2})">Míra reklamací (%) →</text>
+      <text x="14" y="${padT+innerH/2}" text-anchor="middle" class="scatter-axis-title" transform="rotate(-90 14 ${padT+innerH/2})">Reklamací na 1000 naskenovaných →</text>
     </svg>
   `;
 }
