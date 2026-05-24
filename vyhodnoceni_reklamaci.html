@@ -509,6 +509,7 @@ table.reklamace td {
 }
 table.reklamace tr:hover td { background: var(--ino-beige-1); }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
+th.num { text-align: right; }
 
 .tag {
   display: inline-block;
@@ -582,7 +583,10 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
   display: flex;
   gap: 4px;
   padding-top: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.topbar-tabs::-webkit-scrollbar { display: none; }
 .tab {
   padding: 10px 20px;
   border: none;
@@ -594,6 +598,8 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
   border-bottom: 2px solid transparent;
   transition: color .15s, border-color .15s;
   font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .tab:hover { color: rgba(255,255,255,0.9); }
 .tab.active {
@@ -929,7 +935,9 @@ tr.rate-alert td.rate-cell { color: var(--ino-red); font-weight: 600; }
       </div>
       <nav class="topbar-tabs">
         <button class="tab active" data-view="prehled">Přehled</button>
-        <button class="tab" data-view="reporty">Reporty</button>
+        <button class="tab" data-view="skladnici">Report: Skladníci</button>
+        <button class="tab" data-view="polozky">Report: Položky</button>
+        <button class="tab" data-view="firmy">Report: Firmy</button>
       </nav>
     </header>
 
@@ -953,9 +961,9 @@ tr.rate-alert td.rate-cell { color: var(--ino-red); font-weight: 600; }
           <div class="kpi-sub" id="kpi-total-sub">za vybrané období</div>
         </div>
         <div class="kpi">
-          <div class="kpi-label">Reklamujících firem</div>
-          <div class="kpi-value" id="kpi-pieces">—</div>
-          <div class="kpi-sub">unikátních odběratelů</div>
+          <div class="kpi-label">Z chyby odběratele</div>
+          <div class="kpi-value" id="kpi-odberatel">—</div>
+          <div class="kpi-sub" id="kpi-odberatel-sub">reklamací zaviněných zákazníkem</div>
         </div>
         <div class="kpi alt">
           <div class="kpi-label">Výdejů celkem</div>
@@ -1057,16 +1065,37 @@ tr.rate-alert td.rate-cell { color: var(--ino-red); font-weight: 600; }
 
       </div><!-- /view-prehled -->
 
-      <!-- ===================== REPORTY ===================== -->
-      <div class="view" id="view-reporty">
+      <!-- ===================== REPORT: SKLADNÍCI ===================== -->
+      <div class="view" id="view-skladnici">
+        <div class="card" style="margin-bottom: 20px;">
+          <h3>👷 Skladníci — výkon po měsících</h3>
+          <p class="card-sub">Kolik každý skladník naskenoval položek a kolik z toho bylo reklamací. Míra ‰ ukazuje kvalitu — barevně zvýrazněná.</p>
+          <div id="report-skladnici-bars"></div>
+        </div>
+        <div class="card table-card">
+          <div class="table-head">
+            <div>
+              <h3>Měsíční přehled skladníků</h3>
+              <p class="card-sub">Naskenováno / reklamací v každém měsíci</p>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="reklamace report-table" id="report-skladnici-table">
+              <thead id="report-skladnici-thead"></thead>
+              <tbody id="report-skladnici-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /view-skladnici -->
 
-        <!-- Report 1: Nejčastěji reklamované položky -->
+      <!-- ===================== REPORT: POLOŽKY ===================== -->
+      <div class="view" id="view-polozky">
         <div class="card" style="margin-bottom: 20px;">
           <h3>📦 Nejčastěji reklamované položky</h3>
           <p class="card-sub">Které produkty se reklamují opakovaně. Vysoký počet u jedné položky = systematický problém s produktem nebo dodavatelem.</p>
           <div id="report-polozky-bars"></div>
         </div>
-        <div class="card table-card" style="margin-bottom: 36px;">
+        <div class="card table-card">
           <div class="table-head">
             <div>
               <h3>Všechny reklamované položky</h3>
@@ -1089,29 +1118,10 @@ tr.rate-alert td.rate-cell { color: var(--ino-red); font-weight: 600; }
             </table>
           </div>
         </div>
+      </div><!-- /view-polozky -->
 
-        <!-- Report 2: Skladníci po měsících -->
-        <div class="card" style="margin-bottom: 20px;">
-          <h3>👷 Skladníci — výkon po měsících</h3>
-          <p class="card-sub">Kolik každý skladník naskenoval položek a kolik z toho bylo reklamací. Míra ‰ ukazuje kvalitu — barevně zvýrazněná.</p>
-          <div id="report-skladnici-bars"></div>
-        </div>
-        <div class="card table-card" style="margin-bottom: 36px;">
-          <div class="table-head">
-            <div>
-              <h3>Měsíční přehled skladníků</h3>
-              <p class="card-sub">Naskenováno / reklamací v každém měsíci</p>
-            </div>
-          </div>
-          <div style="overflow-x: auto;">
-            <table class="reklamace report-table" id="report-skladnici-table">
-              <thead id="report-skladnici-thead"></thead>
-              <tbody id="report-skladnici-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Report 3: Firmy které nejvíce reklamují -->
+      <!-- ===================== REPORT: FIRMY ===================== -->
+      <div class="view" id="view-firmy">
         <div class="card" style="margin-bottom: 20px;">
           <h3>🏢 Firmy, které nejvíce reklamují</h3>
           <p class="card-sub">Žebříček odběratelů podle počtu reklamací. Firmy výrazně nad průměrem jsou označené — vhodné prověřit.</p>
@@ -1140,8 +1150,7 @@ tr.rate-alert td.rate-cell { color: var(--ino-red); font-weight: 600; }
             </table>
           </div>
         </div>
-
-      </div><!-- /view-reporty -->
+      </div><!-- /view-firmy -->
 
     </main>
 
@@ -1166,6 +1175,21 @@ const CONFIG = {
     OK: 0.5,      // ≤ 0.5 ‰ = zeleno-šedá (OK)
     WATCH: 1.0,   // 0.5–1.0 ‰ = oranžová (sledovat)
                   // > 1.0 ‰ = červená (problém)
+  },
+
+  // Hodnoty ve sloupci skladníka, které NEJSOU jméno člověka, ale znamenají
+  // "chybu zákazníka" - reklamace, kterou nezpůsobil sklad.
+  // Tyto reklamace se počítají zvlášť, ne do míry skladníků.
+  CHYBA_ODBERATELE: ["odběratel", "odberatel", "zákazník", "zakaznik"],
+
+  // Překlad jmen: skladník v reklamacích -> jméno v listu sklad.
+  // Klíč = jak je člověk zapsaný v reklamacích (malými písmeny),
+  // hodnota = pod jakým jménem se má hledat ve skladu.
+  // Sem patří lidé, jejichž jména se mezi listy liší.
+  PREKLAD_JMEN: {
+    "zíka kohoutová martina": "Kohoutová",
+    "zíka kohoutová": "Kohoutová",
+    "zíka": "Kohoutová",
   },
 };
 
@@ -1378,7 +1402,7 @@ async function loadAll() {
     debugInfo.push("✓ Sklad načten: " + sk.rows.length + " řádků");
     debugInfo.push("  Sloupce: " + (sk.rows[0] ? Object.keys(sk.rows[0]).join(", ") : "(žádné)"));
 
-    state.reklamace = rek.rows.map(normalizeReklamace).filter(r => r.datum);
+    state.reklamace = rek.rows.map(normalizeReklamace).filter(jeRealReklamace);
     state.sklad = normalizeSklad(sk.rows);
     state.dataLive = rek.live && sk.live;
 
@@ -1533,6 +1557,27 @@ function normalizeReklamace(r) {
   };
 }
 
+/* Filtr platných reklamací - vyřadí řádky, které jsou zjevně
+   hlavičky tabulky nebo prázdné záznamy, ne skutečné reklamace.
+   POZN: "Odběratel" je PLATNÁ hodnota (= chyba zákazníka), nevyřazuje se. */
+function jeRealReklamace(r) {
+  // Musí mít datum NEBO měsíc - jinak to není reklamace
+  if (!r.datum && !r.mesic) return false;
+
+  // Skladník nesmí být název sloupce / hlavička tabulky.
+  // (Ale "Odběratel" NENÍ hlavička - je to platná kategorie chyby zákazníka.)
+  const podezreleHlavicky = [
+    "skladník", "skladnik", "druh - popis", "druh",
+    "jméno", "jmeno", "name", "autor", "celkový součet",
+    "celkovy soucet", "součet", "soucet", "typ - popis", "typ",
+  ];
+  const sk = (r.skladnik || "").trim().toLowerCase();
+  if (!sk) return false;                          // prázdný skladník
+  if (podezreleHlavicky.includes(sk)) return false; // je to hlavička
+
+  return true;
+}
+
 function normalizeSklad(rows) {
   return rows.map(r => {
     const obj = { skladnik: r.skladnik || r.Skladnik || r["Skladník"] || r["Autor"] || "", mesice: {}, celkem: 0 };
@@ -1645,11 +1690,15 @@ function getFiltered() {
    ===================================================== */
 function render() {
   const data = getFiltered();
-  if (state.activeView === "reporty") {
+  if (state.activeView === "skladnici") {
+    renderBarsSkladnici(data);   // graf + tabulka skladníků (přehledová verze)
+    renderReportSkladnici(data); // měsíční report tabulka
+  } else if (state.activeView === "polozky") {
     renderReportPolozky(data);
-    renderReportSkladnici(data);
+  } else if (state.activeView === "firmy") {
     renderReportFirmy(data);
   } else {
+    // Přehled
     renderKPIs(data);
     renderBarsSkladnici(data);
     renderTrend(data);
@@ -1661,7 +1710,6 @@ function render() {
 /* ----- KPI ----- */
 function renderKPIs(data) {
   const total = data.length;
-  const unikatniOdberatele = new Set(data.map(r => r.odberatel).filter(Boolean)).size;
 
   const months = getActiveMonths();
   const filterKey = state.filters.skladnik ? skladnikKey(state.filters.skladnik) : "";
@@ -1673,10 +1721,19 @@ function renderKPIs(data) {
 
   const rate = vydej ? (total / vydej * 1000) : 0;
 
+  // Reklamace z chyby odběratele (ne vinou skladu)
+  const odbCount = data.filter(r => jeChybaOdberatele(r.skladnik)).length;
+  const odbPct = total ? (odbCount / total * 100) : 0;
+
   document.getElementById("kpi-total").textContent  = fmtNum(total);
-  document.getElementById("kpi-pieces").textContent = fmtNum(unikatniOdberatele);
+  document.getElementById("kpi-odberatel").textContent = fmtNum(odbCount);
   document.getElementById("kpi-vydej").textContent  = fmtNum(vydej);
   document.getElementById("kpi-rate").innerHTML     = rate.toFixed(2) + `<span class="unit">‰</span>`;
+
+  const odbSub = document.getElementById("kpi-odberatel-sub");
+  if (odbSub) odbSub.textContent = total
+    ? `${odbPct.toFixed(0)} % všech reklamací`
+    : "reklamací zaviněných zákazníkem";
 
   // Sub label s popiskem období
   document.getElementById("kpi-total-sub").textContent = describePeriod();
@@ -1697,15 +1754,22 @@ const skladniciSort = { key: "rate", dir: "desc" };
 function renderBarsSkladnici(data) {
   const months = getActiveMonths();
 
+  // Oddělíme reklamace "chyba odběratele" od reklamací skladníků
+  const dataSkladnici = data.filter(r => !jeChybaOdberatele(r.skladnik));
+  const dataOdberatel = data.filter(r => jeChybaOdberatele(r.skladnik));
+
   // Reklamace na skladníka — agregujeme podle KLÍČE (příjmení)
   const rekMap = new Map();   // key -> { count, displayName }
-  data.forEach(r => {
+  dataSkladnici.forEach(r => {
     const k = skladnikKey(r.skladnik);
     if (!k) return;
     const cur = rekMap.get(k) || { count: 0, displayName: r.skladnik };
     cur.count++;
     rekMap.set(k, cur);
   });
+
+  // Počet reklamací z chyby odběratele (zobrazí se jako zvláštní řádek)
+  state._odberatelRekCount = dataOdberatel.length;
 
   // Výdej na skladníka za vybrané období
   const skMap = new Map();    // key -> { sum, displayName }
@@ -1733,7 +1797,8 @@ function renderBarsSkladnici(data) {
     const name = (skRec && skRec.displayName) || (rekRec && rekRec.displayName) || key;
     return { name, key, rek, vyd, vSkladu, ratePromile, ratePct };
   })
-  .filter(r => r.rek > 0 || r.vyd > 0);
+  .filter(r => r.rek > 0 || r.vyd > 0)
+  .filter(r => !jeChybaOdberatele(r.name) && !jeChybaOdberatele(r.key));
 
   // Uložíme pro překreslení při třídění
   state._skladniciRows = rows;
@@ -1771,7 +1836,7 @@ function renderSkladniciTable() {
     if (arr) arr.textContent = isActive ? (skladniciSort.dir === "asc" ? "▲" : "▼") : "▾";
   });
 
-  tbody.innerHTML = sorted.map(r => {
+  let tableRows = sorted.map(r => {
     // Barva podle míry
     let rateClass = "rate-ok";
     if (r.vSkladu) {
@@ -1804,6 +1869,21 @@ function renderSkladniciTable() {
       </td>
     </tr>`;
   }).join("");
+
+  // Zvláštní řádek: chyba odběratele (není to skladník, počítá se zvlášť)
+  const odbCount = state._odberatelRekCount || 0;
+  if (odbCount > 0) {
+    tableRows += `<tr style="background: var(--ino-beige-1);">
+      <td data-label="Skladník"><strong>⚠ Chyba odběratele</strong>
+        <div style="font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 2px;">reklamace způsobená zákazníkem, ne skladem</div>
+      </td>
+      <td data-label="Naskenováno" class="num">—</td>
+      <td data-label="Reklamací" class="num"><strong>${odbCount}</strong></td>
+      <td data-label="Míra reklamací"><span style="color: var(--text-muted); font-size: 12px;">nepočítá se skladu</span></td>
+    </tr>`;
+  }
+
+  tbody.innerHTML = tableRows;
 }
 
 /* Bodový graf - osa X = naskenováno, osa Y = míra % */
@@ -1851,20 +1931,72 @@ function renderSkladniciScatter(rows) {
     thresholds += `<line x1="${padL}" y1="${y}" x2="${padL+innerW}" y2="${y}" stroke="var(--ino-orange)" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>`;
   }
 
-  // Body
-  const dots = pts.map(p => {
+  // Body — nejprve spočítáme pozice, pak rozmístíme popisky bez překryvu
+  const computed = pts.map(p => {
     const cx = xPos(p.vyd), cy = yPos(p.ratePct);
     let color = "var(--ino-green-gray)";
     if (p.ratePromile > CONFIG.THRESHOLDS.WATCH) color = "var(--ino-red)";
     else if (p.ratePromile > CONFIG.THRESHOLDS.OK) color = "var(--ino-orange)";
-    // Velikost bodu podle počtu reklamací
     const r = Math.max(5, Math.min(16, 5 + Math.sqrt(p.rek) * 2.2));
-    return `
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.75">
-        <title>${esc(p.name)}: ${p.rek} reklamací z ${fmtNum(p.vyd)} naskenovaných = ${p.ratePct.toFixed(2)} %</title>
-      </circle>
-      <text x="${cx}" y="${cy - r - 4}" text-anchor="middle" class="scatter-label">${esc(p.name)}</text>
-    `;
+    return { p, cx, cy, color, r };
+  });
+
+  // Rozmístění popisků: výchozí pozice nad bodem, pak posun proti překryvu.
+  // Seřadíme zleva doprava a posuneme kolidující labely svisle.
+  const labels = computed.map(c => ({
+    ref: c,
+    lx: c.cx,
+    ly: c.cy - c.r - 5,   // výchozí: nad bodem
+    placed: false,
+  }));
+  // Seřadit podle X
+  labels.sort((a, b) => a.lx - b.lx);
+  const LBL_H = 13;       // výška řádku popisku
+  const charW = 5.6;      // přibližná šířka znaku
+  for (let i = 0; i < labels.length; i++) {
+    const L = labels[i];
+    const halfW = (L.ref.p.name.length * charW) / 2;
+    // Zkontrolovat kolize s už umístěnými
+    let tries = 0;
+    let collides = true;
+    while (collides && tries < 12) {
+      collides = false;
+      for (let j = 0; j < i; j++) {
+        const O = labels[j];
+        const oHalfW = (O.ref.p.name.length * charW) / 2;
+        const dx = Math.abs(L.lx - O.lx);
+        const dy = Math.abs(L.ly - O.ly);
+        if (dx < (halfW + oHalfW) && dy < LBL_H) {
+          // posuneme nahoru nad kolidující label
+          L.ly = O.ly - LBL_H;
+          collides = true;
+          tries++;
+          break;
+        }
+      }
+    }
+    // Když by label vyletěl nad graf, posuneme ho pod bod místo nad
+    if (L.ly < padT + 6) {
+      L.ly = L.ref.cy + L.ref.r + LBL_H;
+    }
+    L.placed = true;
+  }
+
+  const dots = computed.map(c => `
+    <circle cx="${c.cx}" cy="${c.cy}" r="${c.r}" fill="${c.color}" opacity="0.78">
+      <title>${esc(c.p.name)}: ${c.p.rek} reklamací z ${fmtNum(c.p.vyd)} naskenovaných = ${c.p.ratePct.toFixed(2)} %</title>
+    </circle>
+  `).join("");
+
+  // Popisky + tenká spojnice k bodu (když je label posunutý)
+  const labelEls = labels.map(L => {
+    const c = L.ref;
+    const offset = Math.abs(L.ly - (c.cy - c.r - 5));
+    // Spojnice jen když je label dál od bodu
+    const leader = offset > 4
+      ? `<line x1="${c.cx}" y1="${L.ly + 3}" x2="${c.cx}" y2="${c.cy - (L.ly > c.cy ? -c.r : c.r)}" stroke="var(--gray-20)" stroke-width="0.75"/>`
+      : "";
+    return `${leader}<text x="${L.lx}" y="${L.ly}" text-anchor="middle" class="scatter-label">${esc(c.p.name)}</text>`;
   }).join("");
 
   // Osy + popisky
@@ -1875,6 +2007,7 @@ function renderSkladniciScatter(rows) {
       <line x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}" class="trend-axis"/>
       <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" class="trend-axis"/>
       ${dots}
+      ${labelEls}
       <text x="${padL+innerW/2}" y="${H-8}" text-anchor="middle" class="scatter-axis-title">Naskenováno položek →</text>
       <text x="14" y="${padT+innerH/2}" text-anchor="middle" class="scatter-axis-title" transform="rotate(-90 14 ${padT+innerH/2})">Míra reklamací (%) →</text>
     </svg>
@@ -2459,11 +2592,25 @@ function formatDate(s) {
 /* Normalizace jména skladníka pro párování:
    "Vídeňská Jana" -> "vídeňská" (jen příjmení)
    "Archutič"      -> "archutič"
+   Navíc aplikuje překladovou tabulku CONFIG.PREKLAD_JMEN.
    Tím spárujeme reklamace (jméno + příjmení) se skladem (jen příjmení). */
 function skladnikKey(name) {
   if (!name) return "";
-  return String(name).trim().split(/\s+/)[0].toLowerCase();
+  const full = String(name).trim().toLowerCase();
+  // Nejdřív zkusit překladovou tabulku (celé jméno)
+  if (CONFIG.PREKLAD_JMEN && CONFIG.PREKLAD_JMEN[full]) {
+    return CONFIG.PREKLAD_JMEN[full].toLowerCase();
+  }
+  // Jinak vzít první slovo (příjmení)
+  return full.split(/\s+/)[0];
 }
+
+/* Pozná, jestli "skladník" je ve skutečnosti označení chyby zákazníka. */
+function jeChybaOdberatele(name) {
+  if (!name) return false;
+  return CONFIG.CHYBA_ODBERATELE.includes(String(name).trim().toLowerCase());
+}
+
 function duvodClass(d) {
   const s = (d || "").toLowerCase();
   if (s.includes("poškoz")) return "duvod-poskozeny";
