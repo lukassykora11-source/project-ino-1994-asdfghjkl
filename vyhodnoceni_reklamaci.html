@@ -1523,16 +1523,29 @@ function normalizeReklamace(r) {
   let mesic = null;
 
   if (datum) {
-    // Zkusit ISO první (2026-05-15)
-    let d = new Date(datum);
-    if (isNaN(d)) {
-      // Zkusit český formát DD.MM.YYYY nebo DD/MM/YYYY
-      const m = String(datum).match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
-      if (m) {
-        d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+    const datumStr = String(datum).trim();
+    let d = null;
+
+    // 1) Český formát DD.MM.YYYY nebo DD/MM/YYYY - MÁ PŘEDNOST.
+    //    Důvod: new Date("09.05.2026") některé prohlížeče čtou jako
+    //    americký měsíc.den (= 5. září), což je špatně.
+    const czMatch = datumStr.match(/^(\d{1,2})[.\/\s]+(\d{1,2})[.\/\s]+(\d{4})/);
+    if (czMatch) {
+      const den = parseInt(czMatch[1], 10);
+      const mes = parseInt(czMatch[2], 10);
+      const rok = parseInt(czMatch[3], 10);
+      if (den >= 1 && den <= 31 && mes >= 1 && mes <= 12) {
+        d = new Date(rok, mes - 1, den);
       }
     }
-    if (!isNaN(d)) {
+
+    // 2) ISO formát YYYY-MM-DD (jednoznačný, bezpečný)
+    if (!d && /^\d{4}-\d{1,2}-\d{1,2}/.test(datumStr)) {
+      const iso = new Date(datumStr);
+      if (!isNaN(iso)) d = iso;
+    }
+
+    if (d && !isNaN(d)) {
       dateObj = d;
       mesic = d.getMonth() + 1;
     }
@@ -2579,14 +2592,22 @@ function isDarkColor(hex) {
 function fmtNum(n) { return (n || 0).toLocaleString("cs-CZ"); }
 function formatDate(s) {
   if (!s) return "";
-  // Zkusíme ISO první
-  let d = new Date(s);
-  if (isNaN(d)) {
-    // CZ formát DD.MM.YYYY
-    const m = String(s).match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
-    if (m) d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+  const str = String(s).trim();
+  let d = null;
+  // Český formát DD.MM.YYYY má přednost
+  const cz = str.match(/^(\d{1,2})[.\/\s]+(\d{1,2})[.\/\s]+(\d{4})/);
+  if (cz) {
+    const den = parseInt(cz[1], 10), mes = parseInt(cz[2], 10), rok = parseInt(cz[3], 10);
+    if (den >= 1 && den <= 31 && mes >= 1 && mes <= 12) {
+      d = new Date(rok, mes - 1, den);
+    }
   }
-  if (isNaN(d)) return s;
+  // ISO formát
+  if (!d && /^\d{4}-\d{1,2}-\d{1,2}/.test(str)) {
+    const iso = new Date(str);
+    if (!isNaN(iso)) d = iso;
+  }
+  if (!d || isNaN(d)) return str;
   return d.toLocaleDateString("cs-CZ", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 /* Normalizace jména skladníka pro párování:
