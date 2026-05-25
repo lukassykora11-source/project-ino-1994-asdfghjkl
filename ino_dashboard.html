@@ -26,7 +26,7 @@ body{font-family:'GS',sans-serif;background:var(--soft);color:var(--text)}
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
 .metric{background:var(--soft);border-radius:8px;padding:12px 14px;border-left:3px solid var(--red)}
 .metric-label{font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em}
-.metric-value{font-family:'LAD',sans-serif;font-size:20px;color:var(--green)}
+.metric-value{font-family:'LAD',sans-serif;font-size:19px;color:var(--green);white-space:nowrap}
 .metric-sub{font-size:10px;color:var(--muted);margin-top:2px}
 .metric-delta{font-size:11px;margin-top:3px}
 .up{color:#2a6b2a}.dn{color:var(--red)}
@@ -464,7 +464,7 @@ function renderTab(i){
   document.getElementById("metricsRow").innerHTML=`
     <div class="metric">
       <div class="metric-label">Obrat 2026</div>
-      <div class="metric-value">${Mf(totO26)}</div>
+      <div class="metric-value">${kc(totO26)}</div>
       <div class="metric-sub">${d.label}</div>
       ${yy!==null?`<div class="metric-delta ${yy>=0?"up":"dn"}">${yy>=0?"+":""}${yy}% vs 2025</div>`:""}
     </div>
@@ -475,7 +475,7 @@ function renderTab(i){
     </div>
     <div class="metric">
       <div class="metric-label">Marže 2026</div>
-      <div class="metric-value">${Mf(totM26)}</div>
+      <div class="metric-value">${kc(totM26)}</div>
       <div class="metric-sub">${d.label}</div>
     </div>
     <div class="metric">
