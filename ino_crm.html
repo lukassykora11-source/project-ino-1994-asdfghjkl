@@ -161,6 +161,20 @@ td.date-col { font-size: 11px; color: var(--muted); }
 .detail-body { flex: 1; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 20px; }
 .detail-section { display: flex; flex-direction: column; gap: 8px; }
 .detail-section-title { font-family: 'Ladislav', sans-serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--red); border-bottom: 1px solid var(--gray10); padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
+/* editovatelná pole v detailu */
+.detail-input { background: var(--gray2); border: 1px solid var(--gray10); padding: 6px 9px; border-radius: 5px; font-family: 'GeneralSans', sans-serif; font-size: 12px; color: var(--text); outline: none; width: 100%; transition: border-color .15s; }
+.detail-input:focus { border-color: var(--red); box-shadow: 0 0 0 2px rgba(255,68,45,.08); }
+.detail-input:disabled { background: transparent; border-color: transparent; padding-left: 0; color: var(--text); cursor: default; }
+.detail-input.invalid { border-color: var(--red); background: rgba(255,68,45,.05); }
+.detail-field-err { font-size: 10px; color: var(--red); margin-top: 2px; display: none; }
+.detail-field-err.show { display: block; }
+.detail-edit-row { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.detail-save-bar { position: sticky; bottom: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 12px 14px; display: none; gap: 8px; }
+.detail-save-bar.show { display: flex; }
+.detail-save-bar button { flex: 1; padding: 9px; border-radius: 6px; cursor: pointer; font-family: 'GeneralSans', sans-serif; font-size: 13px; font-weight: 600; border: none; }
+.detail-save-bar .ds-save { background: var(--red); color: #fff; }
+.detail-save-bar .ds-save:hover { background: #e53d28; }
+.detail-save-bar .ds-cancel { background: var(--gray5); color: var(--muted); }
 .detail-row { display: flex; gap: 10px; align-items: baseline; }
 .detail-key { font-size: 11px; color: var(--muted); min-width: 88px; font-weight: 500; flex-shrink: 0; }
 .detail-val { font-size: 12px; color: var(--text); word-break: break-all; flex: 1; }
@@ -179,6 +193,7 @@ td.date-col { font-size: 11px; color: var(--muted); }
 .activity-item[data-type="email"] { border-left-color: var(--orange); }
 .activity-item[data-type="schůzka"] { border-left-color: var(--red); }
 .activity-item[data-type="poznámka"] { border-left-color: var(--olive); }
+.activity-item.planned { background: rgba(24,47,88,.05); border-left-color: var(--blue); border-left-style: dashed; }
 .activity-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
 .activity-type { font-family: 'Ladislav', sans-serif; font-size: 10px; letter-spacing: .8px; text-transform: uppercase; color: var(--green-gray); }
 .activity-date { font-size: 10px; color: var(--muted); }
@@ -215,6 +230,45 @@ td.date-col { font-size: 11px; color: var(--muted); }
 /* MŮJ DEN */
 #myday-tab { display: none; flex: 1; flex-direction: column; padding: 24px 32px; background: var(--bg); overflow: auto; }
 #myday-tab.active { display: flex; }
+
+/* DASHBOARD */
+#dashboard-tab { display: none; flex: 1; flex-direction: column; padding: 24px 32px 80px; background: var(--bg); overflow: auto; }
+#dashboard-tab.active { display: flex; }
+.dash-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.dash-scope { display: flex; gap: 2px; background: var(--gray5); border-radius: 8px; padding: 3px; }
+.dash-scope-btn { background: none; border: none; padding: 7px 16px; border-radius: 6px; cursor: pointer; font-family: 'GeneralSans', sans-serif; font-size: 12px; font-weight: 600; color: var(--muted); transition: all .15s; }
+.dash-scope-btn.active { background: var(--surface); color: var(--red); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.dash-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.dash-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+.dash-kpi-label { font-size: 11px; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+.dash-kpi-value { font-family: 'Ladislav', sans-serif; font-size: 32px; color: var(--green-gray); line-height: 1; }
+.dash-kpi-value.accent { color: var(--red); }
+.dash-kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.dash-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+.dash-section-title { font-family: 'Ladislav', sans-serif; font-size: 14px; color: var(--green-gray); margin-bottom: 14px; }
+/* trychtýř / funnel */
+.funnel-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.funnel-label { font-size: 12px; font-weight: 600; width: 96px; flex-shrink: 0; }
+.funnel-bar-wrap { flex: 1; background: var(--gray5); border-radius: 6px; overflow: hidden; height: 26px; position: relative; }
+.funnel-bar { height: 100%; border-radius: 6px; min-width: 2px; transition: width .4s; }
+.funnel-count { font-size: 12px; font-weight: 700; width: 56px; text-align: right; flex-shrink: 0; font-family: 'DM Mono', monospace; }
+.funnel-bar-novy { background: var(--pastel-green); }
+.funnel-bar-kontaktovan { background: #8fa8c4; }
+.funnel-bar-schuzka { background: var(--orange); }
+.funnel-bar-nabidka { background: var(--olive); }
+.funnel-bar-vyhrano { background: #4caf72; }
+.funnel-bar-ztracen { background: #d98a8a; }
+/* jednoduchý sloupcový graf aktivit */
+.dash-bars { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding-top: 10px; }
+.dash-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+.dash-bar { width: 100%; max-width: 48px; background: var(--red); border-radius: 4px 4px 0 0; min-height: 2px; transition: height .4s; }
+.dash-bar-val { font-size: 11px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--green-gray); }
+.dash-bar-label { font-size: 10px; color: var(--muted); text-align: center; }
+.dash-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) {
+  .dash-two-col { grid-template-columns: 1fr; }
+  #dashboard-tab { padding: 16px 14px 80px; }
+}
 .myday-greeting { font-family: 'Ladislav', sans-serif; font-size: 26px; color: var(--green-gray); margin-bottom: 2px; }
 .myday-date { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
 .myday-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; max-width: 1100px; }
@@ -474,6 +528,7 @@ td.date-col { font-size: 11px; color: var(--muted); }
     </div>
     <nav class="tab-nav">
       <button class="tab-btn active" data-tab="myday" id="tab-myday">Můj den</button>
+      <button class="tab-btn" data-tab="dashboard" id="tab-dashboard">Přehled</button>
       <button class="tab-btn" data-tab="contacts">Kontakty</button>
       <button class="tab-btn" data-tab="activities">Aktivity</button>
       <button class="tab-btn" data-tab="calls" id="tab-calls" style="display:none">K navolání <span id="calls-badge" class="tab-badge"></span></button>
@@ -492,6 +547,20 @@ td.date-col { font-size: 11px; color: var(--muted); }
     <div class="myday-greeting" id="myday-greeting">Dobrý den</div>
     <div class="myday-date" id="myday-date"></div>
     <div class="myday-grid" id="myday-grid"></div>
+  </div>
+
+  <div id="dashboard-tab">
+    <div class="dash-header">
+      <div>
+        <h1 class="act-page-title">Přehled</h1>
+        <p class="act-page-sub" id="dash-sub">Souhrn vaší obchodní činnosti</p>
+      </div>
+      <div class="dash-scope" id="dash-scope" style="display:none">
+        <button class="dash-scope-btn active" data-scope="mine">Moje čísla</button>
+        <button class="dash-scope-btn" data-scope="all">Celý tým</button>
+      </div>
+    </div>
+    <div id="dashboard-content"></div>
   </div>
 
   <div id="contacts-tab" style="display:none">
@@ -631,10 +700,10 @@ td.date-col { font-size: 11px; color: var(--muted); }
 
   <nav class="bottom-nav" id="bottom-nav">
     <button data-tab="myday" class="active"><span class="bn-icon">☀️</span>Můj den</button>
+    <button data-tab="dashboard"><span class="bn-icon">📊</span>Přehled</button>
     <button data-tab="contacts"><span class="bn-icon">🏢</span>Kontakty</button>
-    <button data-tab="calls" id="bn-calls"><span class="bn-icon">📞</span>K navolání<span class="bn-badge" id="bn-calls-badge"></span></button>
+    <button data-tab="calls" id="bn-calls"><span class="bn-icon">📞</span>Navolání<span class="bn-badge" id="bn-calls-badge"></span></button>
     <button data-tab="meetings" id="bn-meetings"><span class="bn-icon">📅</span>Schůzky<span class="bn-badge" id="bn-meetings-badge"></span></button>
-    <button data-tab="activities"><span class="bn-icon">📋</span>Aktivity</button>
   </nav>
 </div>
 
@@ -796,6 +865,12 @@ async function loadProfileAndShowApp(user) {
   // Tlačítko "Přidat firmu" jen pro obchodníky a superadminy (ne navolávačka)
   if (profile.role === 'navolavacka') {
     document.getElementById('add-company-btn').style.display = 'none';
+  }
+  // Přepínač "Moje / Tým" na dashboardu jen pro superadmina
+  if (profile.role === 'superadmin') {
+    document.getElementById('dash-scope').style.display = '';
+    dashScope = 'all'; // superadmin začíná souhrnem za tým
+    document.querySelectorAll('.dash-scope-btn').forEach(x => x.classList.toggle('active', x.dataset.scope === 'all'));
   }
   await loadData();
 }
@@ -1146,6 +1221,58 @@ function canAddActivity(c) {
   return false;
 }
 
+// ============ VALIDACE POLÍ ============
+function validateContactFields(v) {
+  const errors = {};
+  if (!v.company_name || v.company_name.length < 2) {
+    errors.company_name = 'Název firmy je povinný.';
+  }
+  if (v.ico) {
+    const ico = v.ico.replace(/\s/g, '');
+    if (!/^\d{8}$/.test(ico)) errors.ico = 'IČO musí mít 8 číslic.';
+  }
+  if (v.zip) {
+    const zip = v.zip.replace(/\s/g, '');
+    if (!/^\d{5}$/.test(zip)) errors.zip = 'PSČ musí mít 5 číslic.';
+  }
+  if (v.phone) {
+    const ph = v.phone.replace(/[\s\-()]/g, '');
+    if (!/^\+?\d{9,14}$/.test(ph)) errors.phone = 'Telefon: 9–14 číslic, smí začínat +.';
+  }
+  if (v.email) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email)) errors.email = 'Neplatný formát e-mailu.';
+  }
+  if (v.website) {
+    const w = v.website.replace(/^https?:\/\//, '');
+    if (!/^[^\s.]+\.[^\s]{2,}/.test(w)) errors.website = 'Neplatná adresa webu.';
+  }
+  return errors;
+}
+
+function normalizeWebsite(w) {
+  if (!w) return w;
+  if (!/^https?:\/\//i.test(w)) return 'https://' + w;
+  return w;
+}
+
+function renderActivityItems(activities) {
+  if (!activities || activities.length === 0) {
+    return '<div style="color:var(--muted);font-size:12px;padding:8px 0">Zatím žádné aktivity.</div>';
+  }
+  const now = new Date();
+  return activities.map(a => {
+    const planned = a.is_planned && new Date(a.activity_date) > now;
+    return `<div class="activity-item ${planned ? 'planned' : ''}" data-type="${esc(a.type)}">
+      <div class="activity-meta">
+        <span class="activity-type">${planned ? '⏳ ' : ''}${esc(a.type)}</span>
+        <span class="activity-date">${planned ? 'naplánováno: ' : ''}${fmtDateTime(a.activity_date)}</span>
+      </div>
+      ${a.note ? `<div class="activity-note">${esc(a.note)}</div>` : ''}
+      <div class="activity-author">— ${esc(a.created_by_name || 'neznámý')}</div>
+    </div>`;
+  }).join('');
+}
+
 async function showDetail(id) {
   selectedId = id;
   const c = allContacts.find(x => x.id === id);
@@ -1172,27 +1299,60 @@ async function showDetail(id) {
     html += `<div class="read-only-notice">Můžete přidávat aktivity, ale editaci firmy zvládne jen obchodník <strong>${esc(c.sales_rep)}</strong> nebo superadmin.</div>`;
   }
   
+  const krajOptions = ['','Hlavní město Praha','Středočeský kraj','Jihočeský kraj','Plzeňský kraj','Karlovarský kraj','Ústecký kraj','Liberecký kraj','Královéhradecký kraj','Pardubický kraj','Kraj Vysočina','Jihomoravský kraj','Olomoucký kraj','Zlínský kraj','Moravskoslezský kraj']
+    .map(k => `<option value="${k}" ${(c.region || '') === k ? 'selected' : ''}>${k || '— nevyplněno —'}</option>`).join('');
+  
+  const dis = editable ? '' : 'disabled';
+  
   html += `
     <div class="detail-section">
       <div class="detail-section-title">Identifikace</div>
       <div class="detail-row"><span class="detail-key">ID</span><span class="detail-val">${c.id}</span></div>
-      <div class="detail-row"><span class="detail-key">IČO</span><span class="detail-val">${esc(c.ico)}</span></div>
+      <div class="detail-row"><span class="detail-key">Název</span><span class="detail-edit-row">
+        <input class="detail-input" id="ef-company_name" value="${esc(c.company_name || '')}" ${dis}>
+        <span class="detail-field-err" id="err-company_name"></span>
+      </span></div>
+      <div class="detail-row"><span class="detail-key">IČO</span><span class="detail-edit-row">
+        <input class="detail-input" id="ef-ico" value="${esc(c.ico || '')}" ${dis} placeholder="8 číslic">
+        <span class="detail-field-err" id="err-ico"></span>
+      </span></div>
       <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val">
-        <select class="edit-select" id="edit-status" ${editable ? '' : 'disabled'}>${statusOptions}</select>
+        <select class="edit-select" id="edit-status" ${dis}>${statusOptions}</select>
       </span></div>
     </div>
     <div class="detail-section">
       <div class="detail-section-title">Adresa</div>
-      <div class="detail-row"><span class="detail-key">Ulice</span><span class="detail-val">${esc(c.street)}</span></div>
-      <div class="detail-row"><span class="detail-key">Město</span><span class="detail-val">${esc(c.city)}</span></div>
-      <div class="detail-row"><span class="detail-key">PSČ</span><span class="detail-val">${esc(c.zip)}</span></div>
-      <div class="detail-row"><span class="detail-key">Kraj</span><span class="detail-val">${esc(c.region)}</span></div>
+      <div class="detail-row"><span class="detail-key">Ulice</span><span class="detail-edit-row">
+        <input class="detail-input" id="ef-street" value="${esc(c.street || '')}" ${dis}>
+      </span></div>
+      <div class="detail-row"><span class="detail-key">Město</span><span class="detail-edit-row">
+        <input class="detail-input" id="ef-city" value="${esc(c.city || '')}" ${dis}>
+      </span></div>
+      <div class="detail-row"><span class="detail-key">PSČ</span><span class="detail-edit-row">
+        <input class="detail-input" id="ef-zip" value="${esc(c.zip || '')}" ${dis} placeholder="500 02">
+        <span class="detail-field-err" id="err-zip"></span>
+      </span></div>
+      <div class="detail-row"><span class="detail-key">Kraj</span><span class="detail-val">
+        <select class="edit-select" id="ef-region" ${dis} style="width:100%">${krajOptions}</select>
+      </span></div>
     </div>
     <div class="detail-section">
       <div class="detail-section-title">Kontakt</div>
-      ${c.phone ? `<div class="detail-row"><span class="detail-key">Telefon</span><span class="detail-val"><a href="tel:${esc(c.phone)}">${esc(c.phone)}</a></span></div>` : ''}
-      ${c.email ? `<div class="detail-row"><span class="detail-key">E-mail</span><span class="detail-val"><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></span></div>` : ''}
-      ${c.website ? `<div class="detail-row"><span class="detail-key">Web</span><span class="detail-val"><a href="${esc(c.website)}" target="_blank" rel="noopener">${esc(c.website.replace(/^https?:\/\//,''))}</a></span></div>` : ''}
+      <div class="detail-row"><span class="detail-key">Telefon</span><span class="detail-edit-row">
+        <input class="detail-input" id="ef-phone" value="${esc(c.phone || '')}" ${dis} placeholder="+420 …">
+        <span class="detail-field-err" id="err-phone"></span>
+        ${c.phone && !editable ? `<a href="tel:${esc(c.phone)}" style="font-size:11px;color:var(--red);margin-top:2px">Zavolat</a>` : ''}
+      </span></div>
+      <div class="detail-row"><span class="detail-key">E-mail</span><span class="detail-edit-row">
+        <input class="detail-input" id="ef-email" value="${esc(c.email || '')}" ${dis}>
+        <span class="detail-field-err" id="err-email"></span>
+        ${c.email && !editable ? `<a href="mailto:${esc(c.email)}" style="font-size:11px;color:var(--red);margin-top:2px">Napsat e-mail</a>` : ''}
+      </span></div>
+      <div class="detail-row"><span class="detail-key">Web</span><span class="detail-edit-row">
+        <input class="detail-input" id="ef-website" value="${esc(c.website || '')}" ${dis} placeholder="https://…">
+        <span class="detail-field-err" id="err-website"></span>
+        ${c.website && !editable ? `<a href="${esc(c.website)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--red);margin-top:2px">Otevřít web</a>` : ''}
+      </span></div>
     </div>
     <div class="detail-section">
       <div class="detail-section-title">CRM</div>
@@ -1218,42 +1378,105 @@ async function showDetail(id) {
           <option value="poznámka">📝 Poznámka</option>
         </select>
         <textarea id="act-note" placeholder="Poznámka k aktivitě…"></textarea>
+        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green-gray);cursor:pointer">
+          <input type="checkbox" id="act-planned"> Naplánovat na později
+        </label>
+        <input type="datetime-local" id="act-when" style="display:none;background:#fff;border:1px solid var(--gray10);padding:7px 9px;border-radius:4px;font-family:'GeneralSans';font-size:12px;outline:none">
         <div class="activity-form-buttons">
           <button class="btn-cancel" id="act-cancel">Zrušit</button>
           <button class="btn-save" id="act-save">Uložit</button>
         </div>
       </div>
       <div class="activity-list" id="activity-list">
-        ${(activities || []).map(a => `
-          <div class="activity-item" data-type="${esc(a.type)}">
-            <div class="activity-meta">
-              <span class="activity-type">${esc(a.type)}</span>
-              <span class="activity-date">${fmtDateTime(a.activity_date)}</span>
-            </div>
-            ${a.note ? `<div class="activity-note">${esc(a.note)}</div>` : ''}
-            <div class="activity-author">— ${esc(a.created_by_name || 'neznámý')}</div>
-          </div>
-        `).join('') || '<div style="color:var(--muted);font-size:12px;padding:8px 0">Zatím žádné aktivity.</div>'}
+        ${renderActivityItems(activities)}
       </div>
     </div>
   `;
+  
+  html += `<div class="detail-save-bar" id="detail-save-bar">
+    <button class="ds-cancel" id="ds-cancel">Zrušit změny</button>
+    <button class="ds-save" id="ds-save">Uložit změny</button>
+  </div>`;
   
   document.getElementById('detail-body').innerHTML = html;
   document.getElementById('detail-panel').classList.remove('hidden');
   
   renderCallRequestArea(c);
   
-  // Bind events
+  // ---- Editace polí firmy (s validací) ----
   if (editable) {
+    const editFields = ['company_name','ico','street','city','zip','phone','email','website'];
+    const saveBar = document.getElementById('detail-save-bar');
+    
+    function markDirty() { saveBar.classList.add('show'); }
+    
+    editFields.forEach(f => {
+      const el = document.getElementById('ef-' + f);
+      if (el) el.addEventListener('input', markDirty);
+    });
+    document.getElementById('ef-region').addEventListener('change', markDirty);
+    
+    // status a obchodník se ukládají hned (jsou to rychlé akce)
     document.getElementById('edit-status').addEventListener('change', async (e) => {
       const newStatus = e.target.value;
       const { error } = await sb.from('contacts').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
       if (error) { toast('Chyba: ' + error.message, true); return; }
       c.status = newStatus;
-      toast('Status změněn na "' + newStatus + '"');
+      toast('Status změněn na „' + newStatus + '"');
+      render(); renderMyDay();
+    });
+    
+    document.getElementById('ds-cancel').addEventListener('click', () => showDetail(id));
+    document.getElementById('ds-save').addEventListener('click', async () => {
+      // posbírat hodnoty
+      const vals = {
+        company_name: document.getElementById('ef-company_name').value.trim(),
+        ico: document.getElementById('ef-ico').value.trim(),
+        street: document.getElementById('ef-street').value.trim(),
+        city: document.getElementById('ef-city').value.trim(),
+        zip: document.getElementById('ef-zip').value.trim(),
+        region: document.getElementById('ef-region').value || null,
+        phone: document.getElementById('ef-phone').value.trim(),
+        email: document.getElementById('ef-email').value.trim(),
+        website: document.getElementById('ef-website').value.trim()
+      };
+      // validace
+      const errors = validateContactFields(vals);
+      // vyčistit staré chyby
+      ['company_name','ico','zip','phone','email','website'].forEach(f => {
+        const errEl = document.getElementById('err-' + f);
+        const inEl = document.getElementById('ef-' + f);
+        if (errEl) { errEl.classList.remove('show'); errEl.textContent = ''; }
+        if (inEl) inEl.classList.remove('invalid');
+      });
+      if (Object.keys(errors).length > 0) {
+        for (const [f, msg] of Object.entries(errors)) {
+          const errEl = document.getElementById('err-' + f);
+          const inEl = document.getElementById('ef-' + f);
+          if (errEl) { errEl.textContent = msg; errEl.classList.add('show'); }
+          if (inEl) inEl.classList.add('invalid');
+        }
+        toast('Opravte zvýrazněná pole', true);
+        return;
+      }
+      // normalizace
+      vals.website = normalizeWebsite(vals.website);
+      vals.zip = vals.zip.replace(/\s/g, '');
+      const payload = { ...vals, updated_at: new Date().toISOString() };
+      // prázdné stringy → null
+      for (const k of ['ico','street','city','zip','phone','email','website']) {
+        if (!payload[k]) payload[k] = null;
+      }
+      const { error } = await sb.from('contacts').update(payload).eq('id', id);
+      if (error) { toast('Chyba: ' + error.message, true); return; }
+      Object.assign(c, vals);
+      toast('Údaje firmy uloženy');
+      document.getElementById('detail-save-bar').classList.remove('show');
       render();
+      showDetail(id);
     });
   }
+  
   if (currentProfile.role === 'superadmin') {
     document.getElementById('edit-rep').addEventListener('change', async (e) => {
       const newRep = e.target.value || null;
@@ -1261,9 +1484,10 @@ async function showDetail(id) {
       if (error) { toast('Chyba: ' + error.message, true); return; }
       c.sales_rep = newRep;
       toast('Obchodník změněn');
-      render();
+      render(); renderMyDay();
     });
   }
+  
   if (canAdd) {
     document.getElementById('add-act-btn').addEventListener('click', () => {
       document.getElementById('activity-form').classList.remove('hidden');
@@ -1272,24 +1496,42 @@ async function showDetail(id) {
     document.getElementById('act-cancel').addEventListener('click', () => {
       document.getElementById('activity-form').classList.add('hidden');
       document.getElementById('act-note').value = '';
+      document.getElementById('act-planned').checked = false;
+      document.getElementById('act-when').style.display = 'none';
+    });
+    document.getElementById('act-planned').addEventListener('change', (e) => {
+      const when = document.getElementById('act-when');
+      when.style.display = e.target.checked ? 'block' : 'none';
+      if (e.target.checked && !when.value) {
+        // přednastavit zítra 9:00
+        const t = new Date(); t.setDate(t.getDate() + 1); t.setHours(9, 0, 0, 0);
+        when.value = t.toISOString().slice(0, 16);
+      }
     });
     document.getElementById('act-save').addEventListener('click', async () => {
       const type = document.getElementById('act-type').value;
       const note = document.getElementById('act-note').value.trim();
-      const now = new Date().toISOString();
+      const isPlanned = document.getElementById('act-planned').checked;
+      let activityDate = new Date().toISOString();
+      if (isPlanned) {
+        const w = document.getElementById('act-when').value;
+        if (!w) { toast('Zadejte datum a čas', true); return; }
+        activityDate = new Date(w).toISOString();
+      }
       const { error } = await sb.from('activities').insert({
-        contact_id: id, type, note, activity_date: now,
+        contact_id: id, type, note, activity_date: activityDate,
+        is_planned: isPlanned,
         created_by: currentUser.id, created_by_name: currentProfile.full_name
       });
       if (error) { toast('Chyba: ' + error.message, true); return; }
-      c.last_activity_date = now;
-      toast('Aktivita uložena');
-      showDetail(id); // refresh
-      // reload activities for activities tab
+      if (!isPlanned) c.last_activity_date = activityDate;
+      toast(isPlanned ? 'Aktivita naplánována' : 'Aktivita uložena');
+      showDetail(id);
       const { data: acts } = await sb.from('activities').select('*, contacts(company_name, sales_rep)').order('activity_date', { ascending: false }).limit(500);
       allActivities = acts || [];
       renderActivities();
       render();
+      renderMyDay();
     });
   }
 }
@@ -1837,16 +2079,188 @@ function renderActivities() {
   `).join('');
 }
 
+// ============ DASHBOARD ============
+let dashScope = 'mine'; // 'mine' nebo 'all'
+
+function renderDashboard() {
+  const container = document.getElementById('dashboard-content');
+  if (!container) return;
+  
+  // určit, čí data zobrazit
+  const isAdmin = currentProfile.role === 'superadmin';
+  const isObchodnik = currentProfile.role === 'obchodnik';
+  // navolávačka: vždy "vše"; obchodník: dle scope; admin: dle scope
+  let scope = dashScope;
+  if (currentProfile.role === 'navolavacka') scope = 'all';
+  if (isObchodnik && !currentProfile.sales_rep_name) scope = 'all';
+  
+  const myRep = currentProfile.sales_rep_name;
+  const filterMine = (scope === 'mine' && myRep);
+  
+  // sada firem dle scope
+  const contacts = filterMine
+    ? allContacts.filter(c => c.sales_rep === myRep)
+    : allContacts;
+  
+  // sada aktivit dle scope
+  const acts = filterMine
+    ? allActivities.filter(a => (a.contacts || {}).sales_rep === myRep)
+    : allActivities;
+  
+  document.getElementById('dash-sub').textContent = filterMine
+    ? 'Souhrn vaší obchodní činnosti'
+    : (currentProfile.role === 'navolavacka' ? 'Souhrn za celý tým' : 'Souhrn za celý tým');
+  
+  // ---- KPI ----
+  const total = contacts.length;
+  const byStatus = {};
+  ['nový','kontaktován','schůzka','nabídka','vyhráno','ztracen'].forEach(s => byStatus[s] = 0);
+  contacts.forEach(c => { if (byStatus[c.status] != null) byStatus[c.status]++; });
+  
+  const now = new Date();
+  const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thirty = new Date(now); thirty.setDate(thirty.getDate() - 30);
+  
+  // aktivity tento týden (splněné, ne naplánované)
+  const actsThisWeek = acts.filter(a => !a.is_planned && new Date(a.activity_date) >= weekAgo).length;
+  // schůzky naplánované do budoucna
+  const futureMeetings = allCallRequests.filter(r => {
+    if (!r.meeting_at || new Date(r.meeting_at) < now) return false;
+    if (filterMine) return (r.contacts || {}).sales_rep === myRep;
+    return true;
+  }).length;
+  // firmy bez aktivity 30+ dní (jen "živé" statusy)
+  const staleCount = contacts.filter(c =>
+    !['vyhráno','ztracen'].includes(c.status) &&
+    (!c.last_activity_date || new Date(c.last_activity_date) < thirty)
+  ).length;
+  // konverze: vyhráno / (vyhráno + ztracen)
+  const closed = byStatus['vyhráno'] + byStatus['ztracen'];
+  const winRate = closed > 0 ? Math.round(byStatus['vyhráno'] / closed * 100) : 0;
+  
+  let html = `
+    <div class="dash-kpi-grid">
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Firem celkem</div>
+        <div class="dash-kpi-value">${total.toLocaleString('cs')}</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Aktivit za 7 dní</div>
+        <div class="dash-kpi-value accent">${actsThisWeek}</div>
+        <div class="dash-kpi-sub">telefonáty, schůzky, e-maily</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Schůzky v plánu</div>
+        <div class="dash-kpi-value">${futureMeetings}</div>
+        <div class="dash-kpi-sub">naplánováno do budoucna</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Dlouho nekontakt.</div>
+        <div class="dash-kpi-value">${staleCount.toLocaleString('cs')}</div>
+        <div class="dash-kpi-sub">30+ dní bez aktivity</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Úspěšnost</div>
+        <div class="dash-kpi-value">${winRate}%</div>
+        <div class="dash-kpi-sub">${byStatus['vyhráno']} vyhráno / ${byStatus['ztracen']} ztraceno</div>
+      </div>
+    </div>
+  `;
+  
+  // ---- TRYCHTÝŘ (funnel) ----
+  const funnelStages = [
+    ['nový', 'novy'], ['kontaktován', 'kontaktovan'], ['schůzka', 'schuzka'],
+    ['nabídka', 'nabidka'], ['vyhráno', 'vyhrano'], ['ztracen', 'ztracen']
+  ];
+  const maxCount = Math.max(1, ...funnelStages.map(([s]) => byStatus[s]));
+  html += `
+    <div class="dash-section">
+      <div class="dash-section-title">Firmy podle fáze</div>
+      ${funnelStages.map(([status, cls]) => {
+        const cnt = byStatus[status];
+        const pct = Math.round(cnt / maxCount * 100);
+        return `<div class="funnel-row">
+          <span class="funnel-label">${status}</span>
+          <span class="funnel-bar-wrap"><span class="funnel-bar funnel-bar-${cls}" style="width:${pct}%"></span></span>
+          <span class="funnel-count">${cnt.toLocaleString('cs')}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+  
+  // ---- GRAF: aktivity po dnech (posledních 7 dní) ----
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
+    days.push(d);
+  }
+  const dayNames = ['Ne','Po','Út','St','Čt','Pá','So'];
+  const dayCounts = days.map(d => {
+    const next = new Date(d); next.setDate(next.getDate() + 1);
+    return acts.filter(a => {
+      if (a.is_planned) return false;
+      const ad = new Date(a.activity_date);
+      return ad >= d && ad < next;
+    }).length;
+  });
+  const maxDay = Math.max(1, ...dayCounts);
+  
+  // ---- typy aktivit ----
+  const typeCounts = {};
+  acts.filter(a => !a.is_planned).forEach(a => { typeCounts[a.type] = (typeCounts[a.type] || 0) + 1; });
+  const typeList = Object.entries(typeCounts).sort((a,b) => b[1]-a[1]);
+  
+  html += `<div class="dash-two-col">
+    <div class="dash-section">
+      <div class="dash-section-title">Aktivity za posledních 7 dní</div>
+      <div class="dash-bars">
+        ${days.map((d, i) => `
+          <div class="dash-bar-col">
+            <span class="dash-bar-val">${dayCounts[i]}</span>
+            <div class="dash-bar" style="height:${Math.round(dayCounts[i]/maxDay*100)}%"></div>
+            <span class="dash-bar-label">${dayNames[d.getDay()]}<br>${d.getDate()}.${d.getMonth()+1}.</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="dash-section">
+      <div class="dash-section-title">Typy aktivit celkem</div>
+      ${typeList.length ? typeList.map(([type, cnt]) => {
+        const pct = Math.round(cnt / typeList[0][1] * 100);
+        return `<div class="funnel-row">
+          <span class="funnel-label">${esc(type)}</span>
+          <span class="funnel-bar-wrap"><span class="funnel-bar" style="width:${pct}%;background:var(--green-gray)"></span></span>
+          <span class="funnel-count">${cnt}</span>
+        </div>`;
+      }).join('') : '<div style="color:var(--muted);font-size:12px">Zatím žádné aktivity.</div>'}
+    </div>
+  </div>`;
+  
+  container.innerHTML = html;
+}
+
+// přepínač rozsahu (moje / tým)
+document.querySelectorAll('.dash-scope-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    dashScope = b.dataset.scope;
+    document.querySelectorAll('.dash-scope-btn').forEach(x => x.classList.toggle('active', x === b));
+    renderDashboard();
+  });
+});
+
 // ============ TABS ============
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(x => x.classList.toggle('active', x.dataset.tab === tab));
   document.querySelectorAll('.bottom-nav button').forEach(x => x.classList.toggle('active', x.dataset.tab === tab));
   document.getElementById('contacts-tab').style.display = tab === 'contacts' ? '' : 'none';
   document.getElementById('myday-tab').classList.toggle('active', tab === 'myday');
+  document.getElementById('dashboard-tab').classList.toggle('active', tab === 'dashboard');
   document.getElementById('activities-tab').classList.toggle('active', tab === 'activities');
   document.getElementById('calls-tab').classList.toggle('active', tab === 'calls');
   document.getElementById('meetings-tab').classList.toggle('active', tab === 'meetings');
   if (tab === 'myday') renderMyDay();
+  if (tab === 'dashboard') renderDashboard();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll('.tab-btn').forEach(b => {
