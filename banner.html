@@ -483,21 +483,26 @@ body {
   cursor: pointer;
 }
 
-/* sponka (symbol N z loga INO) — zobrazuje se jen horní část písmene.
-   Poměr horní části 129.7:150. Posazená u pravého okraje;
-   spodní (oříznutý) konec sahá kousek pod rozhraní do panelu. */
+/* sponka — oficiální symbol INO ze souborů Sponka_*.svg.
+   Poměr 114:176 (š:v). Sedí středem na rozhraní obrázku a panelu,
+   horní oblouk vyčuhuje do obrázku, dlouhá noha do panelu. */
 .clip {
   position: absolute;
-  width: 92px;
-  height: 106px;
+  width: 75px;
+  height: 116px;
   z-index: 20;
   pointer-events: none;
 }
-/* pevné místo: pravý okraj. Spodek sponky je 18px pod rozhraním
-   (top je nastaven inline na rozhraní, translateY ho posune). */
+/* pevné místo: pravý okraj, středem na rozhraní + jemný posun dolů —
+   horní oblouk je v horní ploše, dlouhá noha pokračuje pod rozhraní
+   a její oříznutí je schované ve spodní barvě (jako svorka držící banner). */
 .clip.pos-b {
-  right: 44px;
-  transform: translateY(calc(-100% + 18px));
+  right: 38px;
+  transform: translateY(calc(-50% + 18px));
+}
+/* v layoutu "půl napůl" sponka o pixel níž */
+.banner-b.lay-split .clip.pos-b {
+  transform: translateY(calc(-50% + 19px));
 }
 
 .empty-state {
@@ -637,8 +642,9 @@ body {
           <button data-c="red" class="active">Červená</button>
           <button data-c="white">Bílá</button>
           <button data-c="greengray">Zeleno-šedá</button>
+          <button data-c="pastelgreen">Past. zelená</button>
         </div>
-        <div class="hint">Sponka (písmeno „N" z loga) sedí vždy u pravého okraje, na rozhraní obrázku a panelu.</div>
+        <div class="hint">Sponka (symbol z loga INO) sedí vždy u pravého okraje, středem na rozhraní obrázku a panelu.</div>
       </div>
     </div>
 
@@ -679,17 +685,15 @@ const PALETTE = [
   { name: 'Bílá',             hex: '#FFFFFF' }
 ];
 
-/* Symbol "N" je doslova písmeno N z loga INO — funguje jako svorka/klip.
-   Subpath vytažený přímo z INO-RGB-Red.svg.
-   Bounding box písmene N: x 55.6..185.3, y 0..206.2 (š 129.7 × v 206.2).
-   Pro banner se zobrazuje jen HORNÍ část (oblouk + nohy, ~0..150) —
-   spodní oblouk je oříznutý, aby symbol působil jako svorka držící banner. */
-const N_PATH = 'M185.3,166.3V6.4h-29.9v159.9c0,5.5-4.5,10-10,10c-5.5,0-10-4.5-10-10V39.9c0-22-17.9-39.9-39.9-39.9c-22,0-39.9,17.9-39.9,39.9v7.6v154.4h29.9V47.5v-7.6c0-5.5,4.5-10,10-10c5.5,0,10,4.5,10,10v126.4c0,22,17.9,39.9,39.9,39.9C167.4,206.2,185.3,188.3,185.3,166.3Z';
+/* Sponka — oficiální symbol INO ze souborů Sponka_*.svg.
+   Path obsahuje dva subtvary: hlavní tělo sponky (klip) a malý "doraz" vpravo.
+   Bbox: x 111.12..221.48, y 24.95..196.70 (š 110.36 × v 171.75). */
+const CLIP_PATH = 'M153.57,83.02h25.45V58.9c0-18.72-15.23-33.95-33.95-33.95c-18.72,0-33.95,15.23-33.95,33.95v24.12h0v113.68h25.45V65.35V58.9c0-4.69,3.82-8.5,8.5-8.5c4.69,0,8.5,3.81,8.5,8.5V83.02z M221.48,30.54h-25.45v52.48h25.45V30.54z';
 
 function clipMarkup(color) {
-  // viewBox zobrazuje jen horní část N (výška 150 z 206); slice spodek ořízne
-  return `<svg class="clip-svg" viewBox="55.6 0 129.7 150" preserveAspectRatio="xMidYMin slice" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
-    <path fill="${color}" d="${N_PATH}"/>
+  // viewBox oříznutý na bbox sponky — žádný prázdný okraj kolem
+  return `<svg class="clip-svg" viewBox="109 23 114 176" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+    <path fill="${color}" d="${CLIP_PATH}"/>
   </svg>`;
 }
 
@@ -743,8 +747,9 @@ function renderBanner() {
   const host = document.getElementById('bannerHost');
   const clipColorHex = c => {
     if (c === 'white') return '#FFFFFF';
-    if (c === 'greengray') return '#3D5655';
-    return '#FF442D';
+    if (c === 'greengray') return '#3E5755';
+    if (c === 'pastelgreen') return '#C1DABE';
+    return '#E94A38'; // přesná červená ze Sponka_2.svg
   };
 
   if (STATE.type === 'A') {
@@ -1126,8 +1131,9 @@ function bannerCss() {
 .banner-b .bb-text{font-size:16px;line-height:1.45;margin-bottom:14px;}
 .banner-b .bb-link{font-family:'General Sans',sans-serif;font-size:16px;font-weight:600;text-decoration:underline;
   text-underline-offset:3px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;}
-.clip{position:absolute;width:92px;height:106px;z-index:20;pointer-events:none;}
-.clip.pos-b{right:44px;transform:translateY(calc(-100% + 18px));}
+.clip{position:absolute;width:75px;height:116px;z-index:20;pointer-events:none;}
+.clip.pos-b{right:38px;transform:translateY(calc(-50% + 18px));}
+.banner-b.lay-split .clip.pos-b{transform:translateY(calc(-50% + 19px));}
 .clip-svg{width:100%;height:100%;display:block;}
 `;
 }
