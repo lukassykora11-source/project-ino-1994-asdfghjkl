@@ -15,8 +15,11 @@ body{font-family:'GS',sans-serif;background:var(--soft);color:var(--text)}
 .topbar{background:var(--green);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:12px 12px 0 0}
 .topbar-title{font-family:'LAD',sans-serif;font-size:15px;color:var(--pastel)}
 .topbar-sub{font-size:11px;color:rgba(195,220,190,0.65);margin-top:2px}
-.tabs-bar{background:var(--green);padding:0 20px 12px;display:flex;gap:6px;align-items:center}
-.tab{padding:6px 14px;font-size:12px;border:1px solid rgba(195,220,190,0.4);border-radius:99px;cursor:pointer;color:var(--pastel);background:transparent;font-family:'GS',sans-serif;white-space:nowrap}
+.tabs-bar{background:var(--green);padding:0 20px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.period-select{appearance:none;-webkit-appearance:none;background:var(--red);color:#fff;border:none;border-radius:99px;padding:8px 38px 8px 18px;font-size:14px;font-family:'LAD',sans-serif;cursor:pointer;background-image:url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2012%208%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M1%201l5%205%205-5%27%20stroke%3D%27%23fff%27%20stroke-width%3D%271.5%27%20fill%3D%27none%27%2F%3E%3C%2Fsvg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:11px}
+.period-select:focus{outline:none}
+.period-label{font-size:11px;color:rgba(195,220,190,0.7);text-transform:uppercase;letter-spacing:0.05em;margin-right:2px}
+.tab{padding:8px 18px;font-size:13px;border:1px solid rgba(195,220,190,0.4);border-radius:99px;cursor:pointer;color:var(--pastel);background:transparent;font-family:'GS',sans-serif;white-space:nowrap}
 .tab.active{background:var(--red);color:#fff;border-color:var(--red)}
 .tab:hover:not(.active){background:rgba(195,220,190,0.15)}
 .tab-sep{flex:1}
@@ -291,13 +294,16 @@ function pickDefaultTab(){
 
 function buildTabs(){
   const bar = document.getElementById("tabsBar");
-  let html = "";
-  DATA.forEach((d, i) => {
-    html += `<div class="tab${i===currentMain?' active':''}" onclick="switchMain(${i})">${d.label}</div>`;
-  });
   const ozIdx = DATA.length;
+  const isOZ = currentMain === ozIdx;
+  let opts = "";
+  DATA.forEach((d, i) => {
+    opts += `<option value="${i}"${i===currentMain?' selected':''}>${d.label}</option>`;
+  });
+  let html = `<span class="period-label">Období:</span>`;
+  html += `<select class="period-select" onchange="switchMain(parseInt(this.value))">${opts}</select>`;
   html += `<div class="tab-sep"></div>`;
-  html += `<div class="tab${currentMain===ozIdx?' active':''}" onclick="switchMain(${ozIdx})" id="tabOZ">Obchodník</div>`;
+  html += `<div class="tab${isOZ?' active':''}" onclick="switchMain(${ozIdx})" id="tabOZ">Detail obchodníka</div>`;
   bar.innerHTML = html;
 }
 
