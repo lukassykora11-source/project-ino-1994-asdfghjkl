@@ -21,6 +21,8 @@ body{font-family:'GS',sans-serif;background:var(--soft);color:var(--text)}
 .pill-primary:hover{opacity:0.88}
 .pill-ghost{background:transparent;color:var(--pastel);border:1px solid rgba(195,220,190,0.5)}
 .pill-ghost:hover{background:rgba(195,220,190,0.15)}
+.pill-active{background:var(--red);color:#fff;border-color:var(--red)}
+.pill-active:hover{background:var(--red);opacity:0.88}
 .pill-arrow{font-size:10px;opacity:0.85;transition:transform 0.2s}
 .pill.open .pill-arrow{transform:rotate(180deg)}
 .pill-label-small{font-size:11px;opacity:0.75;font-family:'GS',sans-serif;margin-right:-2px}
@@ -305,22 +307,16 @@ function buildTabs(){
   const ozIdx = DATA.length;
   const isOZ = currentMain === ozIdx;
 
-  // Levé tlačítko: období (nebo zpět na přehled když jsme v detailu)
-  let leftPill;
-  if(isOZ){
-    leftPill = `<button class="pill pill-ghost" onclick="switchMain(${lastTeamTab})">
-      <span>←</span><span>Zpět na přehled týmu</span>
-    </button>`;
-  } else {
-    const label = DATA[currentMain] ? DATA[currentMain].label : "Období";
-    leftPill = `<button class="pill pill-primary" id="periodPill" onclick="toggleDropdown('periodDropdown', this)">
-      <span class="pill-label-small">Období:</span><span>${label}</span><span class="pill-arrow">▼</span>
-    </button>`;
-  }
+  // Tlačítko období
+  const periodLabel = DATA[currentMain] ? DATA[currentMain].label : (DATA[lastTeamTab] ? DATA[lastTeamTab].label : "Období");
+  const shownPeriod = isOZ ? (DATA[lastTeamTab] ? DATA[lastTeamTab].label : "Období") : periodLabel;
+  const periodPill = `<button class="pill pill-ghost" id="periodPill" onclick="toggleDropdown('periodDropdown', this)">
+    <span class="pill-label-small">Období:</span><span>${shownPeriod}</span><span class="pill-arrow">▼</span>
+  </button>`;
 
-  // Pravé tlačítko: detail obchodníka
+  // Tlačítko obchodník
   const ozLabel = (isOZ && selectedOZ) ? selectedOZ : "Detail obchodníka";
-  const rightPill = `<button class="pill ${isOZ?'pill-primary':'pill-ghost'}" id="ozPill" onclick="toggleDropdown('ozDropdown', this)">
+  const ozPill = `<button class="pill pill-ghost${isOZ?' pill-active':''}" id="ozPill" onclick="toggleDropdown('ozDropdown', this)">
     <span>${ozLabel}</span><span class="pill-arrow">▼</span>
   </button>`;
 
@@ -339,7 +335,7 @@ function buildTabs(){
   });
   const ozDrop = `<div class="dropdown" id="ozDropdown"><div class="dropdown-head">Vyberte obchodníka</div>${ozItems}</div>`;
 
-  bar.innerHTML = leftPill + `<div class="tab-sep"></div>` + rightPill + periodDrop + ozDrop;
+  bar.innerHTML = periodPill + ozPill + periodDrop + ozDrop;
 }
 
 let lastTeamTab = 0;
