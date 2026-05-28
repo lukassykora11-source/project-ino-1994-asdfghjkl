@@ -15,13 +15,22 @@ body{font-family:'GS',sans-serif;background:var(--soft);color:var(--text)}
 .topbar{background:var(--green);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:12px 12px 0 0}
 .topbar-title{font-family:'LAD',sans-serif;font-size:15px;color:var(--pastel)}
 .topbar-sub{font-size:11px;color:rgba(195,220,190,0.65);margin-top:2px}
-.tabs-bar{background:var(--green);padding:0 20px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.period-select{appearance:none;-webkit-appearance:none;background:var(--red);color:#fff;border:none;border-radius:99px;padding:8px 38px 8px 18px;font-size:14px;font-family:'LAD',sans-serif;cursor:pointer;background-image:url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2012%208%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M1%201l5%205%205-5%27%20stroke%3D%27%23fff%27%20stroke-width%3D%271.5%27%20fill%3D%27none%27%2F%3E%3C%2Fsvg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:11px}
-.period-select:focus{outline:none}
-.period-label{font-size:11px;color:rgba(195,220,190,0.7);text-transform:uppercase;letter-spacing:0.05em;margin-right:2px}
-.tab{padding:8px 18px;font-size:13px;border:1px solid rgba(195,220,190,0.4);border-radius:99px;cursor:pointer;color:var(--pastel);background:transparent;font-family:'GS',sans-serif;white-space:nowrap}
-.tab.active{background:var(--red);color:#fff;border-color:var(--red)}
-.tab:hover:not(.active){background:rgba(195,220,190,0.15)}
+.tabs-bar{background:var(--green);padding:0 20px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:relative}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;font-size:14px;font-family:'LAD',sans-serif;border-radius:99px;cursor:pointer;white-space:nowrap;border:none;transition:opacity 0.15s}
+.pill-primary{background:var(--red);color:#fff}
+.pill-primary:hover{opacity:0.88}
+.pill-ghost{background:transparent;color:var(--pastel);border:1px solid rgba(195,220,190,0.5)}
+.pill-ghost:hover{background:rgba(195,220,190,0.15)}
+.pill-arrow{font-size:10px;opacity:0.85;transition:transform 0.2s}
+.pill.open .pill-arrow{transform:rotate(180deg)}
+.pill-label-small{font-size:11px;opacity:0.75;font-family:'GS',sans-serif;margin-right:-2px}
+.dropdown{position:absolute;top:calc(100% - 6px);z-index:50;background:#fff;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,0.18);padding:6px;min-width:200px;max-height:340px;overflow-y:auto;display:none}
+.dropdown.show{display:block}
+.dropdown-item{padding:9px 14px;font-size:13px;font-family:'GS',sans-serif;color:var(--text);border-radius:8px;cursor:pointer;white-space:nowrap}
+.dropdown-item:hover{background:var(--soft)}
+.dropdown-item.active{background:var(--red);color:#fff;font-family:'LAD',sans-serif}
+.dropdown-divider{height:1px;background:var(--border);margin:5px 8px}
+.dropdown-head{padding:6px 14px 4px;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);font-family:'LAD',sans-serif}
 .tab-sep{flex:1}
 
 .dash-body{background:#fff;border-radius:0 0 12px 12px;padding:18px}
@@ -114,8 +123,8 @@ tr:hover td{background:#fdf9f8}
   .charts-row{grid-template-columns:1fr}
   .oz-periods{grid-template-columns:1fr}
   .oz-metrics{grid-template-columns:repeat(2,1fr)}
-  .tabs-bar{flex-wrap:wrap;gap:4px;padding:8px 12px}
-  .tab{font-size:11px;padding:5px 10px}
+  .tabs-bar{gap:8px;padding:8px 12px}
+  .pill{font-size:12px;padding:8px 14px}
   .dash-body{padding:12px}
   .topbar{padding:10px 12px}
   .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -204,9 +213,8 @@ tr:hover td{background:#fdf9f8}
 
   <!-- OBCHODNIK VIEW -->
   <div class="dash-body" id="viewOZ" style="display:none">
-    <div class="oz-picker-wrap">
-      <div class="oz-picker-label">Vyberte obchodníka</div>
-      <div class="oz-grid" id="ozGrid"></div>
+    <div id="ozEmpty" style="text-align:center;padding:40px 20px;color:var(--muted);font-size:14px">
+      Vyberte obchodníka z nabídky nahoře.
     </div>
     <div class="oz-detail" id="ozDetail">
       <div class="oz-header">
@@ -296,21 +304,91 @@ function buildTabs(){
   const bar = document.getElementById("tabsBar");
   const ozIdx = DATA.length;
   const isOZ = currentMain === ozIdx;
-  let opts = "";
+
+  // Levé tlačítko: období (nebo zpět na přehled když jsme v detailu)
+  let leftPill;
+  if(isOZ){
+    leftPill = `<button class="pill pill-ghost" onclick="switchMain(${lastTeamTab})">
+      <span>←</span><span>Zpět na přehled týmu</span>
+    </button>`;
+  } else {
+    const label = DATA[currentMain] ? DATA[currentMain].label : "Období";
+    leftPill = `<button class="pill pill-primary" id="periodPill" onclick="toggleDropdown('periodDropdown', this)">
+      <span class="pill-label-small">Období:</span><span>${label}</span><span class="pill-arrow">▼</span>
+    </button>`;
+  }
+
+  // Pravé tlačítko: detail obchodníka
+  const ozLabel = (isOZ && selectedOZ) ? selectedOZ : "Detail obchodníka";
+  const rightPill = `<button class="pill ${isOZ?'pill-primary':'pill-ghost'}" id="ozPill" onclick="toggleDropdown('ozDropdown', this)">
+    <span>${ozLabel}</span><span class="pill-arrow">▼</span>
+  </button>`;
+
+  // Dropdown období
+  let periodItems = "";
   DATA.forEach((d, i) => {
-    opts += `<option value="${i}"${i===currentMain?' selected':''}>${d.label}</option>`;
+    periodItems += `<div class="dropdown-item${i===currentMain&&!isOZ?' active':''}" onclick="pickPeriod(${i})">${d.label}</div>`;
   });
-  let html = `<span class="period-label">Období:</span>`;
-  html += `<select class="period-select" onchange="switchMain(parseInt(this.value))">${opts}</select>`;
-  html += `<div class="tab-sep"></div>`;
-  html += `<div class="tab${isOZ?' active':''}" onclick="switchMain(${ozIdx})" id="tabOZ">Detail obchodníka</div>`;
-  bar.innerHTML = html;
+  const periodDrop = `<div class="dropdown" id="periodDropdown"><div class="dropdown-head">Vyberte období</div>${periodItems}</div>`;
+
+  // Dropdown obchodníci
+  const ALL_NAMES = [...new Set(DATA.flatMap(d=>d.rows.map(r=>r.oz)))].sort();
+  let ozItems = "";
+  ALL_NAMES.forEach(name => {
+    ozItems += `<div class="dropdown-item${name===selectedOZ?' active':''}" onclick="pickOZ('${name.replace(/'/g,"\\'")}')">${name}</div>`;
+  });
+  const ozDrop = `<div class="dropdown" id="ozDropdown"><div class="dropdown-head">Vyberte obchodníka</div>${ozItems}</div>`;
+
+  bar.innerHTML = leftPill + `<div class="tab-sep"></div>` + rightPill + periodDrop + ozDrop;
 }
+
+let lastTeamTab = 0;
+
+function toggleDropdown(id, btn){
+  const dd = document.getElementById(id);
+  const isOpen = dd.classList.contains("show");
+  // Zavři všechny
+  document.querySelectorAll(".dropdown").forEach(d => d.classList.remove("show"));
+  document.querySelectorAll(".pill").forEach(p => p.classList.remove("open"));
+  if(!isOpen){
+    dd.classList.add("show");
+    btn.classList.add("open");
+    // Umísti dropdown pod tlačítko
+    const barRect = btn.closest(".tabs-bar").getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    dd.style.left = (btnRect.left - barRect.left) + "px";
+  }
+}
+
+function pickPeriod(i){
+  document.querySelectorAll(".dropdown").forEach(d => d.classList.remove("show"));
+  switchMain(i);
+}
+
+function pickOZ(name){
+  document.querySelectorAll(".dropdown").forEach(d => d.classList.remove("show"));
+  const ozIdx = DATA.length;
+  currentMain = ozIdx;
+  buildTabs();
+  document.getElementById("viewTym").style.display="none";
+  document.getElementById("viewOZ").style.display="block";
+  document.getElementById("topbarSub").textContent="Detail obchodníka";
+  selectOZ(name);
+}
+
+// Zavři dropdown při kliknutí mimo
+document.addEventListener("click", function(e){
+  if(!e.target.closest(".pill") && !e.target.closest(".dropdown")){
+    document.querySelectorAll(".dropdown").forEach(d => d.classList.remove("show"));
+    document.querySelectorAll(".pill").forEach(p => p.classList.remove("open"));
+  }
+});
 
 function switchMain(i){
   currentMain = i;
-  buildTabs();
   const ozIdx = DATA.length;
+  if(i !== ozIdx) lastTeamTab = i;
+  buildTabs();
   if(i===ozIdx){
     document.getElementById("viewTym").style.display="none";
     document.getElementById("viewOZ").style.display="block";
@@ -323,11 +401,7 @@ function switchMain(i){
 }
 
 function buildOZGrid(){
-  const ALL_NAMES = [...new Set(DATA.flatMap(d=>d.rows.map(r=>r.oz)))].sort();
-  const grid = document.getElementById("ozGrid");
-  grid.innerHTML = ALL_NAMES.map(name =>
-    `<div class="oz-chip" onclick="selectOZ('${name}')">${name}</div>`
-  ).join("");
+  // Výběr obchodníka je nyní v horním tlačítku, tato funkce už nic needělá
 }
 
 function initials(name){
@@ -338,9 +412,9 @@ function initials(name){
 
 function selectOZ(name){
   selectedOZ = name;
-  document.querySelectorAll(".oz-chip").forEach(c=>{
-    c.classList.toggle("sel", c.textContent===name);
-  });
+  const empty = document.getElementById("ozEmpty");
+  if(empty) empty.style.display = "none";
+  buildTabs();
   renderOZ(name);
 }
 
