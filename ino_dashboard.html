@@ -15,7 +15,6 @@ body{font-family:'GS',sans-serif;background:var(--soft);color:var(--text)}
 .topbar{background:var(--green);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:12px 12px 0 0}
 .topbar-title{font-family:'LAD',sans-serif;font-size:15px;color:var(--pastel)}
 .topbar-sub{font-size:11px;color:rgba(195,220,190,0.65);margin-top:2px}
-.topbar-update{font-size:10px;color:rgba(195,220,190,0.5);margin-top:3px;font-style:italic}
 .tabs-bar{background:var(--green);padding:0 20px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:relative}
 .pill{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;font-size:14px;font-family:'LAD',sans-serif;border-radius:99px;cursor:pointer;white-space:nowrap;border:none;transition:opacity 0.15s}
 .pill-primary{background:var(--red);color:#fff}
@@ -149,8 +148,7 @@ tr:hover td{background:#fdf9f8}
     </a>
     <div style="text-align:right">
       <div class="topbar-title">Prodejní přehled týmu 2026</div>
-      <div class="topbar-sub" id="topbarSub">Vyberte období</div>
-      <div class="topbar-update" id="topbarUpdate"></div>
+      <div class="topbar-sub" id="topbarSub">Načítám…</div>
     </div>
   </div>
   <div class="tabs-bar" id="tabsBar">
@@ -289,12 +287,15 @@ window.onload = function(){
 };
 
 function updateLastUpdateLabel(){
-  const el = document.getElementById("topbarUpdate");
+  const el = document.getElementById("topbarSub");
   if(dataLastUpdate){
     const d = dataLastUpdate;
-    const dat = d.toLocaleDateString('cs-CZ', {day:'numeric', month:'numeric', year:'numeric'});
+    const MESICE = ['ledna','února','března','dubna','května','června',
+      'července','srpna','září','října','listopadu','prosince'];
+    const den = d.getDate();
+    const mes = MESICE[d.getMonth()];
     const cas = d.toLocaleTimeString('cs-CZ', {hour:'2-digit', minute:'2-digit'});
-    el.textContent = "Data z tabulky aktualizována: " + dat + " v " + cas;
+    el.textContent = "Soubor nahrán " + den + ". " + mes + " v " + cas;
   } else {
     el.textContent = "Načteno: " + new Date().toLocaleTimeString('cs-CZ');
   }
@@ -388,7 +389,6 @@ function pickOZ(name){
   buildTabs();
   document.getElementById("viewTym").style.display="none";
   document.getElementById("viewOZ").style.display="block";
-  document.getElementById("topbarSub").textContent="Detail obchodníka";
   selectOZ(name);
 }
 
@@ -408,7 +408,6 @@ function switchMain(i){
   if(i===ozIdx){
     document.getElementById("viewTym").style.display="none";
     document.getElementById("viewOZ").style.display="block";
-    document.getElementById("topbarSub").textContent="Detail obchodníka";
   } else {
     document.getElementById("viewTym").style.display="block";
     document.getElementById("viewOZ").style.display="none";
@@ -546,7 +545,6 @@ function renderOZ(name){
 
 function renderTab(i){
   const d=DATA[i];
-  document.getElementById("topbarSub").textContent="Období: "+d.label;
   const rows=d.rows;
   const totO26=rows.reduce((s,r)=>s+r.o26,0);
   const totO25=rows.reduce((s,r)=>s+r.o25,0);
