@@ -15,6 +15,7 @@ body{font-family:'GS',sans-serif;background:var(--soft);color:var(--text)}
 .topbar{background:var(--green);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:12px 12px 0 0}
 .topbar-title{font-family:'LAD',sans-serif;font-size:15px;color:var(--pastel)}
 .topbar-sub{font-size:11px;color:rgba(195,220,190,0.65);margin-top:2px}
+.topbar-update{font-size:10px;color:rgba(195,220,190,0.5);margin-top:3px;font-style:italic}
 .tabs-bar{background:var(--green);padding:0 20px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:relative}
 .pill{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;font-size:14px;font-family:'LAD',sans-serif;border-radius:99px;cursor:pointer;white-space:nowrap;border:none;transition:opacity 0.15s}
 .pill-primary{background:var(--red);color:#fff}
@@ -141,12 +142,15 @@ tr:hover td{background:#fdf9f8}
 
 <div id="dashScreen" class="screen active">
   <div class="topbar">
-    <svg viewBox="0 0 407.1 206.3" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:auto">
-      <path fill="#fff" d="M0,202.8h30V6.5H0V202.8z M185.3,166.3V6.4h-29.9v159.9c0,5.5-4.5,10-10,10c-5.5,0-10-4.5-10-10V39.9c0-22-17.9-39.9-39.9-39.9c-22,0-39.9,17.9-39.9,39.9v7.6v154.4h29.9V47.5v-7.6c0-5.5,4.5-10,10-10c5.5,0,10,4.5,10,10v126.4c0,22,17.9,39.9,39.9,39.9C167.4,206.2,185.3,188.3,185.3,166.3 M377,104.3c0,41.4-31.2,73.1-72,73.1c-40.8,0-72-31.7-72-73.1s31.2-73.1,72-73.1C345.9,31.2,377,62.9,377,104.3 M407.1,104.3c0-57.8-44.2-102-102-102s-102,44.2-102,102c0,57.8,44.2,102,102,102S407.1,162.1,407.1,104.3"/>
-    </svg>
+    <a href="https://portal.ino.cz" title="Přejít na portal.ino.cz" style="display:inline-flex;align-items:center;text-decoration:none;transition:opacity 0.15s" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
+      <svg viewBox="0 0 407.1 206.3" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:auto">
+        <path fill="#fff" d="M0,202.8h30V6.5H0V202.8z M185.3,166.3V6.4h-29.9v159.9c0,5.5-4.5,10-10,10c-5.5,0-10-4.5-10-10V39.9c0-22-17.9-39.9-39.9-39.9c-22,0-39.9,17.9-39.9,39.9v7.6v154.4h29.9V47.5v-7.6c0-5.5,4.5-10,10-10c5.5,0,10,4.5,10,10v126.4c0,22,17.9,39.9,39.9,39.9C167.4,206.2,185.3,188.3,185.3,166.3 M377,104.3c0,41.4-31.2,73.1-72,73.1c-40.8,0-72-31.7-72-73.1s31.2-73.1,72-73.1C345.9,31.2,377,62.9,377,104.3 M407.1,104.3c0-57.8-44.2-102-102-102s-102,44.2-102,102c0,57.8,44.2,102,102,102S407.1,162.1,407.1,104.3"/>
+      </svg>
+    </a>
     <div style="text-align:right">
       <div class="topbar-title">Prodejní přehled týmu 2026</div>
       <div class="topbar-sub" id="topbarSub">Vyberte období</div>
+      <div class="topbar-update" id="topbarUpdate"></div>
     </div>
   </div>
   <div class="tabs-bar" id="tabsBar">
@@ -260,25 +264,41 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTkfUvHzaSv0cJc24PU
 let DATA = [];
 let currentMain = 0;
 let selectedOZ = null;
+let dataLastUpdate = null;
 
 window.onload = function(){
   document.getElementById("topbarSub").textContent = "Načítám data, prosím čekejte…";
   fetch(SCRIPT_URL)
     .then(r => r.json())
     .then(json => {
-      DATA = json.map(period => ({
+      // Nový formát: {lastUpdate, tables}, starý formát: pole tabulek
+      const tables = Array.isArray(json) ? json : json.tables;
+      dataLastUpdate = (json && json.lastUpdate) ? new Date(json.lastUpdate) : null;
+      DATA = tables.map(period => ({
         ...period,
         rows: period.rows.filter(r => r.oz && r.oz !== 'OZ' && r.oz !== 'Celkový součet' && r.oz !== '(prázdné)')
       }));
       buildOZGrid();
       switchMain(pickDefaultTab());
-      document.getElementById("topbarSub").textContent = "Aktualizováno: " + new Date().toLocaleTimeString('cs-CZ');
+      updateLastUpdateLabel();
     })
     .catch(err => {
       document.getElementById("topbarSub").textContent = "Chyba načítání — obnovte stránku (F5)";
       console.error("Fetch error:", err);
     });
 };
+
+function updateLastUpdateLabel(){
+  const el = document.getElementById("topbarUpdate");
+  if(dataLastUpdate){
+    const d = dataLastUpdate;
+    const dat = d.toLocaleDateString('cs-CZ', {day:'numeric', month:'numeric', year:'numeric'});
+    const cas = d.toLocaleTimeString('cs-CZ', {hour:'2-digit', minute:'2-digit'});
+    el.textContent = "Data z tabulky aktualizována: " + dat + " v " + cas;
+  } else {
+    el.textContent = "Načteno: " + new Date().toLocaleTimeString('cs-CZ');
+  }
+}
 
 function pickDefaultTab(){
   // Pravidlo: do 5. dne v měsíci ukazuj minulý měsíc, pak aktuální
