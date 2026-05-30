@@ -194,6 +194,8 @@ td.date-col { font-size: 11px; color: var(--muted); }
 .activity-item[data-type="schůzka"] { border-left-color: var(--red); }
 .activity-item[data-type="poznámka"] { border-left-color: var(--olive); }
 .activity-item.planned { background: rgba(24,47,88,.05); border-left-color: var(--blue); border-left-style: dashed; }
+.act-done-btn { margin-top: 6px; background: var(--green-gray); color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-family: 'GeneralSans', sans-serif; font-size: 11px; font-weight: 600; }
+.act-done-btn:hover { background: #2d3f3e; }
 .activity-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
 .activity-type { font-family: 'Ladislav', sans-serif; font-size: 10px; letter-spacing: .8px; text-transform: uppercase; color: var(--green-gray); }
 .activity-date { font-size: 10px; color: var(--muted); }
@@ -265,9 +267,28 @@ td.date-col { font-size: 11px; color: var(--muted); }
 .dash-bar-val { font-size: 11px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--green-gray); }
 .dash-bar-label { font-size: 10px; color: var(--muted); text-align: center; }
 .dash-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ÚKOLY */
+.task-group { margin-bottom: 14px; }
+.task-group:last-child { margin-bottom: 0; }
+.task-group-head { font-family: 'Ladislav', sans-serif; font-size: 11px; letter-spacing: .8px; text-transform: uppercase; color: var(--green-gray); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.task-group-count { background: var(--gray5); color: var(--muted); font-size: 10px; padding: 1px 7px; border-radius: 10px; font-weight: 700; font-family: 'GeneralSans', sans-serif; }
+.taskgroup-overdue .task-group-head { color: var(--red); }
+.taskgroup-overdue .task-group-count { background: rgba(255,68,45,.12); color: var(--red); }
+.taskgroup-today .task-group-head { color: var(--orange); }
+.taskgroup-today .task-group-count { background: rgba(253,143,48,.15); color: #b85f00; }
+.task-row { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 6px; cursor: pointer; transition: background .1s; border: 1px solid transparent; }
+.task-row:hover { background: var(--beige1); border-color: var(--gray10); }
+.task-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+.task-main { flex: 1; min-width: 0; }
+.task-title { font-size: 13px; font-weight: 600; color: var(--gray80); margin-bottom: 1px; }
+.task-sub { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-when { font-size: 11px; font-weight: 600; color: var(--muted); flex-shrink: 0; font-family: 'DM Mono', monospace; }
+.task-when.overdue { color: var(--red); }
 @media (max-width: 720px) {
   .dash-two-col { grid-template-columns: 1fr; }
   #dashboard-tab { padding: 16px 14px 80px; }
+  .task-sub { white-space: normal; }
 }
 .myday-greeting { font-family: 'Ladislav', sans-serif; font-size: 26px; color: var(--green-gray); margin-bottom: 2px; }
 .myday-date { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
@@ -539,6 +560,7 @@ td.date-col { font-size: 11px; color: var(--muted); }
         <div class="user-name" id="user-name">—</div>
         <div class="user-role" id="user-role">—</div>
       </div>
+      <button class="logout-btn" id="backup-btn" style="display:none" title="Stáhnout kompletní zálohu dat">⬇ Záloha</button>
       <button class="logout-btn" id="logout-btn">Odhlásit</button>
     </div>
   </header>
@@ -672,7 +694,12 @@ td.date-col { font-size: 11px; color: var(--muted); }
 
   <div id="activities-tab">
     <h1 class="act-page-title">Aktivity</h1>
-    <p class="act-page-sub">Přehled všech zaznamenaných obchodních aktivit</p>
+    <p class="act-page-sub">Přehled obchodních aktivit, splněných i naplánovaných</p>
+    <div class="dash-scope" style="margin-bottom: 16px; align-self: flex-start">
+      <button class="dash-scope-btn active" data-actfilter="all">Vše</button>
+      <button class="dash-scope-btn" data-actfilter="done">Splněné</button>
+      <button class="dash-scope-btn" data-actfilter="planned">Naplánované</button>
+    </div>
     <div class="act-table-wrap">
       <table class="act-table">
         <thead>
@@ -721,6 +748,10 @@ td.date-col { font-size: 11px; color: var(--muted); }
         <input type="text" id="nc-name" placeholder="např. Nováček s.r.o.">
       </div>
       <div class="modal-field">
+        <label>IČO</label>
+        <input type="text" id="nc-ico" placeholder="8 číslic (nepovinné)">
+      </div>
+      <div class="modal-field">
         <label>Telefon</label>
         <input type="text" id="nc-phone" placeholder="např. 777123456">
       </div>
@@ -760,7 +791,9 @@ td.date-col { font-size: 11px; color: var(--muted); }
 <script>
 const SUPABASE_URL = "https://ydbetjuujroeorrtkwac.supabase.co";
 const SUPABASE_KEY = "sb_publishable_KNOU7TDUv_-Yi7Jw0oE2Ew_1g0V_8EC";
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: false }
+});
 
 let currentUser = null;
 let currentProfile = null;
@@ -836,6 +869,66 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
   location.reload();
 });
 
+// ============ ZÁLOHA DAT ============
+document.getElementById('backup-btn').addEventListener('click', async () => {
+  toast('Připravuji zálohu…');
+  try {
+    // načti vše čerstvé z DB
+    let allC = [];
+    let from = 0;
+    while (true) {
+      const { data, error } = await sb.from('contacts').select('*').order('id').range(from, from + 999);
+      if (error) throw error;
+      allC = allC.concat(data);
+      if (data.length < 1000) break;
+      from += 1000;
+    }
+    let allA = [];
+    from = 0;
+    while (true) {
+      const { data, error } = await sb.from('activities').select('*').order('id').range(from, from + 999);
+      if (error) throw error;
+      allA = allA.concat(data);
+      if (data.length < 1000) break;
+      from += 1000;
+    }
+    const { data: allCR } = await sb.from('call_requests').select('*');
+    
+    const backup = {
+      exported_at: new Date().toISOString(),
+      exported_by: currentProfile.full_name,
+      counts: { contacts: allC.length, activities: allA.length, call_requests: (allCR || []).length },
+      contacts: allC,
+      activities: allA,
+      call_requests: allCR || []
+    };
+    
+    // JSON záloha (kompletní, pro obnovu)
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const jsonBlob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const a1 = document.createElement('a');
+    a1.href = URL.createObjectURL(jsonBlob);
+    a1.download = `ino_crm_zaloha_${dateStr}.json`;
+    a1.click();
+    
+    // CSV firem (pro Excel)
+    const cols = ['id','company_name','ico','street','city','zip','region','phone','email','website','status','sales_rep','last_activity_date'];
+    const hdr = cols.join(';');
+    const rows = allC.map(r => cols.map(k => `"${String(r[k] == null ? '' : r[k]).replace(/"/g,'""')}"`).join(';'));
+    const csv = '\uFEFF' + [hdr, ...rows].join('\n');
+    setTimeout(() => {
+      const a2 = document.createElement('a');
+      a2.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+      a2.download = `ino_crm_firmy_${dateStr}.csv`;
+      a2.click();
+    }, 400);
+    
+    toast(`Záloha stažena: ${allC.length} firem, ${allA.length} aktivit`);
+  } catch (e) {
+    toast('Chyba zálohy: ' + (e.message || e), true);
+  }
+});
+
 async function loadProfileAndShowApp(user) {
   currentUser = user;
   const { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
@@ -871,6 +964,7 @@ async function loadProfileAndShowApp(user) {
     document.getElementById('dash-scope').style.display = '';
     dashScope = 'all'; // superadmin začíná souhrnem za tým
     document.querySelectorAll('.dash-scope-btn').forEach(x => x.classList.toggle('active', x.dataset.scope === 'all'));
+    document.getElementById('backup-btn').style.display = '';
   }
   await loadData();
 }
@@ -1261,19 +1355,25 @@ function renderActivityItems(activities) {
   }
   const now = new Date();
   return activities.map(a => {
-    const planned = a.is_planned && new Date(a.activity_date) > now;
-    return `<div class="activity-item ${planned ? 'planned' : ''}" data-type="${esc(a.type)}">
+    const isPlannedItem = a.is_planned && !a.done_at;
+    return `<div class="activity-item ${isPlannedItem ? 'planned' : ''}" data-type="${esc(a.type)}">
       <div class="activity-meta">
-        <span class="activity-type">${planned ? '⏳ ' : ''}${esc(a.type)}</span>
-        <span class="activity-date">${planned ? 'naplánováno: ' : ''}${fmtDateTime(a.activity_date)}</span>
+        <span class="activity-type">${isPlannedItem ? '⏳ ' : (a.done_at ? '✓ ' : '')}${esc(a.type)}</span>
+        <span class="activity-date">${isPlannedItem ? 'naplánováno: ' : ''}${fmtDateTime(a.activity_date)}</span>
       </div>
       ${a.note ? `<div class="activity-note">${esc(a.note)}</div>` : ''}
-      <div class="activity-author">— ${esc(a.created_by_name || 'neznámý')}</div>
+      <div class="activity-author">— ${esc(a.created_by_name || 'neznámý')}${a.done_at ? ' · splněno ' + fmtDate(a.done_at) : ''}</div>
+      ${isPlannedItem ? `<button class="act-done-btn" data-done="${a.id}">✓ Označit jako hotové</button>` : ''}
     </div>`;
   }).join('');
 }
 
 async function showDetail(id) {
+  // varování při neuložených změnách, když přepínáme na jinou firmu
+  const saveBar = document.getElementById('detail-save-bar');
+  if (saveBar && saveBar.classList.contains('show') && selectedId && selectedId !== id) {
+    if (!confirm('Máte neuložené změny u jiné firmy. Opravdu přejít jinam bez uložení?')) return;
+  }
   selectedId = id;
   const c = allContacts.find(x => x.id === id);
   if (!c) return;
@@ -1467,9 +1567,22 @@ async function showDetail(id) {
       for (const k of ['ico','street','city','zip','phone','email','website']) {
         if (!payload[k]) payload[k] = null;
       }
-      const { error } = await sb.from('contacts').update(payload).eq('id', id);
-      if (error) { toast('Chyba: ' + error.message, true); return; }
-      Object.assign(c, vals);
+      // kontrola souběžné editace: načti aktuální updated_at z DB
+      const { data: fresh } = await sb.from('contacts').select('updated_at, company_name').eq('id', id).single();
+      if (fresh && c.updated_at && fresh.updated_at && fresh.updated_at !== c.updated_at) {
+        const ok = confirm('Pozor: tuto firmu mezitím upravil někdo jiný.\n\nKliknutím na OK přepíšete jeho změny svými. Kliknutím na Zrušit načtete jeho aktuální verzi.');
+        if (!ok) {
+          // znovu načti firmu z DB a zobraz aktuální stav
+          const { data: latest } = await sb.from('contacts').select('*').eq('id', id).single();
+          if (latest) { Object.assign(c, latest); }
+          toast('Načtena aktuální verze od kolegy');
+          showDetail(id);
+          return;
+        }
+      }
+      const { data: updated, error } = await sb.from('contacts').update(payload).eq('id', id).select().single();
+      if (error) { toast('Chyba při ukládání: ' + error.message + ' — zkuste to prosím znovu', true); return; }
+      Object.assign(c, updated || vals);
       toast('Údaje firmy uloženy');
       document.getElementById('detail-save-bar').classList.remove('show');
       render();
@@ -1534,9 +1647,36 @@ async function showDetail(id) {
       renderMyDay();
     });
   }
+  
+  // tlačítka "Označit jako hotové" u naplánovaných aktivit
+  document.querySelectorAll('.act-done-btn').forEach(b => {
+    b.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const actId = parseInt(b.dataset.done);
+      const now = new Date().toISOString();
+      // splnit: zrušit příznak plánu, nastavit datum splnění na teď
+      const { error } = await sb.from('activities').update({
+        is_planned: false, done_at: now, activity_date: now
+      }).eq('id', actId);
+      if (error) { toast('Chyba: ' + error.message + ' — zkuste znovu', true); return; }
+      c.last_activity_date = now;
+      toast('Úkol označen jako hotový');
+      const { data: acts } = await sb.from('activities').select('*, contacts(company_name, sales_rep)').order('activity_date', { ascending: false }).limit(500);
+      allActivities = acts || [];
+      showDetail(id);
+      renderActivities();
+      render();
+      renderMyDay();
+    });
+  });
 }
 
 document.getElementById('detail-close').addEventListener('click', () => {
+  // varování při neuložených změnách
+  const saveBar = document.getElementById('detail-save-bar');
+  if (saveBar && saveBar.classList.contains('show')) {
+    if (!confirm('Máte neuložené změny. Opravdu zavřít bez uložení?')) return;
+  }
   selectedId = null;
   document.getElementById('detail-panel').classList.add('hidden');
   document.querySelectorAll('tbody tr').forEach(tr => tr.classList.remove('selected'));
@@ -1662,6 +1802,7 @@ async function resolveCallRequest(requestId, contactId) {
 }
 
 async function cancelCallRequest(requestId) {
+  if (!confirm('Opravdu zrušit tento požadavek na navolání?')) return;
   const { error } = await sb.from('call_requests').delete().eq('id', requestId);
   if (error) { toast('Chyba: ' + error.message, true); return; }
   toast('Požadavek zrušen');
@@ -1835,32 +1976,32 @@ function renderMyDay() {
   
   let cards = [];
   
-  // KARTA 1: Nadcházející schůzky (dnes + zítra + budoucí)
-  const myMeetings = getMyMeetings().filter(r => {
-    if (!r.meeting_at) return false;
-    return new Date(r.meeting_at) >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  });
-  const meetingItems = myMeetings.slice(0, 8).map(r => {
-    const co = r.contacts || {};
-    const md = new Date(r.meeting_at);
-    let whenLabel = fmtDateTime(r.meeting_at);
-    if (md.toDateString() === todayStr) whenLabel = 'DNES ' + md.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
-    else if (md.toDateString() === tomorrowStr) whenLabel = 'ZÍTRA ' + md.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
-    return `<div class="myday-item" data-goto="${co.id}">
-      <div class="myday-item-title">${esc(co.company_name || '—')}</div>
-      <div class="myday-item-when">📅 ${whenLabel}</div>
-      ${r.meeting_note ? `<div class="myday-item-sub">${esc(r.meeting_note)}</div>` : ''}
+  // KARTA 1: Mé úkoly (přednostně dnes/zítra/po termínu)
+  // pro navolávačku: její úkoly jsou všechny čekající požadavky → řeší to getTasks
+  const myTasks = getTasks('mine');
+  const taskBuckets = bucketTasks(myTasks);
+  const urgentTasks = [...taskBuckets.overdue, ...taskBuckets.today, ...taskBuckets.tomorrow];
+  const restTasks = [...taskBuckets.thisWeek, ...taskBuckets.nextWeek, ...taskBuckets.later];
+  const showTasks = [...urgentTasks, ...restTasks].slice(0, 8);
+  const taskItems = showTasks.map(t => {
+    const w = new Date(t.when);
+    let whenLabel;
+    if (w < now) whenLabel = '⚠️ ' + w.toLocaleDateString('cs-CZ', {day:'numeric',month:'numeric'});
+    else if (w.toDateString() === todayStr) whenLabel = 'DNES ' + w.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
+    else if (w.toDateString() === tomorrowStr) whenLabel = 'ZÍTRA ' + w.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
+    else whenLabel = w.toLocaleDateString('cs-CZ', {day:'numeric',month:'numeric'});
+    const iconMap = { 'telefonát':'📞', 'email':'✉️', 'schůzka':'🤝', 'poznámka':'📝', 'navolat':'📞', 'čeká u Kristýny':'⏳' };
+    return `<div class="myday-item" data-goto="${t.contactId}">
+      <div class="myday-item-title">${iconMap[t.type] || '•'} ${esc(t.title)}</div>
+      <div class="myday-item-when">${whenLabel} · ${esc(t.type)}</div>
+      ${t.note ? `<div class="myday-item-sub">${esc(t.note).slice(0,100)}</div>` : ''}
     </div>`;
   });
-  const hasUrgentMeeting = myMeetings.some(r => {
-    const md = new Date(r.meeting_at);
-    return md.toDateString() === todayStr || md.toDateString() === tomorrowStr;
-  });
   cards.push({
-    icon: '📅', title: 'Nadcházející schůzky', count: myMeetings.length,
-    items: meetingItems, empty: 'Žádné naplánované schůzky.',
-    highlight: hasUrgentMeeting,
-    show: currentProfile.role === 'obchodnik' || currentProfile.role === 'superadmin'
+    icon: '✓', title: 'Mé úkoly', count: myTasks.length,
+    items: taskItems, empty: 'Žádné úkoly. Vše hotové!',
+    highlight: urgentTasks.length > 0,
+    show: true
   });
   
   // KARTA 2: Firmy bez aktivity 30+ dní (moje)
@@ -1898,7 +2039,8 @@ function renderMyDay() {
     count: pendingCalls.length, items: callItems,
     empty: 'Žádné firmy k navolání.',
     highlight: currentProfile.role === 'navolavacka' && pendingCalls.length > 0,
-    show: true
+    // Pro obchodníka je už součástí "Mé úkoly" → skrýt. Pro Kristýnu a admina užitečné.
+    show: currentProfile.role === 'navolavacka' || currentProfile.role === 'superadmin'
   });
   
   // KARTA 4: Nové navolané schůzky (jen obchodník) - upozornění
@@ -2023,12 +2165,35 @@ document.getElementById('add-company-modal').addEventListener('click', (e) => {
 document.getElementById('modal-save').addEventListener('click', async () => {
   const name = document.getElementById('nc-name').value.trim();
   if (!name) { toast('Zadejte název firmy', true); document.getElementById('nc-name').focus(); return; }
+  const ico = document.getElementById('nc-ico').value.trim().replace(/\s/g, '');
   const phone = document.getElementById('nc-phone').value.trim();
   const city = document.getElementById('nc-city').value.trim();
   const rep = document.getElementById('nc-rep').value || null;
   
+  // validace IČO
+  if (ico && !/^\d{8}$/.test(ico)) {
+    toast('IČO musí mít 8 číslic (nebo nechte prázdné)', true);
+    document.getElementById('nc-ico').focus();
+    return;
+  }
+  
+  // kontrola duplicit — podle IČO (přesně) nebo názvu (přibližně)
+  if (ico) {
+    const dupIco = allContacts.find(c => (c.ico || '').replace(/\s/g,'') === ico);
+    if (dupIco) {
+      const ok = confirm(`Firma s IČO ${ico} už existuje:\n„${dupIco.company_name}"\n\nOpravdu přidat další firmu se stejným IČO?`);
+      if (!ok) { closeAddCompanyModal(); showDetail(dupIco.id); return; }
+    }
+  }
+  const nameLower = name.toLowerCase();
+  const dupName = allContacts.find(c => (c.company_name || '').toLowerCase() === nameLower);
+  if (dupName) {
+    const ok = confirm(`Firma s názvem „${name}" už v databázi je.\n\nOpravdu přidat znovu?`);
+    if (!ok) { closeAddCompanyModal(); showDetail(dupName.id); return; }
+  }
+  
   const baseRecord = {
-    company_name: name, phone: phone || null, city: city || null,
+    company_name: name, ico: ico || null, phone: phone || null, city: city || null,
     sales_rep: rep, status: 'nový'
   };
   
@@ -2041,7 +2206,7 @@ document.getElementById('modal-save').addEventListener('click', async () => {
     ({ data, error } = await sb.from('contacts').insert(baseRecord).select().single());
   }
   
-  if (error) { toast('Chyba: ' + error.message, true); return; }
+  if (error) { toast('Chyba při ukládání: ' + error.message + ' — zkuste znovu', true); return; }
   
   allContacts.push(data);
   toast('Firma „' + name + '" přidána');
@@ -2055,32 +2220,218 @@ document.getElementById('modal-save').addEventListener('click', async () => {
 });
 
 // ============ ACTIVITIES TAB ============
+let activitiesFilter = 'all'; // all | done | planned
 function renderActivities() {
   const tbody = document.getElementById('act-tbody');
   const empty = document.getElementById('act-empty');
   
   // obchodník vidí jen aktivity svých firem; superadmin a Kristýna vše
-  const visible = allActivities.filter(a => canSeeContactRecord((a.contacts || {}).sales_rep));
+  let visible = allActivities.filter(a => canSeeContactRecord((a.contacts || {}).sales_rep));
+  
+  // filtr splněné/naplánované
+  if (activitiesFilter === 'done') visible = visible.filter(a => !a.is_planned);
+  else if (activitiesFilter === 'planned') visible = visible.filter(a => a.is_planned);
   
   if (visible.length === 0) {
     tbody.innerHTML = '';
     empty.style.display = 'block';
+    empty.textContent = activitiesFilter === 'planned'
+      ? 'Žádné naplánované aktivity.'
+      : activitiesFilter === 'done'
+        ? 'Žádné splněné aktivity.'
+        : 'Žádné aktivity zatím nebyly zaznamenány.';
     return;
   }
   empty.style.display = 'none';
-  tbody.innerHTML = visible.map(a => `
-    <tr>
+  tbody.innerHTML = visible.map(a => {
+    const planned = a.is_planned;
+    const typeLabel = (planned ? '⏳ ' : '') + a.type;
+    return `<tr style="${planned ? 'background:rgba(24,47,88,.04)' : ''}">
       <td style="white-space:nowrap;font-size:11px">${fmtDateTime(a.activity_date)}</td>
       <td style="font-weight:600">${esc(a.contacts ? a.contacts.company_name : '—')}</td>
-      <td><span class="badge" style="background:var(--gray5);color:var(--text)">${esc(a.type)}</span></td>
+      <td><span class="badge" style="background:var(--gray5);color:var(--text)">${esc(typeLabel)}</span></td>
       <td style="max-width:400px;white-space:normal">${esc(a.note || '')}</td>
       <td style="white-space:nowrap;color:var(--muted);font-size:11px">${esc(a.created_by_name || '—')}</td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 }
+
+// filtr v záložce Aktivity
+document.querySelectorAll('[data-actfilter]').forEach(b => {
+  b.addEventListener('click', () => {
+    activitiesFilter = b.dataset.actfilter;
+    document.querySelectorAll('[data-actfilter]').forEach(x => x.classList.toggle('active', x === b));
+    renderActivities();
+  });
+});
 
 // ============ DASHBOARD ============
 let dashScope = 'mine'; // 'mine' nebo 'all'
+
+// Vrátí seznam úkolů (plánovaných aktivit + navolaných schůzek + požadavků k navolání)
+// pro daný "rozsah" — buď konkrétního obchodníka, nebo všechny.
+// scope = 'mine'  → úkoly pro currentProfile (jako obchodník/navolávačka)
+// scope = 'all'   → úkoly všech (jen pro superadmin)
+function getTasks(scope) {
+  const myRep = currentProfile.sales_rep_name;
+  const isAll = (scope === 'all');
+  const tasks = [];
+  
+  // 1) Naplánované aktivity (telefonát, schůzka, e-mail, poznámka s budoucím datem)
+  allActivities.forEach(a => {
+    if (!a.is_planned) return;
+    const co = a.contacts || {};
+    const owner = co.sales_rep;
+    if (!isAll && owner !== myRep) return;
+    tasks.push({
+      kind: 'planned',
+      when: a.activity_date,
+      type: a.type,
+      title: co.company_name || '—',
+      contactId: co.id,
+      note: a.note,
+      owner: owner,
+      author: a.created_by_name
+    });
+  });
+  
+  // 2) Navolané schůzky pro mě (od Kristýny) — dokud "beru na vědomí"
+  allCallRequests.forEach(r => {
+    if (r.status !== 'vyřízeno' || !r.meeting_at || r.seen_by_rep) return;
+    const co = r.contacts || {};
+    const owner = co.sales_rep;
+    if (!isAll && owner !== myRep) return;
+    tasks.push({
+      kind: 'meeting',
+      when: r.meeting_at,
+      type: 'schůzka',
+      title: co.company_name || '—',
+      contactId: co.id,
+      note: r.meeting_note,
+      owner: owner,
+      author: r.resolved_by_name,
+      meta: 'navolala ' + (r.resolved_by_name || '—')
+    });
+  });
+  
+  // 3) Požadavky k navolání (čekající) — kdo je zadal, vidí je jako svůj úkol "čeká na Kristýnu"
+  //    Kristýna je vidí všechny jako svůj úkol "zavolat"
+  allCallRequests.forEach(r => {
+    if (r.status !== 'čeká') return;
+    const co = r.contacts || {};
+    const owner = co.sales_rep;
+    
+    if (currentProfile.role === 'navolavacka') {
+      // Kristýna vidí všechny čekající jako úkol "zavolat"
+      tasks.push({
+        kind: 'tocall',
+        when: r.requested_at,
+        type: 'navolat',
+        title: co.company_name || '—',
+        contactId: co.id,
+        note: co.phone ? ('☎ ' + co.phone) : 'bez telefonu',
+        owner: owner,
+        author: r.requested_by_name,
+        meta: 'předal ' + (r.requested_by_name || '—')
+      });
+    } else if (scope === 'all' || r.requested_by === currentUser.id || owner === myRep) {
+      // Obchodník vidí čekající požadavky u svých firem (vlastní zadání)
+      tasks.push({
+        kind: 'waiting',
+        when: r.requested_at,
+        type: 'čeká u Kristýny',
+        title: co.company_name || '—',
+        contactId: co.id,
+        note: 'předáno k navolání',
+        owner: owner,
+        author: r.requested_by_name,
+        meta: 'zadal ' + (r.requested_by_name || '—')
+      });
+    }
+  });
+  
+  // seřadit: nejdřív podle stáří (přidělené dřív = naléhavější) u "čeká", a podle data u plánovaného
+  tasks.sort((a, b) => new Date(a.when) - new Date(b.when));
+  return tasks;
+}
+
+function bucketTasks(tasks) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const dayAfter = new Date(today); dayAfter.setDate(today.getDate() + 2);
+  const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7);
+  const nextWeekEnd = new Date(today); nextWeekEnd.setDate(today.getDate() + 14);
+  
+  const buckets = { overdue: [], today: [], tomorrow: [], thisWeek: [], nextWeek: [], later: [] };
+  tasks.forEach(t => {
+    const w = new Date(t.when);
+    if (w < today) buckets.overdue.push(t);
+    else if (w < tomorrow) buckets.today.push(t);
+    else if (w < dayAfter) buckets.tomorrow.push(t);
+    else if (w < weekEnd) buckets.thisWeek.push(t);
+    else if (w < nextWeekEnd) buckets.nextWeek.push(t);
+    else buckets.later.push(t);
+  });
+  return buckets;
+}
+
+function renderTasksSection(buckets, scope) {
+  const total = buckets.overdue.length + buckets.today.length + buckets.tomorrow.length
+    + buckets.thisWeek.length + buckets.nextWeek.length + buckets.later.length;
+  if (total === 0) {
+    return `<div class="dash-section">
+      <div class="dash-section-title">Mé úkoly</div>
+      <div style="color:var(--muted);font-size:13px;padding:8px 0">Žádné úkoly. Vše máte hotové! 🎉</div>
+    </div>`;
+  }
+  const groups = [
+    ['overdue', 'Po termínu', '⚠️', 'taskgroup-overdue'],
+    ['today', 'Dnes', '🔥', 'taskgroup-today'],
+    ['tomorrow', 'Zítra', '📌', ''],
+    ['thisWeek', 'Tento týden', '', ''],
+    ['nextWeek', 'Příští týden', '', ''],
+    ['later', 'Později', '', '']
+  ];
+  let html = `<div class="dash-section">
+    <div class="dash-section-title">Mé úkoly (${total})</div>`;
+  groups.forEach(([key, label, icon, cls]) => {
+    const list = buckets[key];
+    if (!list.length) return;
+    html += `<div class="task-group ${cls}">
+      <div class="task-group-head">${icon ? icon + ' ' : ''}${label} <span class="task-group-count">${list.length}</span></div>
+      ${list.map(t => taskRowHtml(t, scope === 'all')).join('')}
+    </div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function taskRowHtml(t, showOwner) {
+  const w = new Date(t.when);
+  const now = new Date();
+  const isOverdue = w < now;
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrowStart = new Date(todayStart); tomorrowStart.setDate(todayStart.getDate() + 1);
+  let whenLabel;
+  if (w >= todayStart && w < tomorrowStart) {
+    whenLabel = 'dnes ' + w.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
+  } else if (w >= tomorrowStart && w < new Date(tomorrowStart.getTime() + 86400000)) {
+    whenLabel = 'zítra ' + w.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
+  } else {
+    whenLabel = w.toLocaleDateString('cs-CZ', {day:'numeric',month:'numeric'}) + ' ' + w.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
+  }
+  const iconMap = { 'telefonát':'📞', 'email':'✉️', 'schůzka':'🤝', 'poznámka':'📝', 'navolat':'📞', 'čeká u Kristýny':'⏳' };
+  const icon = iconMap[t.type] || '•';
+  return `<div class="task-row" data-goto="${t.contactId}">
+    <div class="task-icon">${icon}</div>
+    <div class="task-main">
+      <div class="task-title">${esc(t.title)}</div>
+      <div class="task-sub">${esc(t.type)}${t.note ? ' · ' + esc(t.note).slice(0,80) : ''}${t.meta ? ' · ' + esc(t.meta) : ''}${showOwner && t.owner ? ' · ' + esc(t.owner) : ''}</div>
+    </div>
+    <div class="task-when ${isOverdue ? 'overdue' : ''}">${whenLabel}</div>
+  </div>`;
+}
 
 function renderDashboard() {
   const container = document.getElementById('dashboard-content');
@@ -2124,12 +2475,12 @@ function renderDashboard() {
   
   // aktivity tento týden (splněné, ne naplánované)
   const actsThisWeek = acts.filter(a => !a.is_planned && new Date(a.activity_date) >= weekAgo).length;
-  // schůzky naplánované do budoucna
-  const futureMeetings = allCallRequests.filter(r => {
-    if (!r.meeting_at || new Date(r.meeting_at) < now) return false;
-    if (filterMine) return (r.contacts || {}).sales_rep === myRep;
-    return true;
-  }).length;
+  
+  // všechny úkoly v aktuálním scope (plánované aktivity + navolané schůzky + čekající navolání)
+  const tasks = getTasks(scope);
+  const buckets = bucketTasks(tasks);
+  const tasksUrgent = buckets.overdue.length + buckets.today.length + buckets.tomorrow.length;
+  
   // firmy bez aktivity 30+ dní (jen "živé" statusy)
   const staleCount = contacts.filter(c =>
     !['vyhráno','ztracen'].includes(c.status) &&
@@ -2148,12 +2499,12 @@ function renderDashboard() {
       <div class="dash-kpi">
         <div class="dash-kpi-label">Aktivit za 7 dní</div>
         <div class="dash-kpi-value accent">${actsThisWeek}</div>
-        <div class="dash-kpi-sub">telefonáty, schůzky, e-maily</div>
+        <div class="dash-kpi-sub">splněné telefonáty, schůzky, e-maily</div>
       </div>
       <div class="dash-kpi">
-        <div class="dash-kpi-label">Schůzky v plánu</div>
-        <div class="dash-kpi-value">${futureMeetings}</div>
-        <div class="dash-kpi-sub">naplánováno do budoucna</div>
+        <div class="dash-kpi-label">Úkoly k vyřízení</div>
+        <div class="dash-kpi-value ${tasksUrgent > 0 ? 'accent' : ''}">${tasks.length}</div>
+        <div class="dash-kpi-sub">${tasksUrgent} naléhavých (dnes, zítra, po termínu)</div>
       </div>
       <div class="dash-kpi">
         <div class="dash-kpi-label">Dlouho nekontakt.</div>
@@ -2167,6 +2518,9 @@ function renderDashboard() {
       </div>
     </div>
   `;
+  
+  // ---- ÚKOLY (vlastní a přidělené) ----
+  html += renderTasksSection(buckets, scope);
   
   // ---- TRYCHTÝŘ (funnel) ----
   const funnelStages = [
@@ -2238,9 +2592,16 @@ function renderDashboard() {
   </div>`;
   
   container.innerHTML = html;
+  
+  // kliknutí na úkol → otevři detail firmy
+  container.querySelectorAll('[data-goto]').forEach(el => {
+    el.addEventListener('click', () => {
+      const cid = parseInt(el.dataset.goto);
+      switchTab('contacts');
+      showDetail(cid);
+    });
+  });
 }
-
-// přepínač rozsahu (moje / tým)
 document.querySelectorAll('.dash-scope-btn').forEach(b => {
   b.addEventListener('click', () => {
     dashScope = b.dataset.scope;
@@ -2295,6 +2656,15 @@ document.getElementById('export-btn').addEventListener('click', () => {
   a.click();
 });
 
+// Varování při zavření okna s neuloženými změnami
+window.addEventListener('beforeunload', (e) => {
+  const saveBar = document.getElementById('detail-save-bar');
+  if (saveBar && saveBar.classList.contains('show')) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
 // ============ INIT ============
 (async function init() {
   const { data: { session } } = await sb.auth.getSession();
@@ -2302,6 +2672,19 @@ document.getElementById('export-btn').addEventListener('click', () => {
     await loadProfileAndShowApp(session.user);
   }
 })();
+
+// Reakce na vypršení/obnovení přihlášení
+let sessionWasActive = false;
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+    sessionWasActive = true;
+  }
+  if (event === 'SIGNED_OUT' && sessionWasActive) {
+    // token vypršel nebo odhlášení v jiné záložce
+    toast('Přihlášení vypršelo. Přihlaste se prosím znovu.', true);
+    setTimeout(() => location.reload(), 2500);
+  }
+});
 </script>
 </body>
 </html>
