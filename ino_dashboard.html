@@ -170,7 +170,7 @@ tr:hover td{background:#fdf9f8}
         </div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">Plnění plánu obratu (%)</div>
+        <div class="chart-title">Splněno z plánu obratu (%)</div>
         <div id="planChart"></div>
       </div>
     </div>
@@ -186,7 +186,7 @@ tr:hover td{background:#fdf9f8}
         </div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">Plnění plánu marže (%)</div>
+        <div class="chart-title">Splněno z plánu marže (%)</div>
         <div id="planChartMarze"></div>
       </div>
     </div>
@@ -200,14 +200,14 @@ tr:hover td{background:#fdf9f8}
         <thead><tr>
           <th>Obchodník</th>
           <th class="r">Plán obratu</th>
-          <th class="r">Obrat 2026</th>
+          <th class="r">Obrat letos</th>
           <th class="r">Plnění obratu</th>
           <th class="r">Plán marže</th>
-          <th class="r">Marže 2026</th>
+          <th class="r">Marže letos</th>
           <th class="r">Plnění marže</th>
-          <th class="r">Obrat 2025</th>
-          <th class="r">Marže 2025</th>
-          <th class="r">Přirážka 2026</th>
+          <th class="r">Obrat loni</th>
+          <th class="r">Marže loni</th>
+          <th class="r">Přirážka</th>
         </tr></thead>
         <tbody id="tableBody"></tbody>
       </table>
@@ -225,7 +225,7 @@ tr:hover td{background:#fdf9f8}
         <div class="oz-avatar" id="ozAvatar"></div>
         <div>
           <div class="oz-name" id="ozName"></div>
-          <div class="oz-sub">Přehled výsledků 2026 vs. plán a vs. 2025</div>
+          <div class="oz-sub">Srovnání s plánem a s loňským rokem</div>
         </div>
       </div>
       <div class="oz-metrics" id="ozMetrics"></div>
@@ -239,14 +239,14 @@ tr:hover td{background:#fdf9f8}
           <thead><tr>
             <th>Období</th>
             <th class="r">Plán obratu</th>
-            <th class="r">Obrat 2026</th>
+            <th class="r">Obrat letos</th>
             <th class="r">Plnění obratu</th>
             <th class="r">Plán marže</th>
-            <th class="r">Marže 2026</th>
+            <th class="r">Marže letos</th>
             <th class="r">Plnění marže</th>
-            <th class="r">Obrat 2025</th>
-            <th class="r">Marže 2025</th>
-            <th class="r">Přirážka 2026</th>
+            <th class="r">Obrat loni</th>
+            <th class="r">Marže loni</th>
+            <th class="r">Přirážka</th>
           </tr></thead>
           <tbody id="ozTableBody"></tbody>
         </table>
@@ -459,20 +459,20 @@ function renderOZ(name){
 
   document.getElementById("ozMetrics").innerHTML = `
     <div class="metric">
-      <div class="metric-label">Obrat 2026 (celoročně)</div>
+      <div class="metric-label">Obrat letos (celý rok)</div>
       <div class="metric-value">${ytd ? kc(ytd.o26) : "—"}</div>
       <div class="metric-sub">leden – nyní</div>
-      ${mYY!==null?`<div class="metric-delta ${mYY>=0?"up":"dn"}">${mYY>=0?"+":""}${mYY}% vs 2025</div>`:""}
+      ${mYY!==null?`<div class="metric-delta ${mYY>=0?"up":"dn"}">${mYY>=0?"+":""}${mYY}% proti loňsku</div>`:""}
     </div>
     <div class="metric">
-      <div class="metric-label">Plnění plánu obratu (celoročně)</div>
+      <div class="metric-label">Splněno z plánu (obrat)</div>
       <div class="metric-value">${mO!==null?mO+"%":"—"}</div>
-      <div class="metric-sub">celoročně vs. plán</div>
+      <div class="metric-sub">za celý rok</div>
     </div>
     <div class="metric">
-      <div class="metric-label">Plnění plánu marže</div>
+      <div class="metric-label">Splněno z plánu (marže)</div>
       <div class="metric-value">${mM!==null?mM+"%":"—"}</div>
-      <div class="metric-sub">celoročně vs. plán</div>
+      <div class="metric-sub">za celý rok</div>
     </div>
   `;
 
@@ -491,26 +491,26 @@ function renderOZ(name){
       <div class="period-body">
         <div class="card-section">
           <div class="card-section-title">Obrat</div>
-          <div class="period-row"><span class="period-key">Skutečnost 2026</span><span class="period-val">${kc(r.o26)}</span></div>
+          <div class="period-row"><span class="period-key">Letos (skutečnost)</span><span class="period-val">${kc(r.o26)}</span></div>
           <div class="period-row"><span class="period-key">Plán</span><span class="period-val" style="color:var(--muted)">${r.pO>0?kc(r.pO):"—"}</span></div>
           ${r.pO>0?`<div class="period-bar-wrap">
-            <div class="period-bar-label">Plnění plánu obratu</div>
+            <div class="period-bar-label">Splněno z plánu obratu</div>
             <div class="period-bar-track"><div class="period-bar-fill" style="width:${Math.min(oPct,100)}%;background:${oCol}"></div></div>
             <div style="font-family:'LAD',sans-serif;font-size:14px;color:${oCol}">${oPct}%</div>
           </div>`:`<div class="period-bar-label" style="margin-top:6px">Bez plánu obratu</div>`}
         </div>
         <div class="card-section">
           <div class="card-section-title">Marže</div>
-          <div class="period-row"><span class="period-key">Skutečnost 2026</span><span class="period-val">${kc(r.m26)}</span></div>
+          <div class="period-row"><span class="period-key">Letos (skutečnost)</span><span class="period-val">${kc(r.m26)}</span></div>
           <div class="period-row"><span class="period-key">Plán</span><span class="period-val" style="color:var(--muted)">${r.pM>0?kc(r.pM):"—"}</span></div>
           ${r.pM>0?`<div class="period-bar-wrap">
-            <div class="period-bar-label">Plnění plánu marže</div>
+            <div class="period-bar-label">Splněno z plánu (marže)</div>
             <div class="period-bar-track"><div class="period-bar-fill" style="width:${Math.min(mPct2,100)}%;background:${mCol}"></div></div>
             <div style="font-family:'LAD',sans-serif;font-size:14px;color:${mCol}">${mPct2}%</div>
           </div>`:`<div class="period-bar-label" style="margin-top:6px">Bez plánu marže</div>`}
         </div>
         ${pr!==null?`<div class="card-section" style="border-bottom:none">
-          <div class="period-row" style="margin-bottom:0"><span class="period-key">Obchodní přirážka</span><span class="period-val">${pr}%</span></div>
+          <div class="period-row" style="margin-bottom:0"><span class="period-key">Obchodní přirážka<br><span style="font-size:10px;opacity:0.7">přirážka k nákupní ceně</span></span><span class="period-val">${pr}%</span></div>
         </div>`:""}
       </div>
     </div>`;
@@ -557,23 +557,23 @@ function renderTab(i){
 
   document.getElementById("metricsRow").innerHTML=`
     <div class="metric">
-      <div class="metric-label">Obrat 2026</div>
+      <div class="metric-label">Obrat letos</div>
       <div class="metric-value">${kc(totO26)}</div>
       <div class="metric-sub">${d.label}</div>
-      ${yy!==null?`<div class="metric-delta ${yy>=0?"up":"dn"}">${yy>=0?"+":""}${yy}% vs 2025</div>`:""}
+      ${yy!==null?`<div class="metric-delta ${yy>=0?"up":"dn"}">${yy>=0?"+":""}${yy}% proti loňsku</div>`:""}
     </div>
     <div class="metric">
-      <div class="metric-label">Plnění plánu obratu (celoročně)</div>
+      <div class="metric-label">Splněno z plánu (obrat)</div>
       <div class="metric-value">${planPct!==null?planPct+"%":"—"}</div>
       <div class="metric-sub">průměr týmu</div>
     </div>
     <div class="metric">
-      <div class="metric-label">Marže 2026</div>
+      <div class="metric-label">Marže letos</div>
       <div class="metric-value">${kc(totM26)}</div>
       <div class="metric-sub">${d.label}</div>
     </div>
     <div class="metric">
-      <div class="metric-label">Plnění plánu marže</div>
+      <div class="metric-label">Splněno z plánu (marže)</div>
       <div class="metric-value">${mPct!==null?mPct+"%":"—"}</div>
       <div class="metric-sub">průměr týmu</div>
     </div>
