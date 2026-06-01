@@ -40,7 +40,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
   z-index: 200;
   box-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
-.logo-block { display: flex; align-items: center; gap: 14px; }
+.logo-block { display: flex; align-items: center; gap: 14px; text-decoration: none; transition: opacity 0.15s; }
+.logo-block:hover { opacity: 0.85; }
 .logo svg { height: 24px; width: auto; display: block; flex-shrink: 0; }
 .logo-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.2); }
 .logo-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); letter-spacing: 0.04em; text-transform: uppercase; }
@@ -413,7 +414,7 @@ tr.foot td:last-child  { text-align: left; }
 <body>
 
 <div class="topbar">
-  <div class="logo-block">
+  <a class="logo-block" href="https://portal.ino.cz" title="Zpět na portál INO">
     <div class="logo">
       <svg viewBox="0 0 407.1 206.3" xmlns="http://www.w3.org/2000/svg" aria-label="INO logo">
         <path fill="#FF442D" d="M0,202.8h30V6.5H0V202.8z M185.3,166.3V6.4h-29.9v159.9c0,5.5-4.5,10-10,10
@@ -425,7 +426,7 @@ tr.foot td:last-child  { text-align: left; }
     </div>
     <div class="logo-divider"></div>
     <div class="logo-label">Pohledávky</div>
-  </div>
+  </a>
   <div class="topbar-right">
     <button class="refresh-btn" id="refreshBtn" title="Načíst znovu data ze sheetu">
       <span class="ico">↻</span><span>Obnovit</span>
@@ -481,7 +482,7 @@ tr.foot td:last-child  { text-align: left; }
 <script>
 'use strict';
 
-const API = 'https://script.google.com/macros/s/AKfycbyCuwc1EoZRzKxykSfTo5ZTEajbtubuoVGpQa-iJaLbFVEVenRbDNNFzgZJpmczQyzv4A/exec';
+const API = 'https://script.google.com/macros/s/AKfycbzIAXH58B6_1mQbhvS8yjiwQ1P3Ge-xSq7TDa6-MpJhbIhGja-yU599O5MjnO_OdrxJmA/exec';
 
 const COLS = ['d30','d60','d90','d180','d365','d9999'];
 const COL_LABELS = {d30:'30 dní', d60:'60 dní', d90:'90 dní', d180:'180 dní', d365:'365 dní', d9999:'9999'};
@@ -571,7 +572,13 @@ function loadAll() {
 
     if (!week || WEEK_KEYS.indexOf(week) === -1) week = WEEK_KEYS[0];
 
-    setSyncStatus('ok', 'Aktuální data');
+    const last = dataRes && dataRes.lastUpload;
+    if (last && last.formatted) {
+      const week = last.sheetName ? ' (' + last.sheetName + ')' : '';
+      setSyncStatus('ok', 'Poslední nahrání: ' + last.formatted + week);
+    } else {
+      setSyncStatus('ok', 'Data načtena');
+    }
     buildUI();
   }).catch(err => {
     console.error('Load error:', err);
