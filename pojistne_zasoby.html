@@ -106,7 +106,15 @@ body {
   display: flex;
   align-items: center;
   height: 30px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity .2s, transform .2s;
 }
+.logo-wrap:hover {
+  opacity: .85;
+  transform: scale(1.04);
+}
+.logo-wrap:active { transform: scale(0.98); }
 .logo-svg {
   height: 32px;
   width: auto;
@@ -134,6 +142,23 @@ body {
   color: rgba(195,220,190,.55);
   text-align: right;
   white-space: nowrap;
+}
+.hdr-update {
+  font-size: 10px;
+  color: rgba(195,220,190,.45);
+  margin-top: 2px;
+  letter-spacing: .2px;
+  font-style: italic;
+}
+.hdr-update.live::before {
+  content: '●';
+  color: #4caf50;
+  margin-right: 4px;
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; }
+  50% { opacity: .4; }
 }
 
 /* ── TABS ── */
@@ -1013,7 +1038,7 @@ td.sev  { text-align: center; }
   <div class="overlay-box">
     <div class="spinner" id="spinner"></div>
     <div class="ol-title" id="ol-title">Načítám data…</div>
-    <div class="ol-sub" id="ol-sub">Připojuji se k Google Sheets</div>
+    <div class="ol-sub" id="ol-sub">Připojuji se k tajnému úložišti 🔐</div>
     <div class="ol-err" id="ol-err" style="display:none"></div>
     <button class="ol-btn" id="ol-btn" style="display:none" onclick="closeOverlay()">Zavřít</button>
   </div>
@@ -1021,7 +1046,7 @@ td.sev  { text-align: center; }
 
 <!-- HEADER -->
 <header class="hdr">
-  <div class="logo-wrap">
+  <a class="logo-wrap" href="https://portal.ino.cz" title="Zpět na portál INO">
     <svg class="logo-svg" viewBox="0 0 407.1 206.3" xmlns="http://www.w3.org/2000/svg">
       <path d="M0,202.8h30V6.5H0V202.8z M185.3,166.3V6.4h-29.9v159.9c0,5.5-4.5,10-10,10c-5.5,0-10-4.5-10-10V39.9
         c0-22-17.9-39.9-39.9-39.9c-22,0-39.9,17.9-39.9,39.9v7.6v154.4h29.9V47.5v-7.6c0-5.5,4.5-10,10-10c5.5,0,10,4.5,10,10v126.4
@@ -1029,12 +1054,15 @@ td.sev  { text-align: center; }
         s31.2-73.1,72-73.1C345.9,31.2,377,62.9,377,104.3 M407.1,104.3c0-57.8-44.2-102-102-102s-102,44.2-102,102
         c0,57.8,44.2,102,102,102S407.1,162.1,407.1,104.3"/>
     </svg>
-  </div>
+  </a>
   <div class="hdr-center">
     <div class="hdr-title">Vyhodnocení pojistných zásob</div>
     <div class="hdr-sub" id="hdrDate"></div>
   </div>
-  <div class="hdr-right" id="hdrMeta">—</div>
+  <div class="hdr-right">
+    <div id="hdrMeta">—</div>
+    <div class="hdr-update" id="hdrUpdate"></div>
+  </div>
 </header>
 
 <!-- TABS -->
@@ -1057,7 +1085,7 @@ td.sev  { text-align: center; }
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────────────────
-const APPS_URL = 'https://script.google.com/macros/s/AKfycbzYT422wJsLW8MMNUrBEe35gcTj9mpAVCWpFY_wehhsj3QuQkV60OqLW27RjUXqmOtVaQ/exec';
+const APPS_URL = 'https://script.google.com/macros/s/AKfycbwEhJCtJTD_DssDaEtVmIBpHPVXLCTjBerJqNiOoXYpvUI7M8m2Me643R1RrSubiJDUvw/exec';
 
 // Brand colors for charts
 const BRAND = {
@@ -1114,6 +1142,13 @@ function showError(msg) {
 function closeOverlay() { document.getElementById('overlay').style.display = 'none'; }
 
 // ── FETCH ───────────────────────────────────────────────────────────────────
+// Backend (Apps Script) by měl vracet JSON ve tvaru:
+// {
+//   "Nastaveno": [[headers...], [row1...], ...],
+//   "zrušeno":  [[headers...], [row1...], ...],
+//   "lastUpdate": "2026-05-30T14:23:00.000Z"  // čas poslední úpravy souboru (ISO string)
+// }
+// Pokud server lastUpdate neposílá, zobrazí se "—".
 async function loadData() {
   try {
     const res = await fetch(APPS_URL);
@@ -1121,7 +1156,7 @@ async function loadData() {
     const json = await res.json();
     const navKey = Object.keys(json).find(k => k.toLowerCase().includes('nastaven'));
     const zruKey = Object.keys(json).find(k => /ru.?eno/i.test(k));
-    if (!navKey || !zruKey) throw new Error('Listy „Nastaveno" / „zrušeno" nenalezeny.');
+    if (!navKey || !zruKey) throw new Error('Datové sady nenalezeny.');
 
     const navHeaders = json[navKey][0];
     const navRows = json[navKey].slice(1).filter(r => r.some(c => String(c).trim() !== ''));
@@ -1133,10 +1168,36 @@ async function loadData() {
     closeOverlay();
     renderTab('nastaveno');
     renderTab('zruseno');
+
     document.getElementById('hdrMeta').textContent =
       `${state.nastaveno.all.length + state.zruseno.all.length} položek celkem`;
+
+    // Zobrazit čas poslední aktualizace dat
+    const updateEl = document.getElementById('hdrUpdate');
+    if (json.lastUpdate) {
+      const d = new Date(json.lastUpdate);
+      const today = new Date();
+      const isToday = d.toDateString() === today.toDateString();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const isYesterday = d.toDateString() === yesterday.toDateString();
+
+      let txt;
+      if (isToday) {
+        txt = `Data z dneška, ${d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}`;
+      } else if (isYesterday) {
+        txt = `Data ze včerejška, ${d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}`;
+      } else {
+        const daysAgo = Math.floor((today - d) / 86400000);
+        txt = `Data stará ${daysAgo} ${daysAgo===1?'den':daysAgo<5?'dny':'dní'} (${d.toLocaleDateString('cs-CZ')})`;
+      }
+      updateEl.textContent = txt;
+      updateEl.classList.add('live');
+    } else {
+      updateEl.textContent = 'Čas aktualizace nedostupný';
+    }
   } catch(e) {
-    showError(e.message + ' — zkontrolujte, že je Apps Script nasazený jako veřejný.');
+    showError('Nepodařilo se načíst data z úložiště. Zkuste to prosím za chvíli znovu, nebo kontaktujte správce.');
   }
 }
 
