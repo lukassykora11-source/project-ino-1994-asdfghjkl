@@ -827,6 +827,30 @@ td.sev  { text-align: center; }
   letter-spacing: .2px;
 }
 
+.problem-tags {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sklad-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: .1px;
+  cursor: help;
+}
+.sklad-tag.ok   { background: #e8f4e8; color: #2a7e28; }
+.sklad-tag.low  { background: #fff3e0; color: #b87000; }
+.sklad-tag.zero { background: var(--red-light); color: var(--red-dark); }
+.sklad-tag.neg  { background: var(--red); color: white; }
+
 .problem-zakaznik,
 .problem-ostatni {
   background: var(--g2);
@@ -1788,6 +1812,18 @@ function renderProblemItem(d) {
   // Prodej u ostatních zákazníků = rok - zak (jen pokud má smysl)
   const ostatniRok = Math.max(0, d.rok - d.zak);
 
+  // Stav skladu - tag s vizuálním označením stavu
+  let skladTag = '';
+  if (d.sklad < 0) {
+    skladTag = `<span class="sklad-tag neg" title="Záporný stav skladu – chyba evidence">⚠ Sklad: ${fmt(d.sklad)} ks</span>`;
+  } else if (d.sklad === 0) {
+    skladTag = `<span class="sklad-tag zero" title="Sklad je prázdný">📦 Sklad: 0 ks</span>`;
+  } else if (d.mnoz > 0 && d.sklad < d.mnoz) {
+    skladTag = `<span class="sklad-tag low" title="Sklad pod úrovní pojistné zásoby">📦 Sklad: ${fmt(d.sklad)} ks (pod minimem ${fmt(d.mnoz)})</span>`;
+  } else {
+    skladTag = `<span class="sklad-tag ok" title="Sklad v pořádku">📦 Sklad: ${fmt(d.sklad)} ks</span>`;
+  }
+
   return `
     <div class="problem-item ${sevClass}">
       <div class="problem-status">${sevIcon}</div>
@@ -1797,6 +1833,9 @@ function renderProblemItem(d) {
         <div class="problem-meta">
           Reg. č. ${d.reg}
           ${d.dodav ? ' · Dodavatel: ' + escapeHtml(d.dodav) : ''}
+        </div>
+        <div class="problem-tags">
+          ${skladTag}
         </div>
       </div>
 
@@ -1888,6 +1927,11 @@ function copyFirmaReport(key, idx, btn) {
     text += `${n+1}. ${i.name}\n`;
     text += `   Reg. číslo: ${i.reg}\n`;
     if (i.dodav) text += `   Dodavatel: ${i.dodav}\n`;
+    text += `   Aktuální stav skladu: ${fmt(i.sklad)} ks`;
+    if (i.sklad < 0) text += ` ⚠ ZÁPORNÝ!`;
+    else if (i.sklad === 0) text += ` (vyprodáno)`;
+    else if (i.mnoz > 0 && i.sklad < i.mnoz) text += ` (pod minimem ${fmt(i.mnoz)})`;
+    text += `\n`;
     text += `   Domluvená pojistná zásoba: ${fmt(i.mnoz)} ks\n`;
     text += `   Prodej tomuto zákazníkovi za rok: ${fmt(i.zak)} ks\n`;
     text += `   Prodej ostatním zákazníkům za rok: ${fmt(ostatniRok)} ks\n`;
